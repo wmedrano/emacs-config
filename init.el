@@ -41,6 +41,17 @@
 (set-frame-font "JetBrainsMono Nerd Font Mono 11")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; VI like keybindings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'evil)
+(require 'evil-commentary)
+(evil-mode t)
+(evil-commentary-mode t)
+(evil-define-key '(normal visual motion) 'global "j" #'evil-search-next)
+(evil-define-key '(normal visual motion) 'global "n" #'evil-next-line)
+(evil-define-key '(normal visual motion) 'global "e" #'evil-previous-line)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Saving/Reverting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'compile)
@@ -84,6 +95,12 @@
 (setq-default
  chatgpt-shell-openai-key (secrets-get-secret "Login" "emacs-chatgpt")
  dall-e-shell-openai-key (secrets-get-secret "Login" "emacs-chatgpt"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Version Control
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'magit)
+(add-hook 'git-commit-mode-hook #'evil-insert-state)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Autocomplete
@@ -222,17 +239,6 @@ Set COMINT to enable interactivity."
   (when (string= buffer-file-name user-init-file)
     (elisp-eval-after-save)))
 (add-hook 'emacs-lisp-mode-hook #'elisp-auto-eval-config-file)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Evil mode
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'evil)
-(require 'evil-commentary)
-(evil-mode t)
-(evil-commentary-mode t)
-(evil-define-key '(normal visual motion) 'global "j" #'evil-search-next)
-(evil-define-key '(normal visual motion) 'global "n" #'evil-next-line)
-(evil-define-key '(normal visual motion) 'global "e" #'evil-previous-line)
 
 (provide 'init)
 ;;; init.el ends here.
