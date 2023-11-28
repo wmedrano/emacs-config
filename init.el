@@ -8,7 +8,9 @@
  ;; If there is more than one, they won't work right.
  '(auto-save-default nil)
  '(package-selected-packages
-   '(evil-commentary evil atom-one-dark-theme graphviz-dot-mode ox-hugo markdownfmt modus-themes yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich dracula-theme markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper)))
+   '(doom-modeline starhugger dockerfile-mode diff-hl spacemacs-theme evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt modus-themes yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich dracula-theme markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper))
+ '(package-vc-selected-packages
+   '((starhugger :url "https://gitlab.com/daanturo/starhugger.el"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -36,9 +38,12 @@
 (xterm-mouse-mode t)
 (seq-doseq (theme custom-enabled-themes)
   (disable-theme theme))
-(require 'atom-one-dark-theme)
-(load-theme 'atom-one-dark t)
+(require 'spacemacs-theme)
+(load-theme 'spacemacs-dark t)
 (set-frame-font "JetBrainsMono Nerd Font Mono 11")
+
+(require 'doom-modeline)
+(doom-modeline-mode t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; VI like keybindings
@@ -90,6 +95,10 @@
 
 (require 'ansi-color)
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
+(add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter)
+
+(add-to-list 'evil-emacs-state-modes 'rg-mode)
+(add-to-list 'evil-emacs-state-modes 'xref--xref-buffer-mode)
 
 (require 'chatgpt-shell)
 (setq-default
@@ -101,6 +110,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'magit)
 (add-hook 'git-commit-mode-hook #'evil-insert-state)
+
+(require 'diff-hl)
+(global-diff-hl-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Autocomplete
@@ -121,6 +133,24 @@
 (require 'yasnippet)
 (require 'yasnippet-snippets)
 (yas-global-mode t)
+
+;; AI based.
+(require 'starhugger)
+(require 's)
+(setq-default
+ starhugger-api-token (secrets-get-secret "Login" "emacs-huggingface"))
+(evil-define-key '(insert) 'global (kbd "<backtab>") #'starhugger-trigger-suggestion)
+(define-key starhugger-inlining-mode-map (kbd "TAB") #'starhugger-accept-suggestion)
+(define-key starhugger-inlining-mode-map (kbd "<tab>") #'starhugger-accept-suggestion-by-paragraph)
+(define-key starhugger-inlining-mode-map (kbd "<backtab>") #'starhugger-show-next-suggestion)
+(define-key starhugger-inlining-mode-map (kbd "<down>") #'starhugger-accept-suggestion-by-line)
+(define-key starhugger-inlining-mode-map (kbd "<right>") #'starhugger-accept-suggestion-by-word)
+(define-key starhugger-inlining-mode-map (kbd "<escape>") #'starhugger-dismiss-suggestion)
+
+(defun starhugger-update-package ()
+  "Update the starhugger package."
+  (interactive)
+  (package-vc-install '(starhugger :url "https://gitlab.com/daanturo/starhugger.el")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Syntax Checking
@@ -183,9 +213,7 @@
 
 (defmacro with-cargo-workspace (&rest body)
   "Execute BODY within the root of the cargo workspace."
-  `(let* ((cmd "cargo metadata --format-version=1 2>/dev/null | jq \".workspace_root\" -r")
-	  (out (shell-command-to-string cmd))
-	  (root (string-trim out))
+  `(let* ((root (project-root (project-current)))
 	  (default-directory root))
      ,@body))
 
@@ -197,7 +225,7 @@ Set COMINT to enable interactivity."
 (defun cargo-bench ()
   "Execute cargo bench."
   (interactive)
-  (run-cargo-command "cargo bench --color always "))
+  (run-cargo-command "cargo criterion --color always"))
 
 (defun cargo-build ()
   "Execute cargo build."
@@ -222,7 +250,7 @@ Set COMINT to enable interactivity."
 (defun cargo-test ()
   "Execute cargo test."
   (interactive)
-  (run-cargo-command "cargo test --color always "))
+  (run-cargo-command "cargo nextest --color always run "))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Emacs Lisp
