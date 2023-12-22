@@ -8,9 +8,7 @@
  ;; If there is more than one, they won't work right.
  '(auto-save-default nil)
  '(package-selected-packages
-   '(doom-modeline starhugger dockerfile-mode diff-hl spacemacs-theme evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt modus-themes yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich dracula-theme markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper))
- '(package-vc-selected-packages
-   '((starhugger :url "https://gitlab.com/daanturo/starhugger.el"))))
+   '(yaml monokai-pro-theme org-unique-id editorconfig company-box smartparens doom-modeline dockerfile-mode diff-hl evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -38,9 +36,9 @@
 (xterm-mouse-mode t)
 (seq-doseq (theme custom-enabled-themes)
   (disable-theme theme))
-(require 'spacemacs-theme)
-(load-theme 'spacemacs-dark t)
-(set-frame-font "JetBrainsMono Nerd Font Mono 11")
+(require 'monokai-pro-theme)
+(load-theme 'monokai-pro t)
+(set-frame-font "JetBrainsMono NFM 11")
 
 (require 'doom-modeline)
 (doom-modeline-mode t)
@@ -94,8 +92,8 @@
 (add-hook 'eshell-load-hook #'eat-eshell-mode)
 
 (require 'ansi-color)
+(setq-default compilation-scroll-output t)
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
-(add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter)
 
 (add-to-list 'evil-emacs-state-modes 'rg-mode)
 (add-to-list 'evil-emacs-state-modes 'xref--xref-buffer-mode)
@@ -119,8 +117,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code based.
 (require 'company)
+(require 'company-box)
 (setq-default company-tooltip-minimum-width   80
 	      company-tooltip-width-grow-only t)
+(add-hook 'company-mode-hook #'company-box-mode)
 (global-company-mode t)
 (define-key company-active-map (kbd "TAB")      #'company-complete-selection)
 (define-key company-active-map (kbd "<tab>")    #'company-complete-selection)
@@ -134,24 +134,6 @@
 (require 'yasnippet-snippets)
 (yas-global-mode t)
 
-;; AI based.
-(require 'starhugger)
-(require 's)
-(setq-default
- starhugger-api-token (secrets-get-secret "Login" "emacs-huggingface"))
-(evil-define-key '(insert) 'global (kbd "<backtab>") #'starhugger-trigger-suggestion)
-(define-key starhugger-inlining-mode-map (kbd "TAB") #'starhugger-accept-suggestion)
-(define-key starhugger-inlining-mode-map (kbd "<tab>") #'starhugger-accept-suggestion-by-paragraph)
-(define-key starhugger-inlining-mode-map (kbd "<backtab>") #'starhugger-show-next-suggestion)
-(define-key starhugger-inlining-mode-map (kbd "<down>") #'starhugger-accept-suggestion-by-line)
-(define-key starhugger-inlining-mode-map (kbd "<right>") #'starhugger-accept-suggestion-by-word)
-(define-key starhugger-inlining-mode-map (kbd "<escape>") #'starhugger-dismiss-suggestion)
-
-(defun starhugger-update-package ()
-  "Update the starhugger package."
-  (interactive)
-  (package-vc-install '(starhugger :url "https://gitlab.com/daanturo/starhugger.el")))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Syntax Checking
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,7 +144,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Formatting and refactoring
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(cua-mode t)
 (global-visual-line-mode t)
 (defun delete-trailing-whitespace--before-save ()
   "Remove trailing whitespace before saving."
@@ -171,6 +152,10 @@
 (add-hook 'text-mode-hook #'delete-trailing-whitespace--before-save)
 (add-hook 'conf-mode-hook #'delete-trailing-whitespace--before-save)
 
+(require 'smartparens)
+(require 'smartparens-config)
+(smartparens-global-mode)
+
 (require 'eglot)
 (setq-default eglot-confirm-server-initiated-edits nil
 	      ;; Disable event logging to improve performance. This is
@@ -178,6 +163,11 @@
 	      ;; eglot itself.
 	      eglot-events-buffer-size 0
 	      eglot-report-progress    nil)
+;; Toggles inlay hints mode off by default.
+(defun eglot-disable-inlay-hints ()
+  "Disable `eglot-inlay-hints-mode'."
+  (eglot-inlay-hints-mode -1))
+(add-hook 'eglot-managed-mode-hook #'eglot-disable-inlay-hints)
 
 (defun eglot--format-before-save ()
   "Format the buffer before saving."
@@ -192,9 +182,11 @@
   (setq-local fill-column 100))
 (add-hook 'rust-mode-hook #'set-fill-column-100)
 
-(require 'markdownfmt)
-(setq-default markdownfmt-bin "/home/wmedrano/go/bin/markdownfmt")
-(add-hook 'markdown-mode-hook #'markdownfmt-enable-on-save)
+(require 'org-unique-id)
+(defun org--format-before-save ()
+  "Format the buffer before saving."
+  (add-hook 'before-save-hook #'org-unique-id 0 t))
+(add-hook 'org-mode-hook #'org--format-before-save)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; References
@@ -205,6 +197,15 @@
 ;; Org Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq-default org-support-shift-select t)
+(defun set-up-org-babel ()
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '(
+                                 (dot . t)
+                                 (emacs-lisp . t)
+                                 (python . t)
+                                 (shell . t)
+                                 )))
+(add-hook 'org-mode-hook #'set-up-org-babel)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust
