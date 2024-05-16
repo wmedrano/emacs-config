@@ -8,7 +8,9 @@
  ;; If there is more than one, they won't work right.
  '(auto-save-default nil)
  '(package-selected-packages
-   '(yaml monokai-pro-theme org-unique-id editorconfig company-box smartparens doom-modeline dockerfile-mode diff-hl evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper)))
+   '(eglot-booster ace-window yaml monokai-pro-theme org-unique-id editorconfig smartparens doom-modeline dockerfile-mode diff-hl evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper))
+ '(package-vc-selected-packages
+   '((eglot-booster :vc-backend Git :url "https://github.com/jdtsmith/eglot-booster.git"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -29,8 +31,9 @@
 (setq-default inhibit-startup-screen t
 	      ring-bell-function     'ignore
 	      scroll-conservatively  5
-	      gc-cons-percentage     1.0
+	      gc-cons-percentage     2.0
 	      gc-cons-threshold      (* 256 1024 1024))
+(run-with-idle-timer 2 t (lambda () (garbage-collect)))
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (xterm-mouse-mode t)
@@ -44,15 +47,35 @@
 (doom-modeline-mode t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; More Responsive LSP
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'eglot-booster)
+(add-to-list 'exec-path "~/.cargo/bin")
+(eglot-booster-mode t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; VI like keybindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar wm-use-evil t)
 (require 'evil)
 (require 'evil-commentary)
-(evil-mode t)
-(evil-commentary-mode t)
-(evil-define-key '(normal visual motion) 'global "j" #'evil-search-next)
-(evil-define-key '(normal visual motion) 'global "n" #'evil-next-line)
-(evil-define-key '(normal visual motion) 'global "e" #'evil-previous-line)
+(when wm-use-evil
+  (evil-mode t)
+  (evil-commentary-mode t)
+  (evil-define-key '(normal visual motion) 'global "j" #'evil-search-next)
+  (evil-define-key '(normal visual motion) 'global "n" #'evil-next-line)
+  (evil-define-key '(normal visual motion) 'global "e" #'evil-previous-line))
+(unless wm-use-evil
+  (cua-mode t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Ace window
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'ace-window)
+(setq-default aw-dispatch-always t)
+(when wm-use-evil
+  (evil-define-key '(normal visual motion emacs) 'global (kbd "C-w") #'ace-window))
+(global-set-key (kbd "C-w") #'ace-window)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Saving/Reverting
@@ -97,17 +120,25 @@
 
 (add-to-list 'evil-emacs-state-modes 'rg-mode)
 (add-to-list 'evil-emacs-state-modes 'xref--xref-buffer-mode)
+(add-to-list 'evil-emacs-state-modes 'compilation-mode)
+(delete 'compilation-mode evil-motion-state-modes)
 
 (require 'chatgpt-shell)
 (setq-default
  chatgpt-shell-openai-key (secrets-get-secret "Login" "emacs-chatgpt")
  dall-e-shell-openai-key (secrets-get-secret "Login" "emacs-chatgpt"))
 
+(require 'khoj)
+(setq-default
+ khoj-api-key (secrets-get-secret "Login" "khoj")
+ khoj-org-directories '("~/Documents/khoj"))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Version Control
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'magit)
-(add-hook 'git-commit-mode-hook #'evil-insert-state)
+(when wm-use-evil
+  (add-hook 'git-commit-mode-hook #'evil-insert-state))
 
 (require 'diff-hl)
 (global-diff-hl-mode)
@@ -117,10 +148,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code based.
 (require 'company)
-(require 'company-box)
 (setq-default company-tooltip-minimum-width   80
-	      company-tooltip-width-grow-only t)
-(add-hook 'company-mode-hook #'company-box-mode)
+	      company-tooltip-width-grow-only t
+              company-idle-delay              0.05)
 (global-company-mode t)
 (define-key company-active-map (kbd "TAB")      #'company-complete-selection)
 (define-key company-active-map (kbd "<tab>")    #'company-complete-selection)
@@ -145,6 +175,7 @@
 ;; Formatting and refactoring
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (global-visual-line-mode t)
+(setq-default indent-tabs-mode nil)
 (defun delete-trailing-whitespace--before-save ()
   "Remove trailing whitespace before saving."
   (add-hook 'before-save-hook #'delete-trailing-whitespace 0 t))
@@ -181,6 +212,7 @@
   "Set the `fill-column' to 100."
   (setq-local fill-column 100))
 (add-hook 'rust-mode-hook #'set-fill-column-100)
+(add-hook 'org-mode-hook #'turn-on-auto-fill)
 
 (require 'org-unique-id)
 (defun org--format-before-save ()
@@ -251,7 +283,7 @@ Set COMINT to enable interactivity."
 (defun cargo-test ()
   "Execute cargo test."
   (interactive)
-  (run-cargo-command "cargo nextest --color always run "))
+  (run-cargo-command "cargo --color always test "))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Emacs Lisp
