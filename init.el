@@ -8,7 +8,7 @@
  ;; If there is more than one, they won't work right.
  '(auto-save-default nil)
  '(package-selected-packages
-   '(eglot-booster ace-window yaml monokai-pro-theme org-unique-id editorconfig smartparens doom-modeline dockerfile-mode diff-hl evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper))
+   '(esqlite elpy pyvenv which-key cider clojure-mode starhugger htmlize eglot-booster ace-window yaml monokai-pro-theme org-unique-id editorconfig smartparens doom-modeline dockerfile-mode diff-hl evil-commentary evil graphviz-dot-mode ox-hugo markdownfmt yasnippet-snippets yasnippet dall-e-shell rg chatgpt-shell nerd-icons-ivy-rich markdown-mode ivy-rich eat yaml-mode magit counsel ivy rust-mode company swiper))
  '(package-vc-selected-packages
    '((eglot-booster :vc-backend Git :url "https://github.com/jdtsmith/eglot-booster.git"))))
 (custom-set-faces
@@ -17,6 +17,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Packages
@@ -64,7 +66,13 @@
   (evil-commentary-mode t)
   (evil-define-key '(normal visual motion) 'global "j" #'evil-search-next)
   (evil-define-key '(normal visual motion) 'global "n" #'evil-next-line)
-  (evil-define-key '(normal visual motion) 'global "e" #'evil-previous-line))
+  (evil-define-key '(normal visual motion) 'global "e" #'evil-previous-line)
+  (define-key evil-insert-state-map (kbd "C-n")  #'nil)
+  (define-key evil-insert-state-map (kbd "C-p")  #'nil)
+  (define-key evil-insert-state-map (kbd "S-<left>")  #'nil)
+  (define-key evil-insert-state-map (kbd "S-<right>") #'nil)
+  (define-key evil-insert-state-map (kbd "S-<up>")    #'nil)
+  (define-key evil-insert-state-map (kbd "S-<down>")  #'nil))
 (unless wm-use-evil
   (cua-mode t))
 
@@ -72,9 +80,20 @@
 ;; Ace window
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'ace-window)
-(setq-default aw-dispatch-always t)
+(setq-default aw-dispatch-always t
+              aw-fair-aspect-ratio 2.5
+              aw-dispatch-alist '((?? aw-show-dispatch-help)
+                                  (?B (lambda (w) (counsel-switch-buffer-other-window)) "Switch Buffer Other Window")
+                                  (?M aw-move-window "Move Window")
+                                  (?b (lambda (w) (aw-switch-to-window w) (counsel-switch-buffer)) "Switch Buffer")
+                                  (?c aw-copy-window "Copy window.")
+                                  (?f (lambda (w) (aw-switch-to-window w) (call-interactively #'project-find-file)) "Find File")
+                                  (?m aw-swap-window "Swap Windows")
+                                  (?o delete-other-windows)
+                                  (?s aw-split-window-fair "Split Window")
+                                  (?x aw-delete-window "Delete Window")))
 (when wm-use-evil
-  (evil-define-key '(normal visual motion emacs) 'global (kbd "C-w") #'ace-window))
+  (evil-define-key '(normal visual motion emacs insert) 'global (kbd "C-w") #'ace-window))
 (global-set-key (kbd "C-w") #'ace-window)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -108,6 +127,14 @@
 (nerd-icons-ivy-rich-mode t)
 (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Editor Help
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'which-key)
+(setq-default which-key-idle-delay 0.5)
+(which-key-mode t)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Shells
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -118,6 +145,7 @@
 (setq-default compilation-scroll-output t)
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 
+(add-to-list 'evil-emacs-state-modes 'cider-stacktrace-mode)
 (add-to-list 'evil-emacs-state-modes 'rg-mode)
 (add-to-list 'evil-emacs-state-modes 'xref--xref-buffer-mode)
 (add-to-list 'evil-emacs-state-modes 'compilation-mode)
@@ -128,10 +156,24 @@
  chatgpt-shell-openai-key (secrets-get-secret "Login" "emacs-chatgpt")
  dall-e-shell-openai-key (secrets-get-secret "Login" "emacs-chatgpt"))
 
-(require 'khoj)
+(require 'starhugger)
 (setq-default
- khoj-api-key (secrets-get-secret "Login" "khoj")
- khoj-org-directories '("~/Documents/khoj"))
+ starhugger-model-id "bigcode/starcoder2-3b"
+ starhugger-fill-tokens '("<fim_prefix>" "<fim_suffix>" "<fim_middle>")
+ starhugger-stop-tokens '("<|endoftext|>")
+ starhugger-api-token (secrets-get-secret "Login" "HF_API_KEY"))
+(add-hook 'prog-mode-hook #'starhugger-auto-mode)
+(global-set-key (kbd "<backtab>") #'starhugger-trigger-suggestion)
+(define-key starhugger-inlining-mode-map (kbd "S-<right>")
+            (starhugger-inline-menu-item #'starhugger-accept-suggestion-by-character))
+(define-key starhugger-inlining-mode-map (kbd "S-<down>")
+            (starhugger-inline-menu-item #'starhugger-accept-suggestion-by-line))
+(define-key starhugger-inlining-mode-map (kbd "TAB")
+            (starhugger-inline-menu-item #'starhugger-accept-suggestion-by-paragraph))
+(define-key starhugger-inlining-mode-map (kbd "C-p")
+            (starhugger-inline-menu-item #'starhugger-show-prev-suggestion))
+(define-key starhugger-inlining-mode-map (kbd "<backtab>")
+            (starhugger-inline-menu-item #'starhugger-show-next-suggestion))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Version Control
