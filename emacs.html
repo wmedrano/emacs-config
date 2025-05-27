@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-05-26 Mon 17:48 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Emacs Config</title>
+<meta name="author" content="will@wmedrano.dev" />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">Emacs Config</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org405064e">1. Packages</a>
+<ul>
+<li><a href="#orgf6ed125">1.1. Melpa</a></li>
+<li><a href="#org82712be">1.2. Initialize</a></li>
+</ul>
+</li>
+<li><a href="#org558ad83">2. Startup</a></li>
+<li><a href="#orgfe5ed66">3. Backups &amp; Autosaves</a></li>
+<li><a href="#org55d31ba">4. Appearance &amp; Feel</a>
+<ul>
+<li><a href="#org9033f2b">4.1. Remove Clutter</a></li>
+<li><a href="#org847b0b5">4.2. Lines</a></li>
+<li><a href="#org9179649">4.3. Color Scheme</a></li>
+<li><a href="#orgc4a26b2">4.4. Modeline</a></li>
+</ul>
+</li>
+<li><a href="#org0a79ad6">5. Editor Completions</a>
+<ul>
+<li><a href="#orgc969027">5.1. Ivy</a></li>
+<li><a href="#org5f61a13">5.2. Counsel</a></li>
+</ul>
+</li>
+<li><a href="#orgb6e0615">6. Formatting</a>
+<ul>
+<li><a href="#org6b8a44f">6.1. Tabs</a></li>
+<li><a href="#orgf920257">6.2. Line Width</a></li>
+</ul>
+</li>
+<li><a href="#org15c6255">7. Languages</a>
+<ul>
+<li><a href="#org1783b8d">7.1. Rust</a></li>
+<li><a href="#org3402f59">7.2. Org Mode</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org405064e" class="outline-2">
+<h2 id="org405064e"><span class="section-number-2">1.</span> Packages</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-orgf6ed125" class="outline-3">
+<h3 id="orgf6ed125"><span class="section-number-3">1.1.</span> Melpa</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+Add Melpa to the package manager. <a href="https://melpa.org">Melpa</a> contains many popular Emacs packages.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">require</span> '<span style="color: #008b8b;">package</span>)
+(add-to-list 'package-archives '(<span style="color: #8b2252;">"melpa"</span> . <span style="color: #8b2252;">"https://melpa.org/packages/"</span>) t)
+</pre>
+</div>
+
+<p>
+Counting the default package archives, the following package archives are
+available.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">package-archives
+</pre>
+</div>
+
+<pre class="example">
+((gnu . https://elpa.gnu.org/packages/) (nongnu . https://elpa.nongnu.org/nongnu/) (melpa . https://melpa.org/packages/))
+</pre>
+
+
+<p>
+Package archives must be manually refreshed or fetched with <code>M-x
+package-refresh-contents</code>. All packages added to the <code>package-selected-packages</code>
+variable can be installed with <code>M-x package-install-selected-packages</code>. Packages
+can also be installed on a one-off basis interactively with <code>M-x
+package-install</code>.
+</p>
+
+<p>
+In some cases, package installation may fail with "&#x2026; not found". This likely
+means that the package archives point to an old (and non-existant) version of
+the package. The package definitions can be updated by running <code>M-x
+package-refresh-contents</code>. Packages may also be upgraded all at once with <code>M-x
+package-upgrade-all</code>.
+</p>
+</div>
+</div>
+<div id="outline-container-org82712be" class="outline-3">
+<h3 id="org82712be"><span class="section-number-3">1.2.</span> Initialize</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+Initialize the package archive. This makes all previously installed packages available.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(package-initialize)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org558ad83" class="outline-2">
+<h2 id="org558ad83"><span class="section-number-2">2.</span> Startup</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Disable the default Emacs startup screen. Instead, this displays just the opened
+file or the <code>*Scratch*</code> buffer if no file has been opened.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> inhibit-startup-screen t)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfe5ed66" class="outline-2">
+<h2 id="orgfe5ed66"><span class="section-number-2">3.</span> Backups &amp; Autosaves</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Backup and autosaves may litter the filesystem so we disable
+them. This is ok as my disk is reliable, I save often, and use version
+control.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> auto-save-interval 0
+              create-lockfiles   nil
+              make-backup-files  nil)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org55d31ba" class="outline-2">
+<h2 id="org55d31ba"><span class="section-number-2">4.</span> Appearance &amp; Feel</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-org9033f2b" class="outline-3">
+<h3 id="org9033f2b"><span class="section-number-3">4.1.</span> Remove Clutter</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+Remove the menu bar and tool bar.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(menu-bar-mode -1)
+(tool-bar-mode -1)
+</pre>
+</div>
+
+<p>
+Disable the scroll bar. The functionality is ok sometimes, but it clashes with
+the theming.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(scroll-bar-mode -1)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org847b0b5" class="outline-3">
+<h3 id="org847b0b5"><span class="section-number-3">4.2.</span> Lines</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+Scroll conservatively values above 100 cause Emacs to scroll the
+minimum number of lines required to get the cursor in position. The
+default value of 0 causes Emacs to recenter the window.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> scroll-conservatively 101)
+</pre>
+</div>
+
+<p>
+Display line numbers for text buffers. This can be toggled in an individual
+buffer with <code>M-x display-line-numbers-mode</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(global-display-line-numbers-mode t)
+</pre>
+</div>
+
+<p>
+Highlight the currently selected line. This can be toggled in an individual
+buffer with <code>M-x hl-line-mode</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(global-hl-line-mode t)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9179649" class="outline-3">
+<h3 id="org9179649"><span class="section-number-3">4.3.</span> Color Scheme</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+Use the <code>doom-dracula</code> theme from the <a href="https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941">Doom Themes</a> package.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'doom-themes)
+(load-theme 'doom-dracula t)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc4a26b2" class="outline-3">
+<h3 id="orgc4a26b2"><span class="section-number-3">4.4.</span> Modeline</h3>
+<div class="outline-text-3" id="text-4-4">
+<p>
+Use <a href="https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f">Doom Modeline</a> to display a nicer modeline. Mainly, it:
+</p>
+
+<ul class="org-ul">
+<li>Uses more icons.</li>
+<li>Displays a minimal amount of information while still keeping
+important information such as:
+<ul class="org-ul">
+<li>Syntax errors</li>
+<li>Version control information</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'doom-themes)
+(doom-modeline-mode t)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org0a79ad6" class="outline-2">
+<h2 id="org0a79ad6"><span class="section-number-2">5.</span> Editor Completions</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Editor completions refers to auto complete done within the editor context, as
+opposed to code. Editor completion is used to complete prompts for things such
+as selecting a file, buffer, or command.
+</p>
+</div>
+<div id="outline-container-orgc969027" class="outline-3">
+<h3 id="orgc969027"><span class="section-number-3">5.1.</span> Ivy</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+Editor completions are displayed using the <a href="https://github.com/abo-abo/swiper?tab=readme-ov-file#ivy">Ivy</a> package. This provides a huge
+improvement over the default built-in Emacs completion.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'ivy)
+(ivy-mode t)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5f61a13" class="outline-3">
+<h3 id="org5f61a13"><span class="section-number-3">5.2.</span> Counsel</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+<a href="https://github.com/abo-abo/swiper?tab=readme-ov-file#counsel">Counsel</a> provides functions that wrap ivy completion with some extra
+features. For example, <code>counsel-M-x</code> is an <code>M-x</code> replacement that also displays
+a keybinding if there is an active keybinding for the particular function.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'counsel)
+(counsel-mode t)
+</pre>
+</div>
+
+<p>
+Enabling <code>counsel-mode</code> makes the <code>counsel-mode-map</code> keymap active. This keymap
+defines several rebinds.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">counsel-mode-map
+</pre>
+</div>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">keymap</td>
+<td class="org-left">(24 keymap (98 . counsel-switch-buffer))</td>
+<td class="org-left">(remap keymap (bookmark-jump . counsel-bookmark) (geiser-doc-look-up-manual . counsel-geiser-doc-look-up-manual) (pop-to-mark-command . counsel-mark-ring) (info-lookup-symbol . counsel-info-lookup-symbol) (yank-pop . counsel-yank-pop) (load-theme . counsel-load-theme) (load-library . counsel-load-library) (imenu . counsel-imenu) (find-library . counsel-find-library) (find-file . counsel-find-file) (list-faces-display . counsel-faces) (describe-face . counsel-describe-face) (apropos-command . counsel-apropos) (describe-symbol . counsel-describe-symbol) (describe-variable . counsel-describe-variable) (describe-function . counsel-describe-function) (describe-bindings . counsel-descbinds) (execute-extended-command . counsel-M-x))</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+However, it does not provide a rebind for <code>counsel-switch-buffer</code>. We make this
+our default (interactive) switch buffer command as it allows previewing the
+contents of a buffer before switching.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(define-key counsel-mode-map (kbd <span style="color: #8b2252;">"C-x b"</span>) #'counsel-switch-buffer)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb6e0615" class="outline-2">
+<h2 id="orgb6e0615"><span class="section-number-2">6.</span> Formatting</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-org6b8a44f" class="outline-3">
+<h3 id="org6b8a44f"><span class="section-number-3">6.1.</span> Tabs</h3>
+<div class="outline-text-3" id="text-6-1">
+<p>
+Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
+neither the spaces crowd, nor the tabs crowd. Tabs are disabled to prevent the
+mixed use, though opinionated languages will still find a way to use their
+correct default. For example, Go will still use tabs when indenting.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> indent-tabs-mode nil)
+</pre>
+</div>
+
+<p>
+Use a default tab width of 4 spaces.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> tab-width 4)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf920257" class="outline-3">
+<h3 id="orgf920257"><span class="section-number-3">6.2.</span> Line Width</h3>
+<div class="outline-text-3" id="text-6-2">
+<p>
+Set a target line width of 80. Contents of a "paragraph" may be made to follow
+the target line width through <code>M-x fill-paragraph</code> or a highlighted region with
+<code>M-x fill-region</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> fill-column 80)
+</pre>
+</div>
+
+<p>
+Some languages have a different target line length.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">defun</span> <span style="color: #0000ff;">fill-column-100</span> ()
+  (<span style="color: #a020f0;">setq-local</span> fill-column 100))
+
+(add-hook 'rust-mode-hook #'fill-column-100)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org15c6255" class="outline-2">
+<h2 id="org15c6255"><span class="section-number-2">7.</span> Languages</h2>
+<div class="outline-text-2" id="text-7">
+</div>
+<div id="outline-container-org1783b8d" class="outline-3">
+<h3 id="org1783b8d"><span class="section-number-3">7.1.</span> Rust</h3>
+<div class="outline-text-3" id="text-7-1">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'rust-mode)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3402f59" class="outline-3">
+<h3 id="org3402f59"><span class="section-number-3">7.2.</span> Org Mode</h3>
+<div class="outline-text-3" id="text-7-2">
+<p>
+Enable syntax highlighting for exported material.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'htmlize)
+</pre>
+</div>
+
+<p>
+Enable previews while editing org document. Previews can be enabled with <code>M-x
+org-preview-html-mode</code>. Behind the scenes, this exports to HTML on save on
+displays the generated HTML in an <code>*eww*</code> buffer.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'org-preview-html)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: will@wmedrano.dev</p>
+<p class="date">Created: 2025-05-26 Mon 17:48</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,237 @@
+#+title: Emacs Config
+#+author: will@wmedrano.dev
+
+* Packages
+
+** Melpa
+
+Add Melpa to the package manager. [[https://melpa.org][Melpa]] contains many popular Emacs packages.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (require 'package)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+#+END_SRC
+
+Counting the default package archives, the following package archives are
+available.
+
+#+BEGIN_SRC emacs-lisp :exports both
+  package-archives
+#+END_SRC
+
+#+RESULTS:
+: ((gnu . https://elpa.gnu.org/packages/) (nongnu . https://elpa.nongnu.org/nongnu/) (melpa . https://melpa.org/packages/))
+
+Package archives must be manually refreshed or fetched with ~M-x
+package-refresh-contents~. All packages added to the ~package-selected-packages~
+variable can be installed with ~M-x package-install-selected-packages~. Packages
+can also be installed on a one-off basis interactively with ~M-x
+package-install~.
+
+In some cases, package installation may fail with "... not found". This likely
+means that the package archives point to an old (and non-existant) version of
+the package. The package definitions can be updated by running ~M-x
+package-refresh-contents~. Packages may also be upgraded all at once with ~M-x
+package-upgrade-all~.
+
+** Initialize
+
+Initialize the package archive. This makes all previously installed packages available.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (package-initialize)
+#+END_SRC
+
+* Startup
+
+Disable the default Emacs startup screen. Instead, this displays just the opened
+file or the ~*Scratch*~ buffer if no file has been opened.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default inhibit-startup-screen t)
+#+END_SRC
+
+* Backups & Autosaves
+
+Backup and autosaves may litter the filesystem so we disable
+them. This is ok as my disk is reliable, I save often, and use version
+control.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default auto-save-interval 0
+                create-lockfiles   nil
+                make-backup-files  nil)
+#+END_SRC
+
+* Appearance & Feel
+
+** Remove Clutter
+
+Remove the menu bar and tool bar.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+#+END_SRC
+
+Disable the scroll bar. The functionality is ok sometimes, but it clashes with
+the theming.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (scroll-bar-mode -1)
+#+END_SRC
+
+** Lines
+
+Scroll conservatively values above 100 cause Emacs to scroll the
+minimum number of lines required to get the cursor in position. The
+default value of 0 causes Emacs to recenter the window.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default scroll-conservatively 101)
+#+END_SRC
+
+Display line numbers for text buffers. This can be toggled in an individual
+buffer with ~M-x display-line-numbers-mode~.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (global-display-line-numbers-mode t)
+#+END_SRC
+
+Highlight the currently selected line. This can be toggled in an individual
+buffer with ~M-x hl-line-mode~.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (global-hl-line-mode t)
+#+END_SRC
+
+** Color Scheme
+
+Use the ~doom-dracula~ theme from the [[https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941][Doom Themes]] package.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'doom-themes)
+  (load-theme 'doom-dracula t)
+#+END_SRC
+
+** Modeline
+
+Use [[https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f][Doom Modeline]] to display a nicer modeline. Mainly, it:
+
+- Uses more icons.
+- Displays a minimal amount of information while still keeping
+  important information such as:
+  - Syntax errors
+  - Version control information
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'doom-themes)
+  (doom-modeline-mode t)
+#+END_SRC
+
+* Editor Completions
+
+Editor completions refers to auto complete done within the editor context, as
+opposed to code. Editor completion is used to complete prompts for things such
+as selecting a file, buffer, or command.
+
+** Ivy
+
+Editor completions are displayed using the [[https://github.com/abo-abo/swiper?tab=readme-ov-file#ivy][Ivy]] package. This provides a huge
+improvement over the default built-in Emacs completion.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'ivy)
+  (ivy-mode t)
+#+END_SRC
+
+** Counsel
+
+[[https://github.com/abo-abo/swiper?tab=readme-ov-file#counsel][Counsel]] provides functions that wrap ivy completion with some extra
+features. For example, ~counsel-M-x~ is an ~M-x~ replacement that also displays
+a keybinding if there is an active keybinding for the particular function.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'counsel)
+  (counsel-mode t)
+#+END_SRC
+
+Enabling ~counsel-mode~ makes the ~counsel-mode-map~ keymap active. This keymap
+defines several rebinds.
+
+#+BEGIN_SRC emacs-lisp :exports both
+  counsel-mode-map
+#+END_SRC
+
+#+RESULTS:
+| keymap | (remap keymap (bookmark-jump . counsel-bookmark) (geiser-doc-look-up-manual . counsel-geiser-doc-look-up-manual) (pop-to-mark-command . counsel-mark-ring) (info-lookup-symbol . counsel-info-lookup-symbol) (yank-pop . counsel-yank-pop) (load-theme . counsel-load-theme) (load-library . counsel-load-library) (imenu . counsel-imenu) (find-library . counsel-find-library) (find-file . counsel-find-file) (list-faces-display . counsel-faces) (describe-face . counsel-describe-face) (apropos-command . counsel-apropos) (describe-symbol . counsel-describe-symbol) (describe-variable . counsel-describe-variable) (describe-function . counsel-describe-function) (describe-bindings . counsel-descbinds) (execute-extended-command . counsel-M-x)) |
+
+However, it does not provide a rebind for ~counsel-switch-buffer~. We make this
+our default (interactive) switch buffer command as it allows previewing the
+contents of a buffer before switching.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
+#+END_SRC
+
+* Formatting
+
+** Tabs
+
+Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
+neither the spaces crowd, nor the tabs crowd. Tabs are disabled to prevent the
+mixed use, though opinionated languages will still find a way to use their
+correct default. For example, Go will still use tabs when indenting.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default indent-tabs-mode nil)
+#+END_SRC
+
+Use a default tab width of 4 spaces.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default tab-width 4)
+#+END_SRC
+
+** Line Width
+
+Set a target line width of 80. Contents of a "paragraph" may be made to follow
+the target line width through ~M-x fill-paragraph~ or a highlighted region with
+~M-x fill-region~.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default fill-column 80)
+#+END_SRC
+
+Some languages have a different target line length.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (defun fill-column-100 ()
+    (setq-local fill-column 100))
+
+  (add-hook 'rust-mode-hook #'fill-column-100)
+#+END_SRC
+
+* Languages
+
+** Rust
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'rust-mode)
+#+END_SRC
+
+** Org Mode
+
+Enable syntax highlighting for exported material.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'htmlize)
+#+END_SRC
+
+Enable previews while editing org document. Previews can be enabled with ~M-x
+org-preview-html-mode~. Behind the scenes, this exports to HTML on save on
+displays the generated HTML in an ~*eww*~ buffer.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'org-preview-html)
+#+END_SRC
