@@ -16,11 +16,14 @@ Counting the default package archives, the following package archives are
 available.
 
 #+BEGIN_SRC emacs-lisp :exports both
-  package-archives
+  (cl-loop for package-archive in package-archives
+           collect (list (car package-archive) (cdr package-archive)))
 #+END_SRC
 
 #+RESULTS:
-: ((gnu . https://elpa.gnu.org/packages/) (nongnu . https://elpa.nongnu.org/nongnu/) (melpa . https://melpa.org/packages/))
+| gnu    | https://elpa.gnu.org/packages/  |
+| nongnu | https://elpa.nongnu.org/nongnu/ |
+| melpa  | https://melpa.org/packages/     |
 
 Package archives must be manually refreshed or fetched with ~M-x
 package-refresh-contents~. All packages added to the ~package-selected-packages~
@@ -179,9 +182,9 @@ contents of a buffer before switching.
 ** Tabs
 
 Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
-neither the spaces crowd, nor the tabs crowd. Tabs are disabled to prevent the
-mixed use, though opinionated languages will still find a way to use their
-correct default. For example, Go will still use tabs when indenting.
+neither the spaces nor tabs crowds. Tabs are disabled to prevent the mixed use,
+though opinionated languages will still find a way to use their correct
+default. For example, Go will still use tabs when indenting.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (setq-default indent-tabs-mode nil)
@@ -196,8 +199,8 @@ Use a default tab width of 4 spaces.
 ** Line Width
 
 Set a target line width of 80. Contents of a "paragraph" may be made to follow
-the target line width through ~M-x fill-paragraph~ or a highlighted region with
-~M-x fill-region~.
+the target line width through ~M-x fill-paragraph~ (default keybind ~M-q~) or a
+highlighted region with ~M-x fill-region~.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (setq-default fill-column 80)

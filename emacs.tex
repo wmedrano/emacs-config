@@ -1,4 +1,4 @@
-% Created 2025-05-26 Mon 18:20
+% Created 2025-05-26 Mon 18:38
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -28,10 +28,10 @@
 \tableofcontents
 
 \section{Packages}
-\label{sec:org9bf85c0}
+\label{sec:orgc3eda18}
 
 \subsection{Melpa}
-\label{sec:org7915c61}
+\label{sec:org916edb6}
 
 Add Melpa to the package manager. \href{https://melpa.org}{Melpa} contains many popular Emacs packages.
 
@@ -44,15 +44,19 @@ Counting the default package archives, the following package archives are
 available.
 
 \begin{verbatim}
-package-archives
+(cl-loop for package-archive in package-archives
+         collect (list (car package-archive) (cdr package-archive)))
 \end{verbatim}
 
-\phantomsection
-\label{orgf010245}
-\begin{verbatim}
-((gnu . https://elpa.gnu.org/packages/) (nongnu . https://elpa.nongnu.org/nongnu/) (melpa . https://melpa.org/packages/))
-\end{verbatim}
-
+\begin{table}[htbp]
+\label{tab:orgc2b7430}
+\centering
+\begin{tabular}{ll}
+gnu & \url{https://elpa.gnu.org/packages/}\\
+nongnu & \url{https://elpa.nongnu.org/nongnu/}\\
+melpa & \url{https://melpa.org/packages/}\\
+\end{tabular}
+\end{table}
 
 Package archives must be manually refreshed or fetched with \texttt{M-x
 package-refresh-contents}. All packages added to the \texttt{package-selected-packages}
@@ -66,7 +70,7 @@ the package. The package definitions can be updated by running \texttt{M-x
 package-refresh-contents}. Packages may also be upgraded all at once with \texttt{M-x
 package-upgrade-all}.
 \subsection{Initialize}
-\label{sec:org7bc0fbc}
+\label{sec:org935957a}
 
 Initialize the package archive. This makes all previously installed packages available.
 
@@ -74,7 +78,7 @@ Initialize the package archive. This makes all previously installed packages ava
 (package-initialize)
 \end{verbatim}
 \section{Startup}
-\label{sec:orgd737570}
+\label{sec:orga71e986}
 
 Disable the default Emacs startup screen. Instead, this displays just the opened
 file or the \texttt{*Scratch*} buffer if no file has been opened.
@@ -83,7 +87,7 @@ file or the \texttt{*Scratch*} buffer if no file has been opened.
 (setq-default inhibit-startup-screen t)
 \end{verbatim}
 \section{Backups \& Autosaves}
-\label{sec:org64d7226}
+\label{sec:orgd048df1}
 
 Backup and autosaves may litter the filesystem so we disable
 them. This is ok as my disk is reliable, I save often, and use version
@@ -95,10 +99,10 @@ control.
               make-backup-files  nil)
 \end{verbatim}
 \section{Appearance \& Feel}
-\label{sec:org2a5bb84}
+\label{sec:orgce748b4}
 
 \subsection{Remove Clutter}
-\label{sec:orge83e8ce}
+\label{sec:org5785da4}
 
 Remove the menu bar and tool bar.
 
@@ -114,7 +118,7 @@ the theming.
 (scroll-bar-mode -1)
 \end{verbatim}
 \subsection{Lines}
-\label{sec:orgb0e77f2}
+\label{sec:org5c95215}
 
 Scroll conservatively values above 100 cause Emacs to scroll the
 minimum number of lines required to get the cursor in position. The
@@ -138,7 +142,7 @@ buffer with \texttt{M-x hl-line-mode}.
 (global-hl-line-mode t)
 \end{verbatim}
 \subsection{Color Scheme}
-\label{sec:org27b1498}
+\label{sec:orgd1b90c4}
 
 Use the \texttt{doom-dracula} theme from the \href{https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941}{Doom Themes} package.
 
@@ -147,7 +151,7 @@ Use the \texttt{doom-dracula} theme from the \href{https://github.com/doomemacs/
 (load-theme 'doom-dracula t)
 \end{verbatim}
 \subsection{Modeline}
-\label{sec:orgea572eb}
+\label{sec:org522bfc8}
 
 Use \href{https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f}{Doom Modeline} to display a nicer modeline. Mainly, it:
 
@@ -166,13 +170,13 @@ important information such as:
 (doom-modeline-mode t)
 \end{verbatim}
 \section{Editor Completions}
-\label{sec:org7a05584}
+\label{sec:org7b2e0f0}
 
 Editor completions refers to auto complete done within the editor context, as
 opposed to code. Editor completion is used to complete prompts for things such
 as selecting a file, buffer, or command.
 \subsection{Ivy}
-\label{sec:org4b59c39}
+\label{sec:org0dc8d65}
 
 Editor completions are displayed using the \href{https://github.com/abo-abo/swiper?tab=readme-ov-file\#ivy}{Ivy} package. This provides a huge
 improvement over the default built-in Emacs completion.
@@ -182,7 +186,7 @@ improvement over the default built-in Emacs completion.
 (ivy-mode t)
 \end{verbatim}
 \subsection{Counsel}
-\label{sec:org8decf39}
+\label{sec:org4085ed6}
 
 \href{https://github.com/abo-abo/swiper?tab=readme-ov-file\#counsel}{Counsel} provides functions that wrap ivy completion with some extra
 features. For example, \texttt{counsel-M-x} is an \texttt{M-x} replacement that also displays
@@ -201,7 +205,7 @@ counsel-mode-map
 \end{verbatim}
 
 \begin{table}[htbp]
-\label{tab:orge042f57}
+\label{tab:orgb51afc9}
 \centering
 \begin{tabular}{lll}
 keymap & (24 keymap (98 . counsel-switch-buffer)) & (remap keymap (bookmark-jump . counsel-bookmark) (geiser-doc-look-up-manual . counsel-geiser-doc-look-up-manual) (pop-to-mark-command . counsel-mark-ring) (info-lookup-symbol . counsel-info-lookup-symbol) (yank-pop . counsel-yank-pop) (load-theme . counsel-load-theme) (load-library . counsel-load-library) (imenu . counsel-imenu) (find-library . counsel-find-library) (find-file . counsel-find-file) (list-faces-display . counsel-faces) (describe-face . counsel-describe-face) (apropos-command . counsel-apropos) (describe-symbol . counsel-describe-symbol) (describe-variable . counsel-describe-variable) (describe-function . counsel-describe-function) (describe-bindings . counsel-descbinds) (execute-extended-command . counsel-M-x))\\
@@ -216,15 +220,15 @@ contents of a buffer before switching.
 (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
 \end{verbatim}
 \section{Formatting}
-\label{sec:orgfaa509f}
+\label{sec:orgde0b80c}
 
 \subsection{Tabs}
-\label{sec:org7d0b79b}
+\label{sec:org5c55f4f}
 
 Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
-neither the spaces crowd, nor the tabs crowd. Tabs are disabled to prevent the
-mixed use, though opinionated languages will still find a way to use their
-correct default. For example, Go will still use tabs when indenting.
+neither the spaces nor tabs crowds. Tabs are disabled to prevent the mixed use,
+though opinionated languages will still find a way to use their correct
+default. For example, Go will still use tabs when indenting.
 
 \begin{verbatim}
 (setq-default indent-tabs-mode nil)
@@ -236,11 +240,11 @@ Use a default tab width of 4 spaces.
 (setq-default tab-width 4)
 \end{verbatim}
 \subsection{Line Width}
-\label{sec:org4e8035d}
+\label{sec:orgb96bf2f}
 
 Set a target line width of 80. Contents of a "paragraph" may be made to follow
-the target line width through \texttt{M-x fill-paragraph} or a highlighted region with
-\texttt{M-x fill-region}.
+the target line width through \texttt{M-x fill-paragraph} (default keybind \texttt{M-q}) or a
+highlighted region with \texttt{M-x fill-region}.
 
 \begin{verbatim}
 (setq-default fill-column 80)
@@ -255,16 +259,16 @@ Some languages have a different target line length.
 (add-hook 'rust-mode-hook #'fill-column-100)
 \end{verbatim}
 \section{Languages}
-\label{sec:org5a8c681}
+\label{sec:orgd178f44}
 
 \subsection{Rust}
-\label{sec:org16dbc73}
+\label{sec:org36da65a}
 
 \begin{verbatim}
 (add-to-list 'package-selected-packages 'rust-mode)
 \end{verbatim}
 \subsection{Org Mode}
-\label{sec:org50c7c89}
+\label{sec:orgcb82ac1}
 
 Enable syntax highlighting for exported material.
 

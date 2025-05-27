@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-05-26 Mon 17:48 -->
+<!-- 2025-05-26 Mon 18:38 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Emacs Config</title>
@@ -201,49 +201,49 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org405064e">1. Packages</a>
+<li><a href="#org39d0ec8">1. Packages</a>
 <ul>
-<li><a href="#orgf6ed125">1.1. Melpa</a></li>
-<li><a href="#org82712be">1.2. Initialize</a></li>
+<li><a href="#org7480571">1.1. Melpa</a></li>
+<li><a href="#org23f966b">1.2. Initialize</a></li>
 </ul>
 </li>
-<li><a href="#org558ad83">2. Startup</a></li>
-<li><a href="#orgfe5ed66">3. Backups &amp; Autosaves</a></li>
-<li><a href="#org55d31ba">4. Appearance &amp; Feel</a>
+<li><a href="#org23460c7">2. Startup</a></li>
+<li><a href="#org5c8ea98">3. Backups &amp; Autosaves</a></li>
+<li><a href="#orgad40067">4. Appearance &amp; Feel</a>
 <ul>
-<li><a href="#org9033f2b">4.1. Remove Clutter</a></li>
-<li><a href="#org847b0b5">4.2. Lines</a></li>
-<li><a href="#org9179649">4.3. Color Scheme</a></li>
-<li><a href="#orgc4a26b2">4.4. Modeline</a></li>
+<li><a href="#org093d5b3">4.1. Remove Clutter</a></li>
+<li><a href="#orgd42ebab">4.2. Lines</a></li>
+<li><a href="#orga4baa97">4.3. Color Scheme</a></li>
+<li><a href="#org2bce71a">4.4. Modeline</a></li>
 </ul>
 </li>
-<li><a href="#org0a79ad6">5. Editor Completions</a>
+<li><a href="#orga674b92">5. Editor Completions</a>
 <ul>
-<li><a href="#orgc969027">5.1. Ivy</a></li>
-<li><a href="#org5f61a13">5.2. Counsel</a></li>
+<li><a href="#org720897b">5.1. Ivy</a></li>
+<li><a href="#orga4d560c">5.2. Counsel</a></li>
 </ul>
 </li>
-<li><a href="#orgb6e0615">6. Formatting</a>
+<li><a href="#orgb5a3ac4">6. Formatting</a>
 <ul>
-<li><a href="#org6b8a44f">6.1. Tabs</a></li>
-<li><a href="#orgf920257">6.2. Line Width</a></li>
+<li><a href="#org22f56b5">6.1. Tabs</a></li>
+<li><a href="#org9526646">6.2. Line Width</a></li>
 </ul>
 </li>
-<li><a href="#org15c6255">7. Languages</a>
+<li><a href="#orga727e85">7. Languages</a>
 <ul>
-<li><a href="#org1783b8d">7.1. Rust</a></li>
-<li><a href="#org3402f59">7.2. Org Mode</a></li>
+<li><a href="#org444d450">7.1. Rust</a></li>
+<li><a href="#orgb44a1d3">7.2. Org Mode</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org405064e" class="outline-2">
-<h2 id="org405064e"><span class="section-number-2">1.</span> Packages</h2>
+<div id="outline-container-org39d0ec8" class="outline-2">
+<h2 id="org39d0ec8"><span class="section-number-2">1.</span> Packages</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-orgf6ed125" class="outline-3">
-<h3 id="orgf6ed125"><span class="section-number-3">1.1.</span> Melpa</h3>
+<div id="outline-container-org7480571" class="outline-3">
+<h3 id="org7480571"><span class="section-number-3">1.1.</span> Melpa</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 Add Melpa to the package manager. <a href="https://melpa.org">Melpa</a> contains many popular Emacs packages.
@@ -261,14 +261,36 @@ available.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">package-archives
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">cl-loop</span> for package-archive in package-archives
+         collect (list (car package-archive) (cdr package-archive)))
 </pre>
 </div>
 
-<pre class="example">
-((gnu . https://elpa.gnu.org/packages/) (nongnu . https://elpa.nongnu.org/nongnu/) (melpa . https://melpa.org/packages/))
-</pre>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">gnu</td>
+<td class="org-left"><a href="https://elpa.gnu.org/packages/">https://elpa.gnu.org/packages/</a></td>
+</tr>
+
+<tr>
+<td class="org-left">nongnu</td>
+<td class="org-left"><a href="https://elpa.nongnu.org/nongnu/">https://elpa.nongnu.org/nongnu/</a></td>
+</tr>
+
+<tr>
+<td class="org-left">melpa</td>
+<td class="org-left"><a href="https://melpa.org/packages/">https://melpa.org/packages/</a></td>
+</tr>
+</tbody>
+</table>
 
 <p>
 Package archives must be manually refreshed or fetched with <code>M-x
@@ -287,8 +309,8 @@ package-upgrade-all</code>.
 </p>
 </div>
 </div>
-<div id="outline-container-org82712be" class="outline-3">
-<h3 id="org82712be"><span class="section-number-3">1.2.</span> Initialize</h3>
+<div id="outline-container-org23f966b" class="outline-3">
+<h3 id="org23f966b"><span class="section-number-3">1.2.</span> Initialize</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
 Initialize the package archive. This makes all previously installed packages available.
@@ -301,8 +323,8 @@ Initialize the package archive. This makes all previously installed packages ava
 </div>
 </div>
 </div>
-<div id="outline-container-org558ad83" class="outline-2">
-<h2 id="org558ad83"><span class="section-number-2">2.</span> Startup</h2>
+<div id="outline-container-org23460c7" class="outline-2">
+<h2 id="org23460c7"><span class="section-number-2">2.</span> Startup</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Disable the default Emacs startup screen. Instead, this displays just the opened
@@ -315,8 +337,8 @@ file or the <code>*Scratch*</code> buffer if no file has been opened.
 </div>
 </div>
 </div>
-<div id="outline-container-orgfe5ed66" class="outline-2">
-<h2 id="orgfe5ed66"><span class="section-number-2">3.</span> Backups &amp; Autosaves</h2>
+<div id="outline-container-org5c8ea98" class="outline-2">
+<h2 id="org5c8ea98"><span class="section-number-2">3.</span> Backups &amp; Autosaves</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Backup and autosaves may litter the filesystem so we disable
@@ -332,12 +354,12 @@ control.
 </div>
 </div>
 </div>
-<div id="outline-container-org55d31ba" class="outline-2">
-<h2 id="org55d31ba"><span class="section-number-2">4.</span> Appearance &amp; Feel</h2>
+<div id="outline-container-orgad40067" class="outline-2">
+<h2 id="orgad40067"><span class="section-number-2">4.</span> Appearance &amp; Feel</h2>
 <div class="outline-text-2" id="text-4">
 </div>
-<div id="outline-container-org9033f2b" class="outline-3">
-<h3 id="org9033f2b"><span class="section-number-3">4.1.</span> Remove Clutter</h3>
+<div id="outline-container-org093d5b3" class="outline-3">
+<h3 id="org093d5b3"><span class="section-number-3">4.1.</span> Remove Clutter</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 Remove the menu bar and tool bar.
@@ -360,8 +382,8 @@ the theming.
 </div>
 </div>
 </div>
-<div id="outline-container-org847b0b5" class="outline-3">
-<h3 id="org847b0b5"><span class="section-number-3">4.2.</span> Lines</h3>
+<div id="outline-container-orgd42ebab" class="outline-3">
+<h3 id="orgd42ebab"><span class="section-number-3">4.2.</span> Lines</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 Scroll conservatively values above 100 cause Emacs to scroll the
@@ -395,8 +417,8 @@ buffer with <code>M-x hl-line-mode</code>.
 </div>
 </div>
 </div>
-<div id="outline-container-org9179649" class="outline-3">
-<h3 id="org9179649"><span class="section-number-3">4.3.</span> Color Scheme</h3>
+<div id="outline-container-orga4baa97" class="outline-3">
+<h3 id="orga4baa97"><span class="section-number-3">4.3.</span> Color Scheme</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
 Use the <code>doom-dracula</code> theme from the <a href="https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941">Doom Themes</a> package.
@@ -409,8 +431,8 @@ Use the <code>doom-dracula</code> theme from the <a href="https://github.com/doo
 </div>
 </div>
 </div>
-<div id="outline-container-orgc4a26b2" class="outline-3">
-<h3 id="orgc4a26b2"><span class="section-number-3">4.4.</span> Modeline</h3>
+<div id="outline-container-org2bce71a" class="outline-3">
+<h3 id="org2bce71a"><span class="section-number-3">4.4.</span> Modeline</h3>
 <div class="outline-text-3" id="text-4-4">
 <p>
 Use <a href="https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f">Doom Modeline</a> to display a nicer modeline. Mainly, it:
@@ -434,8 +456,8 @@ important information such as:
 </div>
 </div>
 </div>
-<div id="outline-container-org0a79ad6" class="outline-2">
-<h2 id="org0a79ad6"><span class="section-number-2">5.</span> Editor Completions</h2>
+<div id="outline-container-orga674b92" class="outline-2">
+<h2 id="orga674b92"><span class="section-number-2">5.</span> Editor Completions</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 Editor completions refers to auto complete done within the editor context, as
@@ -443,8 +465,8 @@ opposed to code. Editor completion is used to complete prompts for things such
 as selecting a file, buffer, or command.
 </p>
 </div>
-<div id="outline-container-orgc969027" class="outline-3">
-<h3 id="orgc969027"><span class="section-number-3">5.1.</span> Ivy</h3>
+<div id="outline-container-org720897b" class="outline-3">
+<h3 id="org720897b"><span class="section-number-3">5.1.</span> Ivy</h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 Editor completions are displayed using the <a href="https://github.com/abo-abo/swiper?tab=readme-ov-file#ivy">Ivy</a> package. This provides a huge
@@ -458,8 +480,8 @@ improvement over the default built-in Emacs completion.
 </div>
 </div>
 </div>
-<div id="outline-container-org5f61a13" class="outline-3">
-<h3 id="org5f61a13"><span class="section-number-3">5.2.</span> Counsel</h3>
+<div id="outline-container-orga4d560c" class="outline-3">
+<h3 id="orga4d560c"><span class="section-number-3">5.2.</span> Counsel</h3>
 <div class="outline-text-3" id="text-5-2">
 <p>
 <a href="https://github.com/abo-abo/swiper?tab=readme-ov-file#counsel">Counsel</a> provides functions that wrap ivy completion with some extra
@@ -515,18 +537,18 @@ contents of a buffer before switching.
 </div>
 </div>
 </div>
-<div id="outline-container-orgb6e0615" class="outline-2">
-<h2 id="orgb6e0615"><span class="section-number-2">6.</span> Formatting</h2>
+<div id="outline-container-orgb5a3ac4" class="outline-2">
+<h2 id="orgb5a3ac4"><span class="section-number-2">6.</span> Formatting</h2>
 <div class="outline-text-2" id="text-6">
 </div>
-<div id="outline-container-org6b8a44f" class="outline-3">
-<h3 id="org6b8a44f"><span class="section-number-3">6.1.</span> Tabs</h3>
+<div id="outline-container-org22f56b5" class="outline-3">
+<h3 id="org22f56b5"><span class="section-number-3">6.1.</span> Tabs</h3>
 <div class="outline-text-3" id="text-6-1">
 <p>
 Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
-neither the spaces crowd, nor the tabs crowd. Tabs are disabled to prevent the
-mixed use, though opinionated languages will still find a way to use their
-correct default. For example, Go will still use tabs when indenting.
+neither the spaces nor tabs crowds. Tabs are disabled to prevent the mixed use,
+though opinionated languages will still find a way to use their correct
+default. For example, Go will still use tabs when indenting.
 </p>
 
 <div class="org-src-container">
@@ -544,13 +566,13 @@ Use a default tab width of 4 spaces.
 </div>
 </div>
 </div>
-<div id="outline-container-orgf920257" class="outline-3">
-<h3 id="orgf920257"><span class="section-number-3">6.2.</span> Line Width</h3>
+<div id="outline-container-org9526646" class="outline-3">
+<h3 id="org9526646"><span class="section-number-3">6.2.</span> Line Width</h3>
 <div class="outline-text-3" id="text-6-2">
 <p>
 Set a target line width of 80. Contents of a "paragraph" may be made to follow
-the target line width through <code>M-x fill-paragraph</code> or a highlighted region with
-<code>M-x fill-region</code>.
+the target line width through <code>M-x fill-paragraph</code> (default keybind <code>M-q</code>) or a
+highlighted region with <code>M-x fill-region</code>.
 </p>
 
 <div class="org-src-container">
@@ -572,12 +594,12 @@ Some languages have a different target line length.
 </div>
 </div>
 </div>
-<div id="outline-container-org15c6255" class="outline-2">
-<h2 id="org15c6255"><span class="section-number-2">7.</span> Languages</h2>
+<div id="outline-container-orga727e85" class="outline-2">
+<h2 id="orga727e85"><span class="section-number-2">7.</span> Languages</h2>
 <div class="outline-text-2" id="text-7">
 </div>
-<div id="outline-container-org1783b8d" class="outline-3">
-<h3 id="org1783b8d"><span class="section-number-3">7.1.</span> Rust</h3>
+<div id="outline-container-org444d450" class="outline-3">
+<h3 id="org444d450"><span class="section-number-3">7.1.</span> Rust</h3>
 <div class="outline-text-3" id="text-7-1">
 <div class="org-src-container">
 <pre class="src src-emacs-lisp">(add-to-list 'package-selected-packages 'rust-mode)
@@ -585,8 +607,8 @@ Some languages have a different target line length.
 </div>
 </div>
 </div>
-<div id="outline-container-org3402f59" class="outline-3">
-<h3 id="org3402f59"><span class="section-number-3">7.2.</span> Org Mode</h3>
+<div id="outline-container-orgb44a1d3" class="outline-3">
+<h3 id="orgb44a1d3"><span class="section-number-3">7.2.</span> Org Mode</h3>
 <div class="outline-text-3" id="text-7-2">
 <p>
 Enable syntax highlighting for exported material.
@@ -613,7 +635,7 @@ displays the generated HTML in an <code>*eww*</code> buffer.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: will@wmedrano.dev</p>
-<p class="date">Created: 2025-05-26 Mon 17:48</p>
+<p class="date">Created: 2025-05-26 Mon 18:38</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
