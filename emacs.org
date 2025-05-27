@@ -54,7 +54,18 @@ file or the ~*Scratch*~ buffer if no file has been opened.
   (setq-default inhibit-startup-screen t)
 #+END_SRC
 
-* Backups & Autosaves
+* File System
+
+** Auto-Revert
+
+Auto revert mode automatically reloads file-based buffer's when their files have
+been updated.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (global-auto-revert-mode t)
+#+END_SRC
+
+** Backups & Autosaves
 
 Backup and autosaves may litter the filesystem so we disable
 them. This is ok as my disk is reliable, I save often, and use version
@@ -64,6 +75,25 @@ control.
   (setq-default auto-save-interval 0
                 create-lockfiles   nil
                 make-backup-files  nil)
+#+END_SRC
+
+* Performance
+
+Increase the amount of memory allowed before garbage collection kicks in. Emacs
+runs garbage collection when it is over the limit. The limit is equal to the
+amount of memory that is ~actively-used~ plus ~used-memory *
+gc-cons-percentage~. Once the limit is reached, Emacs runs garbage collection
+and recomputes the amount of memory that is ~actively-used~.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (setq-default gc-cons-percentage 1.0)
+#+END_SRC
+
+Run the garbage collector on idle, every 3 seconds. This reduces the chances of
+a GC run when interacting with Emacs.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (run-with-idle-timer 3 t #'garbage-collect)
 #+END_SRC
 
 * Appearance & Feel
@@ -162,12 +192,6 @@ a keybinding if there is an active keybinding for the particular function.
 Enabling ~counsel-mode~ makes the ~counsel-mode-map~ keymap active. This keymap
 defines several rebinds.
 
-#+BEGIN_SRC emacs-lisp :exports both
-  counsel-mode-map
-#+END_SRC
-
-#+RESULTS:
-| keymap | (remap keymap (bookmark-jump . counsel-bookmark) (geiser-doc-look-up-manual . counsel-geiser-doc-look-up-manual) (pop-to-mark-command . counsel-mark-ring) (info-lookup-symbol . counsel-info-lookup-symbol) (yank-pop . counsel-yank-pop) (load-theme . counsel-load-theme) (load-library . counsel-load-library) (imenu . counsel-imenu) (find-library . counsel-find-library) (find-file . counsel-find-file) (list-faces-display . counsel-faces) (describe-face . counsel-describe-face) (apropos-command . counsel-apropos) (describe-symbol . counsel-describe-symbol) (describe-variable . counsel-describe-variable) (describe-function . counsel-describe-function) (describe-bindings . counsel-descbinds) (execute-extended-command . counsel-M-x)) |
 
 However, it does not provide a rebind for ~counsel-switch-buffer~. We make this
 our default (interactive) switch buffer command as it allows previewing the
@@ -225,16 +249,9 @@ Some languages have a different target line length.
 
 ** Org Mode
 
-Enable syntax highlighting for exported material.
+Enable syntax highlighting for exported material html. Note that this will use
+the currently active theme.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (add-to-list 'package-selected-packages 'htmlize)
-#+END_SRC
-
-Enable previews while editing org document. Previews can be enabled with ~M-x
-org-preview-html-mode~. Behind the scenes, this exports to HTML on save on
-displays the generated HTML in an ~*eww*~ buffer.
-
-#+BEGIN_SRC emacs-lisp :tangle init.el
-  (add-to-list 'package-selected-packages 'org-preview-html)
 #+END_SRC

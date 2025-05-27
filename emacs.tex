@@ -1,4 +1,4 @@
-% Created 2025-05-26 Mon 18:38
+% Created 2025-05-26 Mon 22:13
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -28,10 +28,10 @@
 \tableofcontents
 
 \section{Packages}
-\label{sec:orgc3eda18}
+\label{sec:orgf41818d}
 
 \subsection{Melpa}
-\label{sec:org916edb6}
+\label{sec:org1ce1463}
 
 Add Melpa to the package manager. \href{https://melpa.org}{Melpa} contains many popular Emacs packages.
 
@@ -49,7 +49,7 @@ available.
 \end{verbatim}
 
 \begin{table}[htbp]
-\label{tab:orgc2b7430}
+\label{tab:org09f32cc}
 \centering
 \begin{tabular}{ll}
 gnu & \url{https://elpa.gnu.org/packages/}\\
@@ -70,7 +70,7 @@ the package. The package definitions can be updated by running \texttt{M-x
 package-refresh-contents}. Packages may also be upgraded all at once with \texttt{M-x
 package-upgrade-all}.
 \subsection{Initialize}
-\label{sec:org935957a}
+\label{sec:org2165807}
 
 Initialize the package archive. This makes all previously installed packages available.
 
@@ -78,7 +78,7 @@ Initialize the package archive. This makes all previously installed packages ava
 (package-initialize)
 \end{verbatim}
 \section{Startup}
-\label{sec:orga71e986}
+\label{sec:orgf92848c}
 
 Disable the default Emacs startup screen. Instead, this displays just the opened
 file or the \texttt{*Scratch*} buffer if no file has been opened.
@@ -86,8 +86,20 @@ file or the \texttt{*Scratch*} buffer if no file has been opened.
 \begin{verbatim}
 (setq-default inhibit-startup-screen t)
 \end{verbatim}
-\section{Backups \& Autosaves}
-\label{sec:orgd048df1}
+\section{File System}
+\label{sec:orgadf2d71}
+
+\subsection{Auto-Revert}
+\label{sec:org607b3ad}
+
+Auto revert mode automatically reloads file-based buffer's when their files have
+been updated.
+
+\begin{verbatim}
+(global-auto-revert-mode t)
+\end{verbatim}
+\subsection{Backups \& Autosaves}
+\label{sec:orgaab9483}
 
 Backup and autosaves may litter the filesystem so we disable
 them. This is ok as my disk is reliable, I save often, and use version
@@ -98,11 +110,30 @@ control.
               create-lockfiles   nil
               make-backup-files  nil)
 \end{verbatim}
+\section{Performance}
+\label{sec:orgea78980}
+
+Increase the amount of memory allowed before garbage collection kicks in. Emacs
+runs garbage collection when it is over the limit. The limit is equal to the
+amount of memory that is \texttt{actively-used} plus \texttt{used-memory *
+gc-cons-percentage}. Once the limit is reached, Emacs runs garbage collection
+and recomputes the amount of memory that is \texttt{actively-used}.
+
+\begin{verbatim}
+(setq-default gc-cons-percentage 1.0)
+\end{verbatim}
+
+Run the garbage collector on idle, every 3 seconds. This reduces the chances of
+a GC run when interacting with Emacs.
+
+\begin{verbatim}
+(run-with-idle-timer 3 t #'garbage-collect)
+\end{verbatim}
 \section{Appearance \& Feel}
-\label{sec:orgce748b4}
+\label{sec:org2e01e3f}
 
 \subsection{Remove Clutter}
-\label{sec:org5785da4}
+\label{sec:orgd7be8ef}
 
 Remove the menu bar and tool bar.
 
@@ -118,7 +149,7 @@ the theming.
 (scroll-bar-mode -1)
 \end{verbatim}
 \subsection{Lines}
-\label{sec:org5c95215}
+\label{sec:orgec02fd1}
 
 Scroll conservatively values above 100 cause Emacs to scroll the
 minimum number of lines required to get the cursor in position. The
@@ -142,7 +173,7 @@ buffer with \texttt{M-x hl-line-mode}.
 (global-hl-line-mode t)
 \end{verbatim}
 \subsection{Color Scheme}
-\label{sec:orgd1b90c4}
+\label{sec:org070a2a2}
 
 Use the \texttt{doom-dracula} theme from the \href{https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941}{Doom Themes} package.
 
@@ -151,7 +182,7 @@ Use the \texttt{doom-dracula} theme from the \href{https://github.com/doomemacs/
 (load-theme 'doom-dracula t)
 \end{verbatim}
 \subsection{Modeline}
-\label{sec:org522bfc8}
+\label{sec:org3ec4279}
 
 Use \href{https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f}{Doom Modeline} to display a nicer modeline. Mainly, it:
 
@@ -170,13 +201,13 @@ important information such as:
 (doom-modeline-mode t)
 \end{verbatim}
 \section{Editor Completions}
-\label{sec:org7b2e0f0}
+\label{sec:org49d8fe6}
 
 Editor completions refers to auto complete done within the editor context, as
 opposed to code. Editor completion is used to complete prompts for things such
 as selecting a file, buffer, or command.
 \subsection{Ivy}
-\label{sec:org0dc8d65}
+\label{sec:org538c76d}
 
 Editor completions are displayed using the \href{https://github.com/abo-abo/swiper?tab=readme-ov-file\#ivy}{Ivy} package. This provides a huge
 improvement over the default built-in Emacs completion.
@@ -186,7 +217,7 @@ improvement over the default built-in Emacs completion.
 (ivy-mode t)
 \end{verbatim}
 \subsection{Counsel}
-\label{sec:org4085ed6}
+\label{sec:orgb5e94f4}
 
 \href{https://github.com/abo-abo/swiper?tab=readme-ov-file\#counsel}{Counsel} provides functions that wrap ivy completion with some extra
 features. For example, \texttt{counsel-M-x} is an \texttt{M-x} replacement that also displays
@@ -200,17 +231,6 @@ a keybinding if there is an active keybinding for the particular function.
 Enabling \texttt{counsel-mode} makes the \texttt{counsel-mode-map} keymap active. This keymap
 defines several rebinds.
 
-\begin{verbatim}
-counsel-mode-map
-\end{verbatim}
-
-\begin{table}[htbp]
-\label{tab:orgb51afc9}
-\centering
-\begin{tabular}{lll}
-keymap & (24 keymap (98 . counsel-switch-buffer)) & (remap keymap (bookmark-jump . counsel-bookmark) (geiser-doc-look-up-manual . counsel-geiser-doc-look-up-manual) (pop-to-mark-command . counsel-mark-ring) (info-lookup-symbol . counsel-info-lookup-symbol) (yank-pop . counsel-yank-pop) (load-theme . counsel-load-theme) (load-library . counsel-load-library) (imenu . counsel-imenu) (find-library . counsel-find-library) (find-file . counsel-find-file) (list-faces-display . counsel-faces) (describe-face . counsel-describe-face) (apropos-command . counsel-apropos) (describe-symbol . counsel-describe-symbol) (describe-variable . counsel-describe-variable) (describe-function . counsel-describe-function) (describe-bindings . counsel-descbinds) (execute-extended-command . counsel-M-x))\\
-\end{tabular}
-\end{table}
 
 However, it does not provide a rebind for \texttt{counsel-switch-buffer}. We make this
 our default (interactive) switch buffer command as it allows previewing the
@@ -220,10 +240,10 @@ contents of a buffer before switching.
 (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
 \end{verbatim}
 \section{Formatting}
-\label{sec:orgde0b80c}
+\label{sec:org0b5f1bd}
 
 \subsection{Tabs}
-\label{sec:org5c55f4f}
+\label{sec:orgb1dcd13}
 
 Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
 neither the spaces nor tabs crowds. Tabs are disabled to prevent the mixed use,
@@ -240,7 +260,7 @@ Use a default tab width of 4 spaces.
 (setq-default tab-width 4)
 \end{verbatim}
 \subsection{Line Width}
-\label{sec:orgb96bf2f}
+\label{sec:org011b1db}
 
 Set a target line width of 80. Contents of a "paragraph" may be made to follow
 the target line width through \texttt{M-x fill-paragraph} (default keybind \texttt{M-q}) or a
@@ -259,28 +279,21 @@ Some languages have a different target line length.
 (add-hook 'rust-mode-hook #'fill-column-100)
 \end{verbatim}
 \section{Languages}
-\label{sec:orgd178f44}
+\label{sec:org3405c2b}
 
 \subsection{Rust}
-\label{sec:org36da65a}
+\label{sec:org5dbea34}
 
 \begin{verbatim}
 (add-to-list 'package-selected-packages 'rust-mode)
 \end{verbatim}
 \subsection{Org Mode}
-\label{sec:orgcb82ac1}
+\label{sec:org60fff5f}
 
-Enable syntax highlighting for exported material.
+Enable syntax highlighting for exported material html. Note that this will use
+the currently active theme.
 
 \begin{verbatim}
 (add-to-list 'package-selected-packages 'htmlize)
-\end{verbatim}
-
-Enable previews while editing org document. Previews can be enabled with \texttt{M-x
-org-preview-html-mode}. Behind the scenes, this exports to HTML on save on
-displays the generated HTML in an \texttt{*eww*} buffer.
-
-\begin{verbatim}
-(add-to-list 'package-selected-packages 'org-preview-html)
 \end{verbatim}
 \end{document}

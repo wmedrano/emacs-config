@@ -5,9 +5,15 @@
 
 (setq-default inhibit-startup-screen t)
 
+(global-auto-revert-mode t)
+
 (setq-default auto-save-interval 0
               create-lockfiles   nil
               make-backup-files  nil)
+
+(setq-default gc-cons-percentage 1.0)
+
+(run-with-idle-timer 3 t #'garbage-collect)
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -48,5 +54,3 @@
 (add-to-list 'package-selected-packages 'rust-mode)
 
 (add-to-list 'package-selected-packages 'htmlize)
-
-(add-to-list 'package-selected-packages 'org-preview-html)
