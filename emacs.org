@@ -201,6 +201,35 @@ contents of a buffer before switching.
   (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
 #+END_SRC
 
+* LSP
+
+** Background
+The LanguageServerProtocol defines a way for a language server to communicate
+programming language specific information for a project to an IDE(Emacs). The
+protocol defines things such as syntax checking, autocomplete, and code
+formatting.
+
+** Updating Eglot Package
+
+Eglot is included in Emacs. However, Eglot can be upgraded to the latest version
+with ~M-x eglot-upgrade-eglot~.
+
+** Obtaining Language Servers
+
+Eglot is configured to run the most popular language servers by
+default. However, they must still be installed on the system. Some popular
+language servers include ~rust-analyzer~ for Rust.
+
+** Enabling Eglot
+
+Eglot can be manually enabled on a buffer with ~M-x eglot~. To enable it
+automatically, you may call ~eglot-ensure~ on the buffer automatically through
+hooks.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-hook 'rust-mode-hook #'eglot-ensure)
+#+END_SRC
+
 * Formatting
 
 ** Tabs
@@ -239,13 +268,65 @@ Some languages have a different target line length.
   (add-hook 'rust-mode-hook #'fill-column-100)
 #+END_SRC
 
+** Delete Trailing Whitespace
+
+Trailing whitespace is usually unintended. These are whitespace characters
+hanging at the end of the sentence or newlines/whitespace at the end of the
+file. Trailing whitespace can be automatically deleted before save.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-hook 'before-save-hook #'delete-trailing-whitespace)
+#+END_SRC
+
+** Language Specific Autoformat
+
+Eglot provides 2 functions for formatting.
+
+- ~eglot-format~ - Formats the selected region.
+- ~eglot-format-buffer~ - Format the current buffer.
+
+However, running these functions interactively is not needed as we can
+automatically run ~eglot-format-buffer~ before save.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (defun eglot-maybe-format-buffer ()
+    (when (eglot-managed-p) (eglot-format-buffer)))
+
+  (add-hook 'before-save-hook #'eglot-maybe-format-buffer)
+#+END_SRC
+
+* Code Auto-Complete
+
+Code auto-complete is handled by the [[https://company-mode.github.io/][Company]] package. Company is an
+autocompletion frontend that comes with many backends. Company comes with a lot
+of built-in backends and usually selects the best choice among them for
+auto-complete suggestions. One of the more useful backends is the Eglot backend
+which is automatically used if the buffer has Eglot mode enabled.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (add-to-list 'package-selected-packages 'company)
+#+END_SRC
+
+Company mode is usually fine to enable globally. If the buffer doesn't have a
+suitable backend, then it does nothing.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (global-company-mode t)
+#+END_SRC
+
+
 * Languages
 
 ** Rust
 
+Rust is not built into Emacs so we install the [[https://github.com/rust-lang/rust-mode/tree/25d91cff281909e9b7cb84e31211c4e7b0480f94][Rust Mode]] package.
+
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (add-to-list 'package-selected-packages 'rust-mode)
 #+END_SRC
+
+Beyond that, there is not much to Rust as most of its functionality comes
+throught Eglot + the ~rust-analyzer~ LSP.
 
 ** Org Mode
 
@@ -255,3 +336,26 @@ the currently active theme.
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (add-to-list 'package-selected-packages 'htmlize)
 #+END_SRC
+
+* Elisp Concepts
+
+** Interactive Commands
+
+Interactive functions that can be run "interactively". Here, interactively maens
+that they can be run through ~M-x~. Interactive functions are defined by adding
+(interactive) in their function definition.
+
+#+BEGIN_SRC emacs-lisp
+  (defun my-function ()
+    "Do a thing."
+    (message "Hello World"))
+
+  (defun my-interactive-function ()
+    "Do a thing."
+    (interactive)
+    (message "Hello World"))
+#+END_SRC
+
+Interactive functions also have a sophisticated mechanism of querying the user
+for standard options and passing them as flags. See the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Using-Interactive.html][Emacs Documentation]] for
+"Using interactive" for more details.

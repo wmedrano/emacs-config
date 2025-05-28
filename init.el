@@ -40,6 +40,8 @@
 
 (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
 
+(add-hook 'rust-mode-hook #'eglot-ensure)
+
 (setq-default indent-tabs-mode nil)
 
 (setq-default tab-width 4)
@@ -50,6 +52,15 @@
   (setq-local fill-column 100))
 
 (add-hook 'rust-mode-hook #'fill-column-100)
+
+(defun eglot-maybe-format-buffer ()
+  (when (eglot-managed-p) (eglot-format-buffer)))
+
+(add-hook 'before-save-hook #'eglot-maybe-format-buffer)
+
+(add-to-list 'package-selected-packages 'company)
+
+(global-company-mode t)
 
 (add-to-list 'package-selected-packages 'rust-mode)
 
