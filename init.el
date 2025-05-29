@@ -1,6 +1,16 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
+(setq-default package-selected-packages
+              '(doom-themes
+                doom-modeline
+                ivy
+                counsel
+                company
+                rust-mode
+                htmlize
+                magit))
+
 (package-initialize)
 
 (setq-default inhibit-startup-screen t)
@@ -26,16 +36,12 @@
 
 (global-hl-line-mode t)
 
-(add-to-list 'package-selected-packages 'doom-themes)
 (load-theme 'doom-dracula t)
 
-(add-to-list 'package-selected-packages 'doom-themes)
 (doom-modeline-mode t)
 
-(add-to-list 'package-selected-packages 'ivy)
 (ivy-mode t)
 
-(add-to-list 'package-selected-packages 'counsel)
 (counsel-mode t)
 
 (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
@@ -60,10 +66,4 @@
 
 (add-hook 'before-save-hook #'eglot-maybe-format-buffer)
 
-(add-to-list 'package-selected-packages 'company)
-
 (global-company-mode t)
-
-(add-to-list 'package-selected-packages 'rust-mode)
-
-(add-to-list 'package-selected-packages 'htmlize)
