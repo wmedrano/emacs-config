@@ -53,6 +53,8 @@
 
 (add-hook 'rust-mode-hook #'fill-column-100)
 
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+
 (defun eglot-maybe-format-buffer ()
   (when (eglot-managed-p) (eglot-format-buffer)))
 

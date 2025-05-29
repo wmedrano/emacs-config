@@ -314,6 +314,34 @@ suitable backend, then it does nothing.
   (global-company-mode t)
 #+END_SRC
 
+* Syntax Checking
+
+** On The Fly Syntax Checking
+
+Syntax errors are surfaced by the built-in Flymake package. The Flymake package
+provides the frontend and several backends.
+
+The most common backend for Flymake is Eglot. Additionally, Eglot automatically
+enables Flymake on Eglot managed buffers so there is no setup on that front.
+
+** Custom Compile
+
+~M-x compile~ and ~M-x project-compile~ can be used to run a command. ~compile~
+runs in the current directory while ~project-compile~ runs the command in the
+projec's root directory, where a project is often defined as a version
+controlled (like Git) repo.
+
+The outputs of the command will be displayed in a buffer named
+"*compilation*". By default, pressing ~n~ and ~p~ can be used to go through all
+detected errors in the buffer. For other keybindings, run ~M-x describe-keymap~
+to check ~compilation-mode-map~.
+
+*** Error Detection
+
+~M-x compile~ has some built in mechanisms to detect errors. However, some
+packages, like ~rust-mode~, add new patterns. For these patterns to be added,
+the package has to be loaded. Packages are often lazily loaded or can be
+manually loaded with something like ~M-: (require 'rust-mode)~.
 
 * Languages
 
