@@ -196,6 +196,7 @@ a keybinding if there is an active keybinding for the particular function.
 Enabling ~counsel-mode~ makes the ~counsel-mode-map~ keymap active. This keymap
 defines several rebinds.
 
+** Buffer Switching
 
 However, it does not provide a rebind for ~counsel-switch-buffer~. We make this
 our default (interactive) switch buffer command as it allows previewing the
@@ -203,6 +204,14 @@ contents of a buffer before switching.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
+#+END_SRC
+
+For some cases, I like to see all the buffers on a buffer instead of the
+minibuffer. This can be done ~C-x C-b~ which runs ~list-buffers~, but ~ibuffer~
+looks a bit nicer.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (global-set-key (kbd "C-x C-b") #'ibuffer)
 #+END_SRC
 
 * Version Control
