@@ -28,9 +28,12 @@ For this Emacs setup, the following packages are required:
                   ivy
                   counsel
                   company
-                  rust-mode
                   htmlize
-                  magit))
+                  magit
+                  rust-mode
+                  yaml-mode
+                  markdown-mode
+                  ))
 #+END_SRC
 
 Package archives must be manually refreshed or fetched with ~M-x
