@@ -4,10 +4,11 @@
 (setq-default package-selected-packages
               '(doom-themes
                 doom-modeline
-                ivy
-                counsel
+                vertico
+                consult
                 company
                 htmlize
+                rg
                 magit
                 rust-mode
                 yaml-mode
@@ -43,11 +44,9 @@
 
 (doom-modeline-mode t)
 
-(ivy-mode t)
+(vertico-mode t)
 
-(counsel-mode t)
-
-(define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
+(global-set-key (kbd "C-x b") #'consult-buffer)
 
 (global-set-key (kbd "C-x C-b") #'ibuffer)
 

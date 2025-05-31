@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-05-29 Thu 07:16 -->
+<!-- 2025-05-31 Sat 09:37 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Emacs Config</title>
@@ -201,95 +201,100 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org409f0ce">1. Packages</a>
+<li><a href="#orgd86b55d">1. Packages</a>
 <ul>
-<li><a href="#org9e39a42">1.1. Melpa</a></li>
-<li><a href="#orgb71b8a7">1.2. Initialize</a></li>
+<li><a href="#org2cf9f74">1.1. Melpa</a></li>
+<li><a href="#org25bd070">1.2. Initialize</a></li>
 </ul>
 </li>
-<li><a href="#org3b80cec">2. Startup</a></li>
-<li><a href="#orgd6c5e31">3. File System</a>
+<li><a href="#org34248ab">2. Startup</a></li>
+<li><a href="#org051d77a">3. File System</a>
 <ul>
-<li><a href="#orgf303cef">3.1. Auto-Revert</a></li>
-<li><a href="#orgb679b0f">3.2. Backups &amp; Autosaves</a></li>
+<li><a href="#org98f7498">3.1. Auto-Revert</a></li>
+<li><a href="#org140e702">3.2. Backups &amp; Autosaves</a></li>
 </ul>
 </li>
-<li><a href="#orge5a8038">4. Performance</a></li>
-<li><a href="#org1cea94d">5. Appearance &amp; Feel</a>
+<li><a href="#org7de3268">4. Performance</a></li>
+<li><a href="#org9c06d21">5. Appearance &amp; Feel</a>
 <ul>
-<li><a href="#org494b700">5.1. Remove Clutter</a></li>
-<li><a href="#org36abb46">5.2. Lines</a></li>
-<li><a href="#org855a51c">5.3. Color Scheme</a></li>
-<li><a href="#org5379037">5.4. Modeline</a></li>
+<li><a href="#org308bbcb">5.1. Remove Clutter</a></li>
+<li><a href="#org2a8c7f6">5.2. Lines</a></li>
+<li><a href="#org885ec64">5.3. Color Scheme</a></li>
+<li><a href="#org932ddb3">5.4. Modeline</a></li>
 </ul>
 </li>
-<li><a href="#org445278a">6. Editor Completions</a>
+<li><a href="#org2d264dc">6. Editor Completions</a>
 <ul>
-<li><a href="#orgc4be61c">6.1. Ivy</a></li>
-<li><a href="#orgbf70ff0">6.2. Counsel</a></li>
-<li><a href="#org2068279">6.3. Buffer Switching</a></li>
+<li><a href="#org0b1be09">6.1. Vertico</a></li>
+<li><a href="#org8610e71">6.2. Consult</a></li>
+<li><a href="#orgc1932e0">6.3. Buffer Switching</a></li>
 </ul>
 </li>
-<li><a href="#orgc216847">7. Version Control</a>
+<li><a href="#org15f9cbc">7. Searching</a>
 <ul>
-<li><a href="#orga409e22">7.1. Git/Magit</a></li>
+<li><a href="#org2dd3e85">7.1. RG</a></li>
 </ul>
 </li>
-<li><a href="#org1aafe9d">8. LSP</a>
+<li><a href="#orgc7f922c">8. Version Control</a>
 <ul>
-<li><a href="#org28bbb7d">8.1. Background</a></li>
-<li><a href="#org2cdd38d">8.2. Updating Eglot Package</a></li>
-<li><a href="#orge70c0d1">8.3. Obtaining Language Servers</a></li>
-<li><a href="#org2423b3b">8.4. Enabling Eglot</a></li>
+<li><a href="#org4307fce">8.1. Git/Magit</a></li>
 </ul>
 </li>
-<li><a href="#org1fc1a0d">9. Formatting</a>
+<li><a href="#orgdaa685a">9. LSP</a>
 <ul>
-<li><a href="#org2f86fd5">9.1. Tabs</a></li>
-<li><a href="#orge534f07">9.2. Line Width</a></li>
-<li><a href="#org426a1de">9.3. Delete Trailing Whitespace</a></li>
-<li><a href="#org7d7f26b">9.4. Language Specific Autoformat</a></li>
+<li><a href="#org3e03abc">9.1. Background</a></li>
+<li><a href="#orgf4b7abf">9.2. Updating Eglot Package</a></li>
+<li><a href="#org3cca859">9.3. Obtaining Language Servers</a></li>
+<li><a href="#org9b38fa3">9.4. Enabling Eglot</a></li>
 </ul>
 </li>
-<li><a href="#orgbf7f867">10. Code Auto-Complete</a></li>
-<li><a href="#orgca35611">11. Syntax Checking</a>
+<li><a href="#org079d77c">10. Formatting</a>
 <ul>
-<li><a href="#org0940d53">11.1. On The Fly Syntax Checking</a></li>
-<li><a href="#orga215d32">11.2. Custom Compile</a>
+<li><a href="#orgd99f8d7">10.1. Tabs</a></li>
+<li><a href="#orgf81620b">10.2. Line Width</a></li>
+<li><a href="#org3046fb0">10.3. Delete Trailing Whitespace</a></li>
+<li><a href="#orgb4c78d1">10.4. Language Specific Autoformat</a></li>
+</ul>
+</li>
+<li><a href="#org3051071">11. Code Auto-Complete</a></li>
+<li><a href="#org3ddb736">12. Syntax Checking</a>
 <ul>
-<li><a href="#org02a798f">11.2.1. Error Detection</a></li>
+<li><a href="#org7c2c47f">12.1. On The Fly Syntax Checking</a></li>
+<li><a href="#org592f13f">12.2. Custom Compile</a>
+<ul>
+<li><a href="#org224fe1e">12.2.1. Error Detection</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org91ee381">12. Languages</a>
+<li><a href="#orgbf790a1">13. Languages</a>
 <ul>
-<li><a href="#org2aefe35">12.1. Rust</a></li>
-<li><a href="#org13fc6ef">12.2. Org Mode</a></li>
+<li><a href="#orgfdd7758">13.1. Rust</a></li>
+<li><a href="#org9e1f2e7">13.2. Org Mode</a></li>
 </ul>
 </li>
-<li><a href="#org0607210">13. Elisp Concepts</a>
+<li><a href="#org304abfd">14. Elisp Concepts</a>
 <ul>
-<li><a href="#orgb13aecd">13.1. Interactive Commands</a></li>
+<li><a href="#org19a695e">14.1. Interactive Commands</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org409f0ce" class="outline-2">
-<h2 id="org409f0ce"><span class="section-number-2">1.</span> Packages</h2>
+<div id="outline-container-orgd86b55d" class="outline-2">
+<h2 id="orgd86b55d"><span class="section-number-2">1.</span> Packages</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-org9e39a42" class="outline-3">
-<h3 id="org9e39a42"><span class="section-number-3">1.1.</span> Melpa</h3>
+<div id="outline-container-org2cf9f74" class="outline-3">
+<h3 id="org2cf9f74"><span class="section-number-3">1.1.</span> Melpa</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 Add Melpa to the package manager. <a href="https://melpa.org">Melpa</a> contains many popular Emacs packages.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">require</span> '<span style="color: #8be9fd;">package</span>)
-(add-to-list 'package-archives '(<span style="color: #f1fa8c;">"melpa"</span> . <span style="color: #f1fa8c;">"https://melpa.org/packages/"</span>) t)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">require</span> '<span style="color: #008b8b;">package</span>)
+(add-to-list 'package-archives '(<span style="color: #8b2252;">"melpa"</span> . <span style="color: #8b2252;">"https://melpa.org/packages/"</span>) t)
 </pre>
 </div>
 
@@ -329,13 +334,14 @@ For this Emacs setup, the following packages are required:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> package-selected-packages
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> package-selected-packages
               '(doom-themes
                 doom-modeline
-                ivy
-                counsel
+                vertico
+                consult
                 company
                 htmlize
+                rg
                 magit
                 rust-mode
                 yaml-mode
@@ -361,8 +367,8 @@ package-upgrade-all</code>.
 </p>
 </div>
 </div>
-<div id="outline-container-orgb71b8a7" class="outline-3">
-<h3 id="orgb71b8a7"><span class="section-number-3">1.2.</span> Initialize</h3>
+<div id="outline-container-org25bd070" class="outline-3">
+<h3 id="org25bd070"><span class="section-number-3">1.2.</span> Initialize</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
 Initialize the package archive. This makes all previously installed packages available.
@@ -375,8 +381,8 @@ Initialize the package archive. This makes all previously installed packages ava
 </div>
 </div>
 </div>
-<div id="outline-container-org3b80cec" class="outline-2">
-<h2 id="org3b80cec"><span class="section-number-2">2.</span> Startup</h2>
+<div id="outline-container-org34248ab" class="outline-2">
+<h2 id="org34248ab"><span class="section-number-2">2.</span> Startup</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Disable the default Emacs startup screen. Instead, this displays just the opened
@@ -384,17 +390,17 @@ file or the <code>*Scratch*</code> buffer if no file has been opened.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> inhibit-startup-screen t)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> inhibit-startup-screen t)
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-orgd6c5e31" class="outline-2">
-<h2 id="orgd6c5e31"><span class="section-number-2">3.</span> File System</h2>
+<div id="outline-container-org051d77a" class="outline-2">
+<h2 id="org051d77a"><span class="section-number-2">3.</span> File System</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-orgf303cef" class="outline-3">
-<h3 id="orgf303cef"><span class="section-number-3">3.1.</span> Auto-Revert</h3>
+<div id="outline-container-org98f7498" class="outline-3">
+<h3 id="org98f7498"><span class="section-number-3">3.1.</span> Auto-Revert</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
 Auto revert mode automatically reloads file-based buffer's when their files have
@@ -407,8 +413,8 @@ been updated.
 </div>
 </div>
 </div>
-<div id="outline-container-orgb679b0f" class="outline-3">
-<h3 id="orgb679b0f"><span class="section-number-3">3.2.</span> Backups &amp; Autosaves</h3>
+<div id="outline-container-org140e702" class="outline-3">
+<h3 id="org140e702"><span class="section-number-3">3.2.</span> Backups &amp; Autosaves</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
 Backup and autosaves may litter the filesystem so we disable
@@ -417,7 +423,7 @@ control.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> auto-save-interval 0
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> auto-save-interval 0
               create-lockfiles   nil
               make-backup-files  nil)
 </pre>
@@ -425,8 +431,8 @@ control.
 </div>
 </div>
 </div>
-<div id="outline-container-orge5a8038" class="outline-2">
-<h2 id="orge5a8038"><span class="section-number-2">4.</span> Performance</h2>
+<div id="outline-container-org7de3268" class="outline-2">
+<h2 id="org7de3268"><span class="section-number-2">4.</span> Performance</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Increase the amount of memory allowed before garbage collection kicks in. Emacs
@@ -437,7 +443,7 @@ and recomputes the amount of memory that is <code>actively-used</code>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> gc-cons-percentage 1.0)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> gc-cons-percentage 1.0)
 </pre>
 </div>
 
@@ -452,12 +458,12 @@ a GC run when interacting with Emacs.
 </div>
 </div>
 </div>
-<div id="outline-container-org1cea94d" class="outline-2">
-<h2 id="org1cea94d"><span class="section-number-2">5.</span> Appearance &amp; Feel</h2>
+<div id="outline-container-org9c06d21" class="outline-2">
+<h2 id="org9c06d21"><span class="section-number-2">5.</span> Appearance &amp; Feel</h2>
 <div class="outline-text-2" id="text-5">
 </div>
-<div id="outline-container-org494b700" class="outline-3">
-<h3 id="org494b700"><span class="section-number-3">5.1.</span> Remove Clutter</h3>
+<div id="outline-container-org308bbcb" class="outline-3">
+<h3 id="org308bbcb"><span class="section-number-3">5.1.</span> Remove Clutter</h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 Remove the menu bar and tool bar.
@@ -480,8 +486,8 @@ the theming.
 </div>
 </div>
 </div>
-<div id="outline-container-org36abb46" class="outline-3">
-<h3 id="org36abb46"><span class="section-number-3">5.2.</span> Lines</h3>
+<div id="outline-container-org2a8c7f6" class="outline-3">
+<h3 id="org2a8c7f6"><span class="section-number-3">5.2.</span> Lines</h3>
 <div class="outline-text-3" id="text-5-2">
 <p>
 Scroll conservatively values above 100 cause Emacs to scroll the
@@ -490,7 +496,7 @@ default value of 0 causes Emacs to recenter the window.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> scroll-conservatively 101)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> scroll-conservatively 101)
 </pre>
 </div>
 
@@ -515,8 +521,8 @@ buffer with <code>M-x hl-line-mode</code>.
 </div>
 </div>
 </div>
-<div id="outline-container-org855a51c" class="outline-3">
-<h3 id="org855a51c"><span class="section-number-3">5.3.</span> Color Scheme</h3>
+<div id="outline-container-org885ec64" class="outline-3">
+<h3 id="org885ec64"><span class="section-number-3">5.3.</span> Color Scheme</h3>
 <div class="outline-text-3" id="text-5-3">
 <p>
 Use the <code>doom-dracula</code> theme from the <a href="https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941">Doom Themes</a> package.
@@ -528,8 +534,8 @@ Use the <code>doom-dracula</code> theme from the <a href="https://github.com/doo
 </div>
 </div>
 </div>
-<div id="outline-container-org5379037" class="outline-3">
-<h3 id="org5379037"><span class="section-number-3">5.4.</span> Modeline</h3>
+<div id="outline-container-org932ddb3" class="outline-3">
+<h3 id="org932ddb3"><span class="section-number-3">5.4.</span> Modeline</h3>
 <div class="outline-text-3" id="text-5-4">
 <p>
 Use <a href="https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f">Doom Modeline</a> to display a nicer modeline. Mainly, it:
@@ -552,8 +558,8 @@ important information such as:
 </div>
 </div>
 </div>
-<div id="outline-container-org445278a" class="outline-2">
-<h2 id="org445278a"><span class="section-number-2">6.</span> Editor Completions</h2>
+<div id="outline-container-org2d264dc" class="outline-2">
+<h2 id="org2d264dc"><span class="section-number-2">6.</span> Editor Completions</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 Editor completions refers to auto complete done within the editor context, as
@@ -561,51 +567,36 @@ opposed to code. Editor completion is used to complete prompts for things such
 as selecting a file, buffer, or command.
 </p>
 </div>
-<div id="outline-container-orgc4be61c" class="outline-3">
-<h3 id="orgc4be61c"><span class="section-number-3">6.1.</span> Ivy</h3>
+<div id="outline-container-org0b1be09" class="outline-3">
+<h3 id="org0b1be09"><span class="section-number-3">6.1.</span> Vertico</h3>
 <div class="outline-text-3" id="text-6-1">
 <p>
-Editor completions are displayed using the <a href="https://github.com/abo-abo/swiper?tab=readme-ov-file#ivy">Ivy</a> package. This provides a huge
+Editor completions are displayed using the <a href="https://github.com/minad/vertico">Vertico</a> package. This provides a huge
 improvement over the default built-in Emacs completion.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(ivy-mode t)
+<pre class="src src-emacs-lisp">(vertico-mode t)
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-orgbf70ff0" class="outline-3">
-<h3 id="orgbf70ff0"><span class="section-number-3">6.2.</span> Counsel</h3>
+<div id="outline-container-org8610e71" class="outline-3">
+<h3 id="org8610e71"><span class="section-number-3">6.2.</span> Consult</h3>
 <div class="outline-text-3" id="text-6-2">
 <p>
-<a href="https://github.com/abo-abo/swiper?tab=readme-ov-file#counsel">Counsel</a> provides functions that wrap ivy completion with some extra
-features. For example, <code>counsel-M-x</code> is an <code>M-x</code> replacement that also displays
-a keybinding if there is an active keybinding for the particular function.
-</p>
-
-<div class="org-src-container">
-<pre class="src src-emacs-lisp">(counsel-mode t)
-</pre>
-</div>
-
-<p>
-Enabling <code>counsel-mode</code> makes the <code>counsel-mode-map</code> keymap active. This keymap
-defines several rebinds.
+<a href="https://github.com/minad/consult">Consult</a> provides functions that wrap vertico completion with some extra
+features. For example, <code>consult-buffer</code> is an <code>switch-to-buffer</code> replacement
+that also displays a keybinding if there is an active keybinding for the
+particular function.
 </p>
 </div>
 </div>
-<div id="outline-container-org2068279" class="outline-3">
-<h3 id="org2068279"><span class="section-number-3">6.3.</span> Buffer Switching</h3>
+<div id="outline-container-orgc1932e0" class="outline-3">
+<h3 id="orgc1932e0"><span class="section-number-3">6.3.</span> Buffer Switching</h3>
 <div class="outline-text-3" id="text-6-3">
-<p>
-However, it does not provide a rebind for <code>counsel-switch-buffer</code>. We make this
-our default (interactive) switch buffer command as it allows previewing the
-contents of a buffer before switching.
-</p>
-
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(define-key counsel-mode-map (kbd <span style="color: #f1fa8c;">"C-x b"</span>) #'counsel-switch-buffer)
+<pre class="src src-emacs-lisp">(global-set-key (kbd <span style="color: #8b2252;">"C-x b"</span>) #'consult-buffer)
 </pre>
 </div>
 
@@ -616,19 +607,34 @@ looks a bit nicer.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(global-set-key (kbd <span style="color: #f1fa8c;">"C-x C-b"</span>) #'ibuffer)
+<pre class="src src-emacs-lisp">(global-set-key (kbd <span style="color: #8b2252;">"C-x C-b"</span>) #'ibuffer)
 </pre>
 </div>
 </div>
 </div>
 </div>
-<div id="outline-container-orgc216847" class="outline-2">
-<h2 id="orgc216847"><span class="section-number-2">7.</span> Version Control</h2>
+<div id="outline-container-org15f9cbc" class="outline-2">
+<h2 id="org15f9cbc"><span class="section-number-2">7.</span> Searching</h2>
 <div class="outline-text-2" id="text-7">
 </div>
-<div id="outline-container-orga409e22" class="outline-3">
-<h3 id="orga409e22"><span class="section-number-3">7.1.</span> Git/Magit</h3>
+<div id="outline-container-org2dd3e85" class="outline-3">
+<h3 id="org2dd3e85"><span class="section-number-3">7.1.</span> RG</h3>
 <div class="outline-text-3" id="text-7-1">
+<p>
+The <a href="https://github.com/dajva/rg.el">rg</a> package can be used to search for regex/literals across a project or
+directory. The package can with several general <code>rg-</code> interactive functions. The
+most general of which being <code>rg-menu</code>.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc7f922c" class="outline-2">
+<h2 id="orgc7f922c"><span class="section-number-2">8.</span> Version Control</h2>
+<div class="outline-text-2" id="text-8">
+</div>
+<div id="outline-container-org4307fce" class="outline-3">
+<h3 id="org4307fce"><span class="section-number-3">8.1.</span> Git/Magit</h3>
+<div class="outline-text-3" id="text-8-1">
 <p>
 <a href="https://github.com/magit/magit/tree/e3806cbb7dd38ab73624ad48024998705f9d0d20">Magit</a> provides an Emacs interface for Git. This involves things such as viewing
 diffs, staging, comitting, branching, and many other things. The Magit
@@ -642,13 +648,13 @@ and pressing <code>?</code> to see all the commands.
 </div>
 </div>
 </div>
-<div id="outline-container-org1aafe9d" class="outline-2">
-<h2 id="org1aafe9d"><span class="section-number-2">8.</span> LSP</h2>
-<div class="outline-text-2" id="text-8">
+<div id="outline-container-orgdaa685a" class="outline-2">
+<h2 id="orgdaa685a"><span class="section-number-2">9.</span> LSP</h2>
+<div class="outline-text-2" id="text-9">
 </div>
-<div id="outline-container-org28bbb7d" class="outline-3">
-<h3 id="org28bbb7d"><span class="section-number-3">8.1.</span> Background</h3>
-<div class="outline-text-3" id="text-8-1">
+<div id="outline-container-org3e03abc" class="outline-3">
+<h3 id="org3e03abc"><span class="section-number-3">9.1.</span> Background</h3>
+<div class="outline-text-3" id="text-9-1">
 <p>
 The LanguageServerProtocol defines a way for a language server to communicate
 programming language specific information for a project to an IDE(Emacs). The
@@ -657,18 +663,18 @@ formatting.
 </p>
 </div>
 </div>
-<div id="outline-container-org2cdd38d" class="outline-3">
-<h3 id="org2cdd38d"><span class="section-number-3">8.2.</span> Updating Eglot Package</h3>
-<div class="outline-text-3" id="text-8-2">
+<div id="outline-container-orgf4b7abf" class="outline-3">
+<h3 id="orgf4b7abf"><span class="section-number-3">9.2.</span> Updating Eglot Package</h3>
+<div class="outline-text-3" id="text-9-2">
 <p>
 Eglot is included in Emacs. However, Eglot can be upgraded to the latest version
 with <code>M-x eglot-upgrade-eglot</code>.
 </p>
 </div>
 </div>
-<div id="outline-container-orge70c0d1" class="outline-3">
-<h3 id="orge70c0d1"><span class="section-number-3">8.3.</span> Obtaining Language Servers</h3>
-<div class="outline-text-3" id="text-8-3">
+<div id="outline-container-org3cca859" class="outline-3">
+<h3 id="org3cca859"><span class="section-number-3">9.3.</span> Obtaining Language Servers</h3>
+<div class="outline-text-3" id="text-9-3">
 <p>
 Eglot is configured to run the most popular language servers by
 default. However, they must still be installed on the system. Some popular
@@ -676,9 +682,9 @@ language servers include <code>rust-analyzer</code> for Rust.
 </p>
 </div>
 </div>
-<div id="outline-container-org2423b3b" class="outline-3">
-<h3 id="org2423b3b"><span class="section-number-3">8.4.</span> Enabling Eglot</h3>
-<div class="outline-text-3" id="text-8-4">
+<div id="outline-container-org9b38fa3" class="outline-3">
+<h3 id="org9b38fa3"><span class="section-number-3">9.4.</span> Enabling Eglot</h3>
+<div class="outline-text-3" id="text-9-4">
 <p>
 Eglot can be manually enabled on a buffer with <code>M-x eglot</code>. To enable it
 automatically, you may call <code>eglot-ensure</code> on the buffer automatically through
@@ -692,13 +698,13 @@ hooks.
 </div>
 </div>
 </div>
-<div id="outline-container-org1fc1a0d" class="outline-2">
-<h2 id="org1fc1a0d"><span class="section-number-2">9.</span> Formatting</h2>
-<div class="outline-text-2" id="text-9">
+<div id="outline-container-org079d77c" class="outline-2">
+<h2 id="org079d77c"><span class="section-number-2">10.</span> Formatting</h2>
+<div class="outline-text-2" id="text-10">
 </div>
-<div id="outline-container-org2f86fd5" class="outline-3">
-<h3 id="org2f86fd5"><span class="section-number-3">9.1.</span> Tabs</h3>
-<div class="outline-text-3" id="text-9-1">
+<div id="outline-container-orgd99f8d7" class="outline-3">
+<h3 id="orgd99f8d7"><span class="section-number-3">10.1.</span> Tabs</h3>
+<div class="outline-text-3" id="text-10-1">
 <p>
 Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
 neither the spaces nor tabs crowds. Tabs are disabled to prevent the mixed use,
@@ -707,7 +713,7 @@ default. For example, Go will still use tabs when indenting.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> indent-tabs-mode nil)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> indent-tabs-mode nil)
 </pre>
 </div>
 
@@ -716,14 +722,14 @@ Use a default tab width of 4 spaces.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> tab-width 4)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> tab-width 4)
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-orge534f07" class="outline-3">
-<h3 id="orge534f07"><span class="section-number-3">9.2.</span> Line Width</h3>
-<div class="outline-text-3" id="text-9-2">
+<div id="outline-container-orgf81620b" class="outline-3">
+<h3 id="orgf81620b"><span class="section-number-3">10.2.</span> Line Width</h3>
+<div class="outline-text-3" id="text-10-2">
 <p>
 Set a target line width of 80. Contents of a "paragraph" may be made to follow
 the target line width through <code>M-x fill-paragraph</code> (default keybind <code>M-q</code>) or a
@@ -731,7 +737,7 @@ highlighted region with <code>M-x fill-region</code>.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">setq-default</span> fill-column 80)
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq-default</span> fill-column 80)
 </pre>
 </div>
 
@@ -740,17 +746,17 @@ Some languages have a different target line length.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">defun</span> <span style="color: #50fa7b;">fill-column-100</span> ()
-  (<span style="color: #ff79c6;">setq-local</span> fill-column 100))
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">defun</span> <span style="color: #0000ff;">fill-column-100</span> ()
+  (<span style="color: #a020f0;">setq-local</span> fill-column 100))
 
 (add-hook 'rust-mode-hook #'fill-column-100)
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org426a1de" class="outline-3">
-<h3 id="org426a1de"><span class="section-number-3">9.3.</span> Delete Trailing Whitespace</h3>
-<div class="outline-text-3" id="text-9-3">
+<div id="outline-container-org3046fb0" class="outline-3">
+<h3 id="org3046fb0"><span class="section-number-3">10.3.</span> Delete Trailing Whitespace</h3>
+<div class="outline-text-3" id="text-10-3">
 <p>
 Trailing whitespace is usually unintended. These are whitespace characters
 hanging at the end of the sentence or newlines/whitespace at the end of the
@@ -763,9 +769,9 @@ file. Trailing whitespace can be automatically deleted before save.
 </div>
 </div>
 </div>
-<div id="outline-container-org7d7f26b" class="outline-3">
-<h3 id="org7d7f26b"><span class="section-number-3">9.4.</span> Language Specific Autoformat</h3>
-<div class="outline-text-3" id="text-9-4">
+<div id="outline-container-orgb4c78d1" class="outline-3">
+<h3 id="orgb4c78d1"><span class="section-number-3">10.4.</span> Language Specific Autoformat</h3>
+<div class="outline-text-3" id="text-10-4">
 <p>
 Eglot provides 2 functions for formatting.
 </p>
@@ -781,8 +787,8 @@ automatically run <code>eglot-format-buffer</code> before save.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">defun</span> <span style="color: #50fa7b;">eglot-maybe-format-buffer</span> ()
-  (<span style="color: #ff79c6;">when</span> (eglot-managed-p) (eglot-format-buffer)))
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">defun</span> <span style="color: #0000ff;">eglot-maybe-format-buffer</span> ()
+  (<span style="color: #a020f0;">when</span> (eglot-managed-p) (eglot-format-buffer)))
 
 (add-hook 'before-save-hook #'eglot-maybe-format-buffer)
 </pre>
@@ -790,9 +796,9 @@ automatically run <code>eglot-format-buffer</code> before save.
 </div>
 </div>
 </div>
-<div id="outline-container-orgbf7f867" class="outline-2">
-<h2 id="orgbf7f867"><span class="section-number-2">10.</span> Code Auto-Complete</h2>
-<div class="outline-text-2" id="text-10">
+<div id="outline-container-org3051071" class="outline-2">
+<h2 id="org3051071"><span class="section-number-2">11.</span> Code Auto-Complete</h2>
+<div class="outline-text-2" id="text-11">
 <p>
 Code auto-complete is handled by the <a href="https://company-mode.github.io/">Company</a> package. Company is an
 autocompletion frontend that comes with many backends. Company comes with a lot
@@ -812,13 +818,13 @@ suitable backend, then it does nothing.
 </div>
 </div>
 </div>
-<div id="outline-container-orgca35611" class="outline-2">
-<h2 id="orgca35611"><span class="section-number-2">11.</span> Syntax Checking</h2>
-<div class="outline-text-2" id="text-11">
+<div id="outline-container-org3ddb736" class="outline-2">
+<h2 id="org3ddb736"><span class="section-number-2">12.</span> Syntax Checking</h2>
+<div class="outline-text-2" id="text-12">
 </div>
-<div id="outline-container-org0940d53" class="outline-3">
-<h3 id="org0940d53"><span class="section-number-3">11.1.</span> On The Fly Syntax Checking</h3>
-<div class="outline-text-3" id="text-11-1">
+<div id="outline-container-org7c2c47f" class="outline-3">
+<h3 id="org7c2c47f"><span class="section-number-3">12.1.</span> On The Fly Syntax Checking</h3>
+<div class="outline-text-3" id="text-12-1">
 <p>
 Syntax errors are surfaced by the built-in Flymake package. The Flymake package
 provides the frontend and several backends.
@@ -830,9 +836,9 @@ enables Flymake on Eglot managed buffers so there is no setup on that front.
 </p>
 </div>
 </div>
-<div id="outline-container-orga215d32" class="outline-3">
-<h3 id="orga215d32"><span class="section-number-3">11.2.</span> Custom Compile</h3>
-<div class="outline-text-3" id="text-11-2">
+<div id="outline-container-org592f13f" class="outline-3">
+<h3 id="org592f13f"><span class="section-number-3">12.2.</span> Custom Compile</h3>
+<div class="outline-text-3" id="text-12-2">
 <p>
 <code>M-x compile</code> and <code>M-x project-compile</code> can be used to run a command. <code>compile</code>
 runs in the current directory while <code>project-compile</code> runs the command in the
@@ -847,9 +853,9 @@ detected errors in the buffer. For other keybindings, run <code>M-x describe-key
 to check <code>compilation-mode-map</code>.
 </p>
 </div>
-<div id="outline-container-org02a798f" class="outline-4">
-<h4 id="org02a798f"><span class="section-number-4">11.2.1.</span> Error Detection</h4>
-<div class="outline-text-4" id="text-11-2-1">
+<div id="outline-container-org224fe1e" class="outline-4">
+<h4 id="org224fe1e"><span class="section-number-4">12.2.1.</span> Error Detection</h4>
+<div class="outline-text-4" id="text-12-2-1">
 <p>
 <code>M-x compile</code> has some built in mechanisms to detect errors. However, some
 packages, like <code>rust-mode</code>, add new patterns. For these patterns to be added,
@@ -860,13 +866,13 @@ manually loaded with something like <code>M-: (require 'rust-mode)</code>.
 </div>
 </div>
 </div>
-<div id="outline-container-org91ee381" class="outline-2">
-<h2 id="org91ee381"><span class="section-number-2">12.</span> Languages</h2>
-<div class="outline-text-2" id="text-12">
+<div id="outline-container-orgbf790a1" class="outline-2">
+<h2 id="orgbf790a1"><span class="section-number-2">13.</span> Languages</h2>
+<div class="outline-text-2" id="text-13">
 </div>
-<div id="outline-container-org2aefe35" class="outline-3">
-<h3 id="org2aefe35"><span class="section-number-3">12.1.</span> Rust</h3>
-<div class="outline-text-3" id="text-12-1">
+<div id="outline-container-orgfdd7758" class="outline-3">
+<h3 id="orgfdd7758"><span class="section-number-3">13.1.</span> Rust</h3>
+<div class="outline-text-3" id="text-13-1">
 <p>
 Rust is not built into Emacs so we install the <a href="https://github.com/rust-lang/rust-mode/tree/25d91cff281909e9b7cb84e31211c4e7b0480f94">Rust Mode</a> package.
 </p>
@@ -877,9 +883,9 @@ throught Eglot + the <code>rust-analyzer</code> LSP.
 </p>
 </div>
 </div>
-<div id="outline-container-org13fc6ef" class="outline-3">
-<h3 id="org13fc6ef"><span class="section-number-3">12.2.</span> Org Mode</h3>
-<div class="outline-text-3" id="text-12-2">
+<div id="outline-container-org9e1f2e7" class="outline-3">
+<h3 id="org9e1f2e7"><span class="section-number-3">13.2.</span> Org Mode</h3>
+<div class="outline-text-3" id="text-13-2">
 <p>
 Enable syntax highlighting for exported material html. Note that this will use
 the currently active theme. This requires the <a href="https://elpa.nongnu.org/nongnu/htmlize.html">htmlize</a> package.
@@ -887,13 +893,13 @@ the currently active theme. This requires the <a href="https://elpa.nongnu.org/n
 </div>
 </div>
 </div>
-<div id="outline-container-org0607210" class="outline-2">
-<h2 id="org0607210"><span class="section-number-2">13.</span> Elisp Concepts</h2>
-<div class="outline-text-2" id="text-13">
+<div id="outline-container-org304abfd" class="outline-2">
+<h2 id="org304abfd"><span class="section-number-2">14.</span> Elisp Concepts</h2>
+<div class="outline-text-2" id="text-14">
 </div>
-<div id="outline-container-orgb13aecd" class="outline-3">
-<h3 id="orgb13aecd"><span class="section-number-3">13.1.</span> Interactive Commands</h3>
-<div class="outline-text-3" id="text-13-1">
+<div id="outline-container-org19a695e" class="outline-3">
+<h3 id="org19a695e"><span class="section-number-3">14.1.</span> Interactive Commands</h3>
+<div class="outline-text-3" id="text-14-1">
 <p>
 Interactive functions that can be run "interactively". Here, interactively maens
 that they can be run through <code>M-x</code>. Interactive functions are defined by adding
@@ -901,14 +907,14 @@ that they can be run through <code>M-x</code>. Interactive functions are defined
 </p>
 
 <div class="org-src-container">
-<pre class="src src-emacs-lisp">(<span style="color: #ff79c6;">defun</span> <span style="color: #50fa7b;">my-function</span> ()
-  <span style="color: #8995ba;">"Do a thing."</span>
-  (message <span style="color: #f1fa8c;">"Hello World"</span>))
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">defun</span> <span style="color: #0000ff;">my-function</span> ()
+  <span style="color: #8b2252;">"Do a thing."</span>
+  (message <span style="color: #8b2252;">"Hello World"</span>))
 
-(<span style="color: #ff79c6;">defun</span> <span style="color: #50fa7b;">my-interactive-function</span> ()
-  <span style="color: #8995ba;">"Do a thing."</span>
-  (<span style="color: #ff79c6;">interactive</span>)
-  (message <span style="color: #f1fa8c;">"Hello World"</span>))
+(<span style="color: #a020f0;">defun</span> <span style="color: #0000ff;">my-interactive-function</span> ()
+  <span style="color: #8b2252;">"Do a thing."</span>
+  (<span style="color: #a020f0;">interactive</span>)
+  (message <span style="color: #8b2252;">"Hello World"</span>))
 </pre>
 </div>
 
@@ -923,7 +929,7 @@ for standard options and passing them as flags. See the <a href="https://www.gnu
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: will@wmedrano.dev</p>
-<p class="date">Created: 2025-05-29 Thu 07:16</p>
+<p class="date">Created: 2025-05-31 Sat 09:37</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

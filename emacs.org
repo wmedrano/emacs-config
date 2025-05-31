@@ -25,10 +25,11 @@ For this Emacs setup, the following packages are required:
   (setq-default package-selected-packages
                 '(doom-themes
                   doom-modeline
-                  ivy
-                  counsel
+                  vertico
+                  consult
                   company
                   htmlize
+                  rg
                   magit
                   rust-mode
                   yaml-mode
@@ -177,36 +178,26 @@ Editor completions refers to auto complete done within the editor context, as
 opposed to code. Editor completion is used to complete prompts for things such
 as selecting a file, buffer, or command.
 
-** Ivy
+** Vertico
 
-Editor completions are displayed using the [[https://github.com/abo-abo/swiper?tab=readme-ov-file#ivy][Ivy]] package. This provides a huge
+Editor completions are displayed using the [[https://github.com/minad/vertico][Vertico]] package. This provides a huge
 improvement over the default built-in Emacs completion.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
-  (ivy-mode t)
+  (vertico-mode t)
 #+END_SRC
 
-** Counsel
+** Consult
 
-[[https://github.com/abo-abo/swiper?tab=readme-ov-file#counsel][Counsel]] provides functions that wrap ivy completion with some extra
-features. For example, ~counsel-M-x~ is an ~M-x~ replacement that also displays
-a keybinding if there is an active keybinding for the particular function.
-
-#+BEGIN_SRC emacs-lisp :tangle init.el
-  (counsel-mode t)
-#+END_SRC
-
-Enabling ~counsel-mode~ makes the ~counsel-mode-map~ keymap active. This keymap
-defines several rebinds.
+[[https://github.com/minad/consult][Consult]] provides functions that wrap vertico completion with some extra
+features. For example, ~consult-buffer~ is an ~switch-to-buffer~ replacement
+that also displays a keybinding if there is an active keybinding for the
+particular function.
 
 ** Buffer Switching
 
-However, it does not provide a rebind for ~counsel-switch-buffer~. We make this
-our default (interactive) switch buffer command as it allows previewing the
-contents of a buffer before switching.
-
 #+BEGIN_SRC emacs-lisp :tangle init.el
-  (define-key counsel-mode-map (kbd "C-x b") #'counsel-switch-buffer)
+  (global-set-key (kbd "C-x b") #'consult-buffer)
 #+END_SRC
 
 For some cases, I like to see all the buffers on a buffer instead of the
@@ -216,6 +207,14 @@ looks a bit nicer.
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (global-set-key (kbd "C-x C-b") #'ibuffer)
 #+END_SRC
+
+* Searching
+
+** RG
+
+The [[https://github.com/dajva/rg.el][rg]] package can be used to search for regex/literals across a project or
+directory. The package can with several general ~rg-~ interactive functions. The
+most general of which being ~rg-menu~.
 
 * Version Control
 
