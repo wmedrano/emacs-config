@@ -51,7 +51,8 @@ package-upgrade-all~.
 
 ** Initialize
 
-Initialize the package archive. This makes all previously installed packages available.
+Initialize the package archive. This makes all previously installed packages
+available.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (package-initialize)
@@ -85,6 +86,7 @@ control.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
   (setq-default auto-save-interval 0
+                auto-save-default  nil
                 create-lockfiles   nil
                 make-backup-files  nil)
 #+END_SRC
@@ -379,6 +381,18 @@ throught Eglot + the ~rust-analyzer~ LSP.
 Enable syntax highlighting for exported material html. Note that this will use
 the currently active theme. This requires the [[https://elpa.nongnu.org/nongnu/htmlize.html][htmlize]] package.
 
+*** Indentation
+
+The built-in and on by default ~electric-indent-mode~ package has buggy behavior
+with org lists and buffers so we turn it off.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  (defun electric-indent-mode-local-off ()
+    (electric-indent-local-mode -1))
+
+  (add-hook 'org-mode-hook #'electric-indent-mode-local-off)
+#+END_SRC
+
 * Elisp Concepts
 
 ** Interactive Commands
@@ -401,3 +415,9 @@ that they can be run through ~M-x~. Interactive functions are defined by adding
 Interactive functions also have a sophisticated mechanism of querying the user
 for standard options and passing them as flags. See the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Using-Interactive.html][Emacs Documentation]] for
 "Using interactive" for more details.
+
+* TODO Improvements
+
+- Remove "Yes" confirmation for changed files.
+- Make checkboxes less ugly.
+- Better PDFs in Emacs.

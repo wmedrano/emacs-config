@@ -1,4 +1,4 @@
-% Created 2025-05-31 Sat 09:37
+% Created 2025-05-31 Sat 10:07
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -28,10 +28,10 @@
 \tableofcontents
 
 \section{Packages}
-\label{sec:org62fdd3f}
+\label{sec:org5602a42}
 
 \subsection{Melpa}
-\label{sec:org34a17b1}
+\label{sec:org33e78ba}
 
 Add Melpa to the package manager. \href{https://melpa.org}{Melpa} contains many popular Emacs packages.
 
@@ -81,15 +81,16 @@ the package. The package definitions can be updated by running \texttt{M-x
 package-refresh-contents}. Packages may also be upgraded all at once with \texttt{M-x
 package-upgrade-all}.
 \subsection{Initialize}
-\label{sec:org05a0fec}
+\label{sec:orgb8540e7}
 
-Initialize the package archive. This makes all previously installed packages available.
+Initialize the package archive. This makes all previously installed packages
+available.
 
 \begin{verbatim}
 (package-initialize)
 \end{verbatim}
 \section{Startup}
-\label{sec:orgd9c5431}
+\label{sec:org14195a4}
 
 Disable the default Emacs startup screen. Instead, this displays just the opened
 file or the \texttt{*Scratch*} buffer if no file has been opened.
@@ -98,10 +99,10 @@ file or the \texttt{*Scratch*} buffer if no file has been opened.
 (setq-default inhibit-startup-screen t)
 \end{verbatim}
 \section{File System}
-\label{sec:orgd572e2d}
+\label{sec:orgabe35a4}
 
 \subsection{Auto-Revert}
-\label{sec:org6ae094e}
+\label{sec:orgb91ab99}
 
 Auto revert mode automatically reloads file-based buffer's when their files have
 been updated.
@@ -110,7 +111,7 @@ been updated.
 (global-auto-revert-mode t)
 \end{verbatim}
 \subsection{Backups \& Autosaves}
-\label{sec:org888d969}
+\label{sec:orge0e4189}
 
 Backup and autosaves may litter the filesystem so we disable
 them. This is ok as my disk is reliable, I save often, and use version
@@ -118,11 +119,12 @@ control.
 
 \begin{verbatim}
 (setq-default auto-save-interval 0
+              auto-save-default  nil
               create-lockfiles   nil
               make-backup-files  nil)
 \end{verbatim}
 \section{Performance}
-\label{sec:org867de3d}
+\label{sec:orgedd83ef}
 
 Increase the amount of memory allowed before garbage collection kicks in. Emacs
 runs garbage collection when it is over the limit. The limit is equal to the
@@ -141,10 +143,10 @@ a GC run when interacting with Emacs.
 (run-with-idle-timer 3 t #'garbage-collect)
 \end{verbatim}
 \section{Appearance \& Feel}
-\label{sec:orga3c54b7}
+\label{sec:org0e86dc9}
 
 \subsection{Remove Clutter}
-\label{sec:org93d20d8}
+\label{sec:org1435df5}
 
 Remove the menu bar and tool bar.
 
@@ -160,7 +162,7 @@ the theming.
 (scroll-bar-mode -1)
 \end{verbatim}
 \subsection{Lines}
-\label{sec:org22d2169}
+\label{sec:orge12f321}
 
 Scroll conservatively values above 100 cause Emacs to scroll the
 minimum number of lines required to get the cursor in position. The
@@ -184,7 +186,7 @@ buffer with \texttt{M-x hl-line-mode}.
 (global-hl-line-mode t)
 \end{verbatim}
 \subsection{Color Scheme}
-\label{sec:orgf03fbc5}
+\label{sec:orgdd2c885}
 
 Use the \texttt{doom-dracula} theme from the \href{https://github.com/doomemacs/themes/tree/729ad034631cba41602ad9191275ece472c21941}{Doom Themes} package.
 
@@ -192,7 +194,7 @@ Use the \texttt{doom-dracula} theme from the \href{https://github.com/doomemacs/
 (load-theme 'doom-dracula t)
 \end{verbatim}
 \subsection{Modeline}
-\label{sec:orgab5f3bb}
+\label{sec:org796b43d}
 
 Use \href{https://github.com/seagle0128/doom-modeline/tree/297b57585fe3b3de9e694512170c44c6e104808f}{Doom Modeline} to display a nicer modeline. Mainly, it:
 
@@ -210,13 +212,13 @@ important information such as:
 (doom-modeline-mode t)
 \end{verbatim}
 \section{Editor Completions}
-\label{sec:org499d21c}
+\label{sec:org99ebd46}
 
 Editor completions refers to auto complete done within the editor context, as
 opposed to code. Editor completion is used to complete prompts for things such
 as selecting a file, buffer, or command.
 \subsection{Vertico}
-\label{sec:orgf2138d9}
+\label{sec:org0800f06}
 
 Editor completions are displayed using the \href{https://github.com/minad/vertico}{Vertico} package. This provides a huge
 improvement over the default built-in Emacs completion.
@@ -225,14 +227,14 @@ improvement over the default built-in Emacs completion.
 (vertico-mode t)
 \end{verbatim}
 \subsection{Consult}
-\label{sec:org481e10d}
+\label{sec:org6a4a954}
 
 \href{https://github.com/minad/consult}{Consult} provides functions that wrap vertico completion with some extra
 features. For example, \texttt{consult-buffer} is an \texttt{switch-to-buffer} replacement
 that also displays a keybinding if there is an active keybinding for the
 particular function.
 \subsection{Buffer Switching}
-\label{sec:org05ba3fd}
+\label{sec:orgd93ea28}
 
 \begin{verbatim}
 (global-set-key (kbd "C-x b") #'consult-buffer)
@@ -246,19 +248,19 @@ looks a bit nicer.
 (global-set-key (kbd "C-x C-b") #'ibuffer)
 \end{verbatim}
 \section{Searching}
-\label{sec:orgc0a99c2}
+\label{sec:org28453a2}
 
 \subsection{RG}
-\label{sec:org65262d5}
+\label{sec:org7bac3ba}
 
 The \href{https://github.com/dajva/rg.el}{rg} package can be used to search for regex/literals across a project or
 directory. The package can with several general \texttt{rg-} interactive functions. The
 most general of which being \texttt{rg-menu}.
 \section{Version Control}
-\label{sec:org396d0bf}
+\label{sec:org83e8984}
 
 \subsection{Git/Magit}
-\label{sec:org3f0cd24}
+\label{sec:orgbc6483f}
 
 \href{https://github.com/magit/magit/tree/e3806cbb7dd38ab73624ad48024998705f9d0d20}{Magit} provides an Emacs interface for Git. This involves things such as viewing
 diffs, staging, comitting, branching, and many other things. The Magit
@@ -267,27 +269,27 @@ documentation provides a lot (too much) information on how to use Magit.
 For a quickstart, try running \texttt{M-x magit} to bring up the magit status buffer
 and pressing \texttt{?} to see all the commands.
 \section{LSP}
-\label{sec:orgca38180}
+\label{sec:org44aec9d}
 
 \subsection{Background}
-\label{sec:org23f7bcb}
+\label{sec:org513aac3}
 The LanguageServerProtocol defines a way for a language server to communicate
 programming language specific information for a project to an IDE(Emacs). The
 protocol defines things such as syntax checking, autocomplete, and code
 formatting.
 \subsection{Updating Eglot Package}
-\label{sec:org68f18e2}
+\label{sec:org87de168}
 
 Eglot is included in Emacs. However, Eglot can be upgraded to the latest version
 with \texttt{M-x eglot-upgrade-eglot}.
 \subsection{Obtaining Language Servers}
-\label{sec:org57abd11}
+\label{sec:org255be90}
 
 Eglot is configured to run the most popular language servers by
 default. However, they must still be installed on the system. Some popular
 language servers include \texttt{rust-analyzer} for Rust.
 \subsection{Enabling Eglot}
-\label{sec:orgee915ac}
+\label{sec:org17e105c}
 
 Eglot can be manually enabled on a buffer with \texttt{M-x eglot}. To enable it
 automatically, you may call \texttt{eglot-ensure} on the buffer automatically through
@@ -297,10 +299,10 @@ hooks.
 (add-hook 'rust-mode-hook #'eglot-ensure)
 \end{verbatim}
 \section{Formatting}
-\label{sec:orge190d0b}
+\label{sec:org144ad6c}
 
 \subsection{Tabs}
-\label{sec:org31e7a21}
+\label{sec:org9b81f94}
 
 Emacs uses a combination of tabs and spaces when auto-indenting. This pleases
 neither the spaces nor tabs crowds. Tabs are disabled to prevent the mixed use,
@@ -317,7 +319,7 @@ Use a default tab width of 4 spaces.
 (setq-default tab-width 4)
 \end{verbatim}
 \subsection{Line Width}
-\label{sec:org8a8ce9c}
+\label{sec:org7ce5f89}
 
 Set a target line width of 80. Contents of a "paragraph" may be made to follow
 the target line width through \texttt{M-x fill-paragraph} (default keybind \texttt{M-q}) or a
@@ -336,7 +338,7 @@ Some languages have a different target line length.
 (add-hook 'rust-mode-hook #'fill-column-100)
 \end{verbatim}
 \subsection{Delete Trailing Whitespace}
-\label{sec:org5e7c32c}
+\label{sec:org36e1fbb}
 
 Trailing whitespace is usually unintended. These are whitespace characters
 hanging at the end of the sentence or newlines/whitespace at the end of the
@@ -346,7 +348,7 @@ file. Trailing whitespace can be automatically deleted before save.
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 \end{verbatim}
 \subsection{Language Specific Autoformat}
-\label{sec:org406bfea}
+\label{sec:org1dfce63}
 
 Eglot provides 2 functions for formatting.
 
@@ -365,7 +367,7 @@ automatically run \texttt{eglot-format-buffer} before save.
 (add-hook 'before-save-hook #'eglot-maybe-format-buffer)
 \end{verbatim}
 \section{Code Auto-Complete}
-\label{sec:org4e9beaf}
+\label{sec:org157304c}
 
 Code auto-complete is handled by the \href{https://company-mode.github.io/}{Company} package. Company is an
 autocompletion frontend that comes with many backends. Company comes with a lot
@@ -380,10 +382,10 @@ suitable backend, then it does nothing.
 (global-company-mode t)
 \end{verbatim}
 \section{Syntax Checking}
-\label{sec:org2d784db}
+\label{sec:orgcadd097}
 
 \subsection{On The Fly Syntax Checking}
-\label{sec:orgdc3f724}
+\label{sec:org12ccfde}
 
 Syntax errors are surfaced by the built-in Flymake package. The Flymake package
 provides the frontend and several backends.
@@ -391,7 +393,7 @@ provides the frontend and several backends.
 The most common backend for Flymake is Eglot. Additionally, Eglot automatically
 enables Flymake on Eglot managed buffers so there is no setup on that front.
 \subsection{Custom Compile}
-\label{sec:org5270402}
+\label{sec:orgb261bb4}
 
 \texttt{M-x compile} and \texttt{M-x project-compile} can be used to run a command. \texttt{compile}
 runs in the current directory while \texttt{project-compile} runs the command in the
@@ -403,32 +405,44 @@ The outputs of the command will be displayed in a buffer named
 detected errors in the buffer. For other keybindings, run \texttt{M-x describe-keymap}
 to check \texttt{compilation-mode-map}.
 \subsubsection{Error Detection}
-\label{sec:orgb11d606}
+\label{sec:orgbb8f9a1}
 
 \texttt{M-x compile} has some built in mechanisms to detect errors. However, some
 packages, like \texttt{rust-mode}, add new patterns. For these patterns to be added,
 the package has to be loaded. Packages are often lazily loaded or can be
 manually loaded with something like \texttt{M-: (require 'rust-mode)}.
 \section{Languages}
-\label{sec:org6c0ee38}
+\label{sec:org6942680}
 
 \subsection{Rust}
-\label{sec:org6fa19ec}
+\label{sec:org1224eac}
 
 Rust is not built into Emacs so we install the \href{https://github.com/rust-lang/rust-mode/tree/25d91cff281909e9b7cb84e31211c4e7b0480f94}{Rust Mode} package.
 
 Beyond that, there is not much to Rust as most of its functionality comes
 throught Eglot + the \texttt{rust-analyzer} LSP.
 \subsection{Org Mode}
-\label{sec:orgf0b8752}
+\label{sec:org9170620}
 
 Enable syntax highlighting for exported material html. Note that this will use
 the currently active theme. This requires the \href{https://elpa.nongnu.org/nongnu/htmlize.html}{htmlize} package.
+\subsubsection{Indentation}
+\label{sec:org1730eba}
+
+The built-in and on by default \texttt{electric-indent-mode} package has buggy behavior
+with org lists and buffers so we turn it off.
+
+\begin{verbatim}
+(defun electric-indent-mode-local-off ()
+  (electric-indent-local-mode -1))
+
+(add-hook 'org-mode-hook #'electric-indent-mode-local-off)
+\end{verbatim}
 \section{Elisp Concepts}
-\label{sec:org6b02ce6}
+\label{sec:org786362a}
 
 \subsection{Interactive Commands}
-\label{sec:org7db3818}
+\label{sec:orgaf89e6f}
 
 Interactive functions that can be run "interactively". Here, interactively maens
 that they can be run through \texttt{M-x}. Interactive functions are defined by adding
@@ -448,4 +462,12 @@ that they can be run through \texttt{M-x}. Interactive functions are defined by 
 Interactive functions also have a sophisticated mechanism of querying the user
 for standard options and passing them as flags. See the \href{https://www.gnu.org/software/emacs/manual/html\_node/elisp/Using-Interactive.html}{Emacs Documentation} for
 "Using interactive" for more details.
+\section{{\bfseries\sffamily TODO} Improvements}
+\label{sec:orgaeceefe}
+
+\begin{itemize}
+\item Remove "Yes" confirmation for changed files.
+\item Make checkboxes less ugly.
+\item Better PDFs in Emacs.
+\end{itemize}
 \end{document}

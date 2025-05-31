@@ -22,6 +22,7 @@
 (global-auto-revert-mode t)
 
 (setq-default auto-save-interval 0
+              auto-save-default  nil
               create-lockfiles   nil
               make-backup-files  nil)
 
@@ -71,3 +72,8 @@
 (add-hook 'before-save-hook #'eglot-maybe-format-buffer)
 
 (global-company-mode t)
+
+(defun electric-indent-mode-local-off ()
+  (electric-indent-local-mode -1))
+
+(add-hook 'org-mode-hook #'electric-indent-mode-local-off)
