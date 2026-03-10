@@ -92,7 +92,10 @@
 ;; Theme and UI
 (setq-default dracula-bolder-keywords nil)
 (require 'dracula-theme)
-(load-theme 'dracula t)
+(let ((color-scheme (string-trim (shell-command-to-string
+                                  "gsettings get org.gnome.desktop.interface color-scheme"))))
+  (unless (string-equal color-scheme "'prefer-light'")
+    (load-theme 'dracula t)))
 (doom-modeline-mode t)
 (column-number-mode t)
 (tool-bar-mode -1)
