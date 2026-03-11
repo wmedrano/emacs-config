@@ -86,8 +86,9 @@
               indent-tabs-mode nil
               tab-width 4
               auto-revert-interval 3
+              lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t))
               fill-column 80)
-(setq history-length 1000)
+(setq-default history-length 1000)
 (savehist-mode 1)
 (global-auto-revert-mode t)
 (which-key-mode t)
