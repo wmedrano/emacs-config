@@ -8,10 +8,11 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ace-window anzu company consult diff-hl doom-modeline doom-themes
-                dracula-theme eglot eldoc embark embark-consult evil flycheck
-                gnuplot htmlize lua-mode markdown-mode orderless posframe rg
-                rust-mode transient vertico which-key)))
+   '(ace-window agent-shell anzu auto-highlight-symbol company consult diff-hl
+                doom-modeline doom-themes dracula-theme eglot eldoc embark
+                embark-consult evil flycheck gnuplot htmlize lua-mode
+                markdown-mode orderless posframe rg rust-mode transient vertico
+                which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -48,7 +49,6 @@
 (require 'consult-imenu)
 (require 'diff-hl)
 (require 'diff-hl-flydiff)
-(require 'disasm)
 (require 'doom-modeline)
 (require 'eglot)
 (require 'embark)
