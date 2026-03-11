@@ -12,7 +12,7 @@
                 doom-modeline doom-themes dracula-theme eglot eldoc embark
                 embark-consult evil flycheck gnuplot htmlize lua-mode
                 markdown-mode orderless posframe rg rust-mode transient vertico
-                which-key)))
+                vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -26,8 +26,8 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (let ((lisp-dir (expand-file-name "lisp/" user-emacs-directory)))
-  (add-to-list 'load-path lisp-dir)
   ;; "^[^.]" excludes . and .. and other dotfiles (e.g. .git) from the directory listing
   (cl-loop for dir in (directory-files lisp-dir t "^[^.]")
            when (file-directory-p dir)
@@ -381,7 +381,9 @@ Otherwise, call compile interactively."
 (setq-default aw-dispatch-always t)
 (when (posframe-workable-p)
   (ace-window-posframe-mode t))
-(set-face-attribute 'aw-leading-char-face nil :height 1024 :font "Nabla")
+(set-face-attribute 'aw-leading-char-face nil
+                    :height 2048
+                    :font "Nabla")
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
 
