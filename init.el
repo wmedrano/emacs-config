@@ -117,6 +117,7 @@
 (global-display-line-numbers-mode t)
 (global-hl-line-mode t)
 (blink-cursor-mode -1)
+(setq-default ring-bell-function 'ignore)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Minibuffer Completion
