@@ -210,8 +210,11 @@ Note: A bit buggy at the moment."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent Shell
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default agent-shell-preferred-agent-config 'claude-code)
-(setq-default agent-shell-google-authentication
+(setq-default agent-shell-preferred-agent-config
+              (if (executable-find "claude-agent-acp")
+                  'claude-code
+                'gemini-cli)
+              agent-shell-google-authentication
               (agent-shell-google-make-authentication :none t))
 
 (add-to-list 'display-buffer-alist
@@ -224,6 +227,15 @@ Note: A bit buggy at the moment."
   (agent-shell-interrupt t)
   (agent-shell-clear-buffer)
   (goto-char (point-max)))
+
+(defun agent-shell-switch-agent ()
+  "Switch preferred agent between claude-code and gemini-cli."
+  (interactive)
+  (setq-default agent-shell-preferred-agent-config
+                (if (eq agent-shell-preferred-agent-config 'claude-code)
+                    'gemini-cli
+                  'claude-code))
+  (message "Agent switched to %s" agent-shell-preferred-agent-config))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Languages
