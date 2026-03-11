@@ -219,12 +219,18 @@ Note: A bit buggy at the moment."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent Shell
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (file-exists-p "/google")
+  (add-to-list 'exec-path "/google/bin/releases/gemini-cli/tools"))
 (setq-default agent-shell-preferred-agent-config
               (if (executable-find "claude-agent-acp")
                   'claude-code
                 'gemini-cli)
               agent-shell-google-authentication
               (agent-shell-google-make-authentication :none t))
+(setq-default
+ ;; Reinitialize this variable to take into account google authentication
+ ;; updates.
+ agent-shell-agent-configs (agent-shell--make-default-agent-configs))
 
 (add-to-list 'display-buffer-alist
              '((major-mode . agent-shell-mode)
