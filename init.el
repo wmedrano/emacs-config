@@ -12,7 +12,7 @@
                 doom-modeline doom-themes dracula-theme eglot eldoc embark
                 embark-consult evil flycheck gnuplot htmlize lua-mode
                 markdown-mode orderless posframe rg rust-mode transient vertico
-                vundo which-key)))
+                vertico-posframe vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -60,6 +60,7 @@
 (require 'shell-maker)
 (require 'ttx)
 (require 'vertico)
+(require 'vertico-posframe)
 (require 'which-key)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -123,6 +124,10 @@
               completion-category-defaults nil)
 (setq-default enable-recursive-minibuffers t)
 (vertico-mode t)
+(when (posframe-workable-p)
+  (setq-default
+   vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
+  (vertico-posframe-mode t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Completion
