@@ -46,6 +46,7 @@
 (require 'anzu)
 (require 'company)
 (require 'consult)
+(require 'consult-agent-shell)
 (require 'consult-flymake)
 (require 'consult-imenu)
 (require 'diff-hl)
@@ -124,10 +125,11 @@
               completion-category-defaults nil)
 (setq-default enable-recursive-minibuffers t)
 (vertico-mode t)
-(when (posframe-workable-p)
-  (setq-default
+
+(setq-default
    vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
-  (vertico-posframe-mode t))
+;; (when (posframe-workable-p)
+;;   (vertico-posframe-mode t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Completion
@@ -375,9 +377,10 @@ Otherwise, call compile interactively."
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
 
 ;; SPC a
-(define-key leader-map "aa" #'agent-shell-send-dwim)
-(define-key leader-map "an" #'agent-shell-new-shell)
-(define-key leader-map "at" #'agent-shell-toggle)
+(define-key leader-map "aa" #'consult-agent-shell-send-region)
+(define-key leader-map "aq" #'consult-agent-shell-queue-request)
+(define-key leader-map "ar" #'consult-agent-shell-rename)
+(define-key leader-map "as" #'consult-agent-shell-switch-buffer)
 
 ;; SPC s
 (define-key leader-map "ss" #'consult-ripgrep)
