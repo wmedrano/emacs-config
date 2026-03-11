@@ -40,6 +40,7 @@
 (require 'ace-window-posframe)
 (require 'agent-shell)
 (require 'agent-shell-diff)
+(require 'agent-shell-google)
 (require 'ansi-color)
 (require 'ansi-osc)
 (require 'anzu)
@@ -209,8 +210,9 @@ Note: A bit buggy at the moment."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent Shell
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default agent-shell-diff-header-style 'diff
-              agent-shell-preferred-agent-config 'claude-code)
+(setq-default agent-shell-preferred-agent-config 'claude-code)
+(setq-default agent-shell-google-authentication
+              (agent-shell-google-make-authentication :none t))
 
 (add-to-list 'display-buffer-alist
              '((major-mode . agent-shell-mode)
