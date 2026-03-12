@@ -59,7 +59,7 @@
 (require 'flymake)
 (require 'posframe)
 (require 'shell-maker)
-(require 'ttx)
+(require 'ttx-mode)
 (require 'vertico)
 (require 'vertico-posframe)
 (require 'which-key)
@@ -387,8 +387,7 @@ Otherwise, call compile interactively."
 ;; SPC a
 (define-key leader-map "aa" #'consult-agent-shell-send-region)
 (define-key leader-map "aq" #'consult-agent-shell-queue-request)
-(define-key leader-map "ar" #'consult-agent-shell-rename)
-(define-key leader-map "as" #'consult-agent-shell-switch-buffer)
+(define-key leader-map "as" #'consult-agent-shell-switch)
 
 ;; SPC s
 (define-key leader-map "ss" #'consult-ripgrep)
