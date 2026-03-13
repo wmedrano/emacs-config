@@ -420,7 +420,8 @@ Otherwise, call compile interactively."
 ;; Agent Shell
 (cl-loop for mode in '(agent-shell-diff-mode
                        diff-mode
-                       xref--xref-buffer-mode)
+                       xref--xref-buffer-mode
+                       ttx-mode)
          do (add-to-list 'evil-motion-state-modes mode))
 ;; bindings
 (define-key agent-shell-mode-map (kbd "C-c C-k") #'agent-shell-reset)
