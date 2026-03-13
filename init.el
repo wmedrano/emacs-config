@@ -348,7 +348,8 @@ Otherwise, call compile interactively."
 (setq-default
  initial-major-mode 'org-mode
  initial-scratch-message "\n#+BEGIN_SRC\n#+END_SRC\n"
- org-src-preserve-indentation t)
+ org-src-preserve-indentation t
+ org-html-postamble nil)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((dot . t)
