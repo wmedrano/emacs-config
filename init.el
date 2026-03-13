@@ -230,7 +230,8 @@ Note: A bit buggy at the moment."
 (setq-default
  ;; Reinitialize this variable to take into account google authentication
  ;; updates.
- agent-shell-agent-configs (agent-shell--make-default-agent-configs))
+ agent-shell-agent-configs    (agent-shell--make-default-agent-configs)
+ agent-shell-session-strategy 'new)
 
 (add-to-list 'display-buffer-alist
              '((major-mode . agent-shell-mode)
