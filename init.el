@@ -222,9 +222,9 @@ Note: A bit buggy at the moment."
 (when (file-exists-p "/google")
   (add-to-list 'exec-path "/google/bin/releases/gemini-cli/tools"))
 (setq-default agent-shell-preferred-agent-config
-              (if (executable-find "claude-agent-acp")
-                  'claude-code
-                'gemini-cli)
+              (cond ((executable-find "claude-agent-acp") 'claude-code)
+                    ((executable-find "opencode") 'opencode)
+                    (t 'gemini-cli))
               agent-shell-google-authentication
               (agent-shell-google-make-authentication :none t))
 (setq-default
@@ -236,6 +236,15 @@ Note: A bit buggy at the moment."
 (add-to-list 'display-buffer-alist
              '((major-mode . agent-shell-mode)
                (display-buffer-reuse-window display-buffer-pop-up-window)))
+
+(defun agent-shell-set-preferred-agent (agent)
+  "Interactively set the preferred agent shell to AGENT."
+  (interactive
+   (list (intern (completing-read "Preferred agent: "
+                                  '("claude-code" "opencode" "gemini-cli")
+                                  nil t))))
+  (setq-default agent-shell-preferred-agent-config agent)
+  (message "Preferred agent set to %s" agent))
 
 (defun agent-shell-reset ()
   "Clear the agent shell buffer and move point to the end."
@@ -390,9 +399,9 @@ Otherwise, call compile interactively."
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
 
 ;; SPC a
-(define-key leader-map "aa" #'consult-agent-shell-send-region)
+(define-key leader-map "aa" #'consult-agent-shell-switch)
 (define-key leader-map "aq" #'consult-agent-shell-queue-request)
-(define-key leader-map "as" #'consult-agent-shell-switch)
+(define-key leader-map "as" #'consult-agent-shell-send-region)
 
 ;; SPC s
 (define-key leader-map "ss" #'consult-ripgrep)
