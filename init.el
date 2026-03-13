@@ -263,6 +263,9 @@ Note: A bit buggy at the moment."
              'elisp-flymake-byte-compile-load-path
              path))
 
+;; Python
+(add-hook 'python-mode-hook #'eglot-ensure)
+
 ;; Rust
 (defun rust-mode-setup ()
   "Setup rust-mode configuration."
