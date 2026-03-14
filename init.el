@@ -10,7 +10,7 @@
  '(package-selected-packages
    '(ace-window agent-shell anzu auto-highlight-symbol company consult diff-hl
                 doom-modeline doom-themes dracula-theme eglot eldoc embark
-                embark-consult evil flycheck gnuplot htmlize lua-mode
+                embark-consult evil flycheck gnuplot htmlize lua-mode marginalia
                 markdown-mode orderless posframe rg rust-mode smartparens
                 transient vertico vertico-posframe vundo which-key)))
 (custom-set-faces
@@ -57,8 +57,10 @@
 (require 'evil)
 (require 'evil)
 (require 'flymake)
+(require 'marginalia)
 (require 'posframe)
 (require 'shell-maker)
+(require 'smartparens)
 (require 'ttx-mode)
 (require 'vertico)
 (require 'vertico-posframe)
@@ -135,9 +137,10 @@
 (vertico-mode t)
 
 (setq-default
-   vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
-;; (when (posframe-workable-p)
-;;   (vertico-posframe-mode t))
+ ;; For the rare occasion I feel like `vertico-posframe-mode'.
+ vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
+
+(marginalia-mode t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Completion
