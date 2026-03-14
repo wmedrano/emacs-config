@@ -243,6 +243,14 @@ Note: A bit buggy at the moment."
              '((major-mode . agent-shell-mode)
                (display-buffer-reuse-window display-buffer-pop-up-window)))
 
+(defun agent-shell--data-dir-under-emacs (subdir)
+  (let* ((cwd (string-remove-suffix "/" (agent-shell-cwd)))
+         (sanitized (replace-regexp-in-string "/" "-" (string-remove-prefix "/" cwd))))
+    (expand-file-name subdir (locate-user-emacs-file (concat "agent-shell-data/" sanitized)))))
+
+(setq-default
+ agent-shell-dot-subdir-function #'agent-shell--data-dir-under-emacs)
+
 (defun agent-shell-set-preferred-agent (agent)
   "Interactively set the preferred agent shell to AGENT."
   (interactive
@@ -251,22 +259,6 @@ Note: A bit buggy at the moment."
                                   nil t))))
   (setq-default agent-shell-preferred-agent-config agent)
   (message "Preferred agent set to %s" agent))
-
-(defun agent-shell-reset ()
-  "Clear the agent shell buffer and move point to the end."
-  (interactive)
-  (agent-shell-interrupt t)
-  (agent-shell-clear-buffer)
-  (goto-char (point-max)))
-
-(defun agent-shell-switch-agent ()
-  "Switch preferred agent between claude-code and gemini-cli."
-  (interactive)
-  (setq-default agent-shell-preferred-agent-config
-                (if (eq agent-shell-preferred-agent-config 'claude-code)
-                    'gemini-cli
-                  'claude-code))
-  (message "Agent switched to %s" agent-shell-preferred-agent-config))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Languages
@@ -443,7 +435,6 @@ Otherwise, call compile interactively."
                        ttx-mode)
          do (add-to-list 'evil-motion-state-modes mode))
 ;; bindings
-(define-key agent-shell-mode-map (kbd "C-c C-k") #'agent-shell-reset)
 (define-key agent-shell-mode-map (kbd "C-c C-q") #'agent-shell-queue-request)
 ;; diff mode bindings
 (define-key agent-shell-diff-mode-map (kbd "C-c C-c") #'agent-shell-diff-accept-all)

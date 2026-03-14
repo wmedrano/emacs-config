@@ -1,3 +1,5 @@
+agent/
+agent-shell-data/
 auto-save-list/
 eln-cache/
 elpa/
