@@ -11,8 +11,8 @@
    '(ace-window agent-shell anzu auto-highlight-symbol company consult diff-hl
                 doom-modeline doom-themes dracula-theme eglot eldoc embark
                 embark-consult evil flycheck gnuplot htmlize lua-mode
-                markdown-mode orderless posframe rg rust-mode transient vertico
-                vertico-posframe vundo which-key)))
+                markdown-mode orderless posframe rg rust-mode smartparens
+                transient vertico vertico-posframe vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -83,15 +83,21 @@
               backup-inhibited  t
               auto-save-default nil
               auto-save-timeout nil
-              indent-tabs-mode nil
-              tab-width 4
               auto-revert-interval 3
-              lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t))
-              fill-column 80)
+              lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t)))
 (setq-default history-length 1000)
 (savehist-mode 1)
 (global-auto-revert-mode t)
 (which-key-mode t)
+
+;; Formatting
+(setq-default fill-column      80
+              indent-tabs-mode nil
+              tab-width        4)
+
+(require 'smartparens)
+(require 'smartparens-config)
+(add-hook 'prog-mode-hook #'smartparens-mode)
 
 ;; Theme and UI
 (setq-default dracula-bolder-keywords nil)
