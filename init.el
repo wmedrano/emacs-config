@@ -236,7 +236,9 @@ Note: A bit buggy at the moment."
                     ((executable-find "claude-agent-acp") 'claude-code)
                     (t 'gemini-cli))
               agent-shell-google-authentication
-              (agent-shell-google-make-authentication :none t))
+              (agent-shell-google-make-authentication :none t)
+              (agent-shell-google-gemini-acp-command '("gemini" "--experimental-acp"
+                                                       "--model" "gemini-3-flash-preview")))
 (setq-default
  ;; Reinitialize this variable to take into account google authentication
  ;; updates.
