@@ -365,7 +365,9 @@ Otherwise, call compile interactively."
  initial-major-mode 'org-mode
  initial-scratch-message "\n#+BEGIN_SRC\n#+END_SRC\n"
  org-src-preserve-indentation t
- org-html-postamble nil)
+ org-html-postamble nil
+ org-use-sub-superscripts nil
+ org-export-with-sub-superscripts nil)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((dot . t)
