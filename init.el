@@ -403,6 +403,7 @@ Otherwise, call compile interactively."
 (define-key leader-map "aa" #'consult-agent-shell-switch)
 (define-key leader-map "aq" #'consult-agent-shell-queue-request)
 (define-key leader-map "as" #'consult-agent-shell-send-region)
+(define-key leader-map "ap" #'agent-shell-set-preferred-agent)
 
 ;; SPC s
 (define-key leader-map "ss" #'consult-ripgrep)
@@ -439,6 +440,7 @@ Otherwise, call compile interactively."
          do (add-to-list 'evil-motion-state-modes mode))
 ;; bindings
 (define-key agent-shell-mode-map (kbd "C-c C-q") #'agent-shell-queue-request)
+(define-key agent-shell-mode-map (kbd "C-c C-t") #'agent-shell-insert-shell-command-output)
 ;; diff mode bindings
 (define-key agent-shell-diff-mode-map (kbd "C-c C-c") #'agent-shell-diff-accept-all)
 (define-key agent-shell-diff-mode-map (kbd "C-c C-k") #'agent-shell-diff-reject-all)
@@ -458,7 +460,8 @@ Otherwise, call compile interactively."
 (global-set-key (kbd "<f2>")  #'eglot-rename)
 (global-set-key (kbd "<f5>")  #'compile-dwim)
 
+(put 'narrow-to-region 'disabled nil)
+
 
 (provide 'init)
 ;;; init.el ends here
-(put 'narrow-to-region 'disabled nil)
