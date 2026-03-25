@@ -10,9 +10,10 @@
  '(package-selected-packages
    '(ace-window agent-shell anzu auto-highlight-symbol company consult diff-hl
                 doom-modeline doom-themes dracula-theme eglot eldoc embark
-                embark-consult evil flycheck gnuplot htmlize lua-mode marginalia
-                markdown-mode orderless posframe rg rust-mode smartparens
-                transient vertico vertico-posframe vundo which-key)))
+                embark-consult erc evil flycheck flymake gnuplot htmlize
+                lua-mode marginalia markdown-mode orderless org peg posframe
+                python rg rust-mode smartparens tramp transient typescript-mode
+                vertico vertico-posframe vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -231,8 +232,8 @@ Note: A bit buggy at the moment."
 (when (file-exists-p "/google")
   (add-to-list 'exec-path "/google/bin/releases/gemini-cli/tools"))
 (setq-default agent-shell-preferred-agent-config
-              (cond ((executable-find "claude-agent-acp") 'claude-code)
-                    ((executable-find "opencode") 'opencode)
+              (cond ((executable-find "opencode") 'opencode)
+                    ((executable-find "claude-agent-acp") 'claude-code)
                     (t 'gemini-cli))
               agent-shell-google-authentication
               (agent-shell-google-make-authentication :none t))
