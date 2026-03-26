@@ -56,7 +56,6 @@
 (require 'eglot)
 (require 'embark)
 (require 'evil)
-(require 'evil)
 (require 'flymake)
 (require 'marginalia)
 (require 'posframe)
@@ -70,7 +69,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq gc-cons-threshold (* 100 1024 1024))  ; 100MB
+(setq-default gc-cons-threshold (* 100 1024 1024))  ; 100MB
 (defvar gc-timer nil
   "Timer for idle garbage collection.")
 (when gc-timer
@@ -110,6 +109,16 @@
   (unless (string-equal color-scheme "'prefer-light'")
     (load-theme 'dracula t)))
 (doom-modeline-mode t)
+
+;; Custom segment: Python virtualenv indicator
+(doom-modeline-def-segment venv
+  "Python virtualenv indicator. Displays a terminal icon when VIRTUAL_ENV is set."
+  (when (getenv "VIRTUAL_ENV")
+    (doom-modeline-icon-with-height
+     (nerd-icons-sucicon "nf-seti-powershell" :face 'doom-modeline-info)
+     (doom-modeline-vspc))))
+;; Add venv segment to modeline after major-mode on the right side
+(doom-modeline-add-segment 'venv 'major-mode :after)
 (column-number-mode t)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -237,8 +246,8 @@ Note: A bit buggy at the moment."
                     (t 'gemini-cli))
               agent-shell-google-authentication
               (agent-shell-google-make-authentication :none t)
-              (agent-shell-google-gemini-acp-command '("gemini" "--experimental-acp"
-                                                       "--model" "gemini-3-flash-preview")))
+              agent-shell-google-gemini-acp-command '("gemini" "--experimental-acp"
+                                                      "--model" "gemini-3-flash-preview"))
 (setq-default
  ;; Reinitialize this variable to take into account google authentication
  ;; updates.
