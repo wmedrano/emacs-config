@@ -442,7 +442,7 @@ Otherwise, call compile interactively."
 (when (posframe-workable-p)
   (ace-window-posframe-mode t))
 (set-face-attribute 'aw-leading-char-face nil
-                    :height 2048
+                    :height 1024
                     :font "Nabla")
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
