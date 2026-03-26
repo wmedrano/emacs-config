@@ -108,6 +108,7 @@
                                   "gsettings get org.gnome.desktop.interface color-scheme"))))
   (unless (string-equal color-scheme "'prefer-light'")
     (load-theme 'dracula t)))
+(setq-default doom-modeline-buffer-encoding nil)
 (doom-modeline-mode t)
 
 ;; Custom segment: Python virtualenv indicator
