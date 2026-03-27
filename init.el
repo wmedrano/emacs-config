@@ -11,9 +11,9 @@
    '(ace-window agent-shell anzu auto-highlight-symbol company consult diff-hl
                 doom-modeline doom-themes dracula-theme eglot eldoc embark
                 embark-consult erc evil flycheck flymake gnuplot htmlize
-                lua-mode marginalia markdown-mode orderless org peg posframe
-                python rg rust-mode smartparens tramp transient typescript-mode
-                vertico vertico-posframe vundo which-key)))
+                lua-mode marginalia markdown-mode orderless org peg
+                posframe python rg rust-mode smartparens tramp transient
+                typescript-mode vertico vertico-posframe vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -368,6 +368,23 @@ Otherwise, call compile interactively."
    (t
     (call-interactively #'compile))))
 
+(defun copy-filename ()
+  "Copy the current file name to `kill-new'.
+If `project-current' returns a project, make the path relative to
+the project root."
+  (interactive)
+  (let* ((file (buffer-file-name))
+         (project (and (fboundp 'project-current)
+                       (project-current)))
+         (root (and project (project-root project)))
+         (name (if (and root (string-prefix-p root file))
+                   (file-relative-name file root)
+                 file)))
+    (unless file
+      (user-error "No file name for current buffer"))
+    (kill-new name)
+    (message "Copied: %s" name)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -476,7 +493,6 @@ Otherwise, call compile interactively."
 (global-set-key (kbd "<f5>")  #'compile-dwim)
 
 (put 'narrow-to-region 'disabled nil)
-
 
 (provide 'init)
 ;;; init.el ends here
