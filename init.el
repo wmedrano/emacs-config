@@ -57,6 +57,7 @@
 (require 'embark)
 (require 'evil)
 (require 'flymake)
+(require 'jj)
 (require 'marginalia)
 (require 'posframe)
 (require 'shell-maker)
@@ -190,9 +191,18 @@
   (start-process "wezterm" nil "wezterm"
                  "start" "--cwd" (expand-file-name directory)
                  "--" "bash" "-ic"
-                 (concat command "; exec bash")))
+(concat command "; exec bash")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun http-server (directory port)
+  "Start an HTTP server in DIRECTORY on PORT."
+  (interactive
+   (list (read-directory-name "Directory: " default-directory)
+         (read-string "Port: " nil nil "8000")))
+  (let ((default-directory (expand-file-name directory)))
+    (async-shell-command (format "python -m http.server %s" port)
+                         (format "*http-server %s*" port)))
+  (browse-url (format "http://localhost:%s" port)))
+
 ;; VC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (global-diff-hl-mode)
