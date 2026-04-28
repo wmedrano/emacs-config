@@ -1,5 +1,7 @@
-agent/
+.org-id-locations
+/.agent-shell/
 agent-shell-data/
+agent/
 auto-save-list/
 eln-cache/
 elpa/
@@ -8,4 +10,3 @@ history
 multisession/
 projects
 transient/
-/.agent-shell/

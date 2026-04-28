@@ -8,12 +8,12 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ace-window agent-shell anzu auto-highlight-symbol company consult diff-hl
-                doom-modeline doom-themes dracula-theme eglot eldoc embark
-                embark-consult erc evil flycheck flymake gnuplot htmlize
-                lua-mode marginalia markdown-mode orderless org peg
-                posframe python rg rust-mode smartparens tramp transient
-                typescript-mode vertico vertico-posframe vundo which-key)))
+   '(ace-window anzu auto-highlight-symbol company consult diff-hl doom-modeline
+                doom-themes dracula-theme eglot eldoc embark embark-consult erc
+                evil flycheck flymake gnuplot htmlize lua-mode marginalia
+                markdown-mode orderless org peg posframe python rg rust-mode
+                smartparens tramp transient typescript-mode vertico
+                vertico-posframe vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -39,15 +39,11 @@
 
 (require 'ace-window)
 (require 'ace-window-posframe)
-(require 'agent-shell)
-(require 'agent-shell-diff)
-(require 'agent-shell-google)
 (require 'ansi-color)
 (require 'ansi-osc)
 (require 'anzu)
 (require 'company)
 (require 'consult)
-(require 'consult-agent-shell)
 (require 'consult-flymake)
 (require 'consult-imenu)
 (require 'diff-hl)
@@ -60,7 +56,6 @@
 (require 'jj)
 (require 'marginalia)
 (require 'posframe)
-(require 'shell-maker)
 (require 'smartparens)
 (require 'ttx-mode)
 (require 'vertico)
@@ -111,6 +106,8 @@
     (load-theme 'dracula t)))
 (setq-default doom-modeline-buffer-encoding nil)
 (doom-modeline-mode t)
+
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; Custom segment: Python virtualenv indicator
 (doom-modeline-def-segment venv
@@ -245,46 +242,6 @@ Note: A bit buggy at the moment."
              (when diag
                (goto-char (flymake-diagnostic-end diag)))))))
     (user-error nil)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Agent Shell
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (file-exists-p "/google")
-  (add-to-list 'exec-path "/google/bin/releases/gemini-cli/tools"))
-(setq-default agent-shell-preferred-agent-config
-              (cond ((executable-find "opencode") 'opencode)
-                    ((executable-find "claude-agent-acp") 'claude-code)
-                    (t 'gemini-cli))
-              agent-shell-google-authentication
-              (agent-shell-google-make-authentication :none t)
-              agent-shell-google-gemini-acp-command '("gemini" "--experimental-acp"
-                                                      "--model" "gemini-3-flash-preview"))
-(setq-default
- ;; Reinitialize this variable to take into account google authentication
- ;; updates.
- agent-shell-agent-configs    (agent-shell--make-default-agent-configs)
- agent-shell-session-strategy 'new)
-
-(add-to-list 'display-buffer-alist
-             '((major-mode . agent-shell-mode)
-               (display-buffer-reuse-window display-buffer-pop-up-window)))
-
-(defun agent-shell--data-dir-under-emacs (subdir)
-  (let* ((cwd (string-remove-suffix "/" (agent-shell-cwd)))
-         (sanitized (replace-regexp-in-string "/" "-" (string-remove-prefix "/" cwd))))
-    (expand-file-name subdir (locate-user-emacs-file (concat "agent-shell-data/" sanitized)))))
-
-(setq-default
- agent-shell-dot-subdir-function #'agent-shell--data-dir-under-emacs)
-
-(defun agent-shell-set-preferred-agent (agent)
-  "Interactively set the preferred agent shell to AGENT."
-  (interactive
-   (list (intern (completing-read "Preferred agent: "
-                                  '("claude-code" "opencode" "gemini-cli")
-                                  nil t))))
-  (setq-default agent-shell-preferred-agent-config agent)
-  (message "Preferred agent set to %s" agent))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Languages
@@ -441,12 +398,6 @@ the project root."
 (defvar leader-map (make-sparse-keymap) "Leader key keymap.")
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
 
-;; SPC a
-(define-key leader-map "aa" #'consult-agent-shell-switch)
-(define-key leader-map "aq" #'consult-agent-shell-queue-request)
-(define-key leader-map "as" #'consult-agent-shell-send-region)
-(define-key leader-map "ap" #'agent-shell-set-preferred-agent)
-
 ;; SPC s
 (define-key leader-map "ss" #'consult-ripgrep)
 (define-key leader-map "sr" #'rg)
@@ -474,20 +425,11 @@ the project root."
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
 
-;; Agent Shell
-(cl-loop for mode in '(agent-shell-diff-mode
-                       diff-mode
+;; Motion modes
+(cl-loop for mode in '(diff-mode
                        xref--xref-buffer-mode
                        ttx-mode)
          do (add-to-list 'evil-motion-state-modes mode))
-;; bindings
-(define-key agent-shell-mode-map (kbd "C-c C-q") #'agent-shell-queue-request)
-(define-key agent-shell-mode-map (kbd "C-c C-t") #'agent-shell-insert-shell-command-output)
-;; diff mode bindings
-(define-key agent-shell-diff-mode-map (kbd "C-c C-c") #'agent-shell-diff-accept-all)
-(define-key agent-shell-diff-mode-map (kbd "C-c C-k") #'agent-shell-diff-reject-all)
-(define-key agent-shell-diff-mode-map (kbd "o") #'agent-shell-diff-open-file)
-
 
 ;; Global Keybindings
 (global-set-key (kbd "C-x b") #'consult-buffer)
