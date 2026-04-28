@@ -10,9 +10,9 @@
  '(package-selected-packages
    '(ace-window anzu auto-highlight-symbol company consult diff-hl doom-modeline
                 doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                evil flycheck flymake gnuplot htmlize lua-mode marginalia
-                markdown-mode orderless org peg posframe python rg rust-mode
-                smartparens tramp transient typescript-mode vertico
+                evil flycheck flymake gn-mode gnuplot htmlize lua-mode
+                marginalia markdown-mode orderless org peg posframe python rg
+                rust-mode smartparens tramp transient typescript-mode vertico
                 vertico-posframe vundo which-key)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -300,6 +300,10 @@ Note: A bit buggy at the moment."
   "Run cargo fix --allow-dirty at the project root."
   (interactive)
   (cargo-cmd "fix --allow-dirty"))
+
+;; Generate Ninja
+
+(add-to-list 'auto-mode-alist '("\\.gn\\'" . gn-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Contextual functions
