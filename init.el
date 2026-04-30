@@ -157,7 +157,6 @@
 (setq-default completion-in-region-function #'consult-completion-in-region
               company-tooltip-minimum-width 64)
 (global-company-mode t)
-(require 'company)
 (define-key company-active-map (kbd "C-s") #'completion-at-point)
 
 ;; Embark
@@ -347,7 +346,7 @@ the project root."
   (let* ((file (buffer-file-name))
          (project (and (fboundp 'project-current)
                        (project-current)))
-         (root (and project (project-root project)))
+         (root (and project (expand-file-name (project-root project))))
          (name (if (and root (string-prefix-p root file))
                    (file-relative-name file root)
                  file)))
