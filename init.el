@@ -423,8 +423,9 @@ the project root."
 (when (posframe-workable-p)
   (ace-window-posframe-mode t))
 (set-face-attribute 'aw-leading-char-face nil
+                    :foreground "#FF5555"
                     :height 1024
-                    :font "Nabla")
+                    :font "Lobster")
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
 
