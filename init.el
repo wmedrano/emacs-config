@@ -10,10 +10,16 @@
  '(package-selected-packages
    '(ace-window anzu auto-highlight-symbol company consult diff-hl doom-modeline
                 doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                evil flycheck flymake gn-mode gnuplot htmlize lua-mode
-                marginalia markdown-mode orderless org peg posframe python rg
-                rust-mode smartparens tramp transient typescript-mode vertico
-                vertico-posframe vundo which-key)))
+                evil flycheck flymake gn-mode gnuplot gptel htmlize lua-mode
+                marginalia markdown-mode orderless org package-lint peg posframe
+                python rg rust-mode smartparens tramp transient ttx-mode
+                typescript-mode vertico vertico-posframe vundo which-key))
+ '(safe-local-variable-values
+   '((eval and buffer-file-name (not (eq major-mode 'package-recipe-mode))
+           (or (require 'package-recipe-mode nil t)
+               (let ((load-path (cons "../package-build" load-path)))
+                 (require 'package-recipe-mode nil t)))
+           (package-recipe-mode)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -53,6 +59,7 @@
 (require 'embark)
 (require 'evil)
 (require 'flymake)
+(require 'gptel)
 (require 'jj)
 (require 'marginalia)
 (require 'posframe)
@@ -368,12 +375,48 @@ the project root."
  org-src-preserve-indentation t
  org-html-postamble nil
  org-use-sub-superscripts nil
- org-export-with-sub-superscripts nil)
+ org-export-with-sub-superscripts nil
+ org-fontify-special-blocks t)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((dot . t)
    (emacs-lisp . t)
    (gnuplot . t)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Ollama
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq-default
+ gptel-directives '((default . "")
+                    (brief . "- You provide succint answer to programming questions.
+- Assume that the person asking the question is already an experienced programmer.
+- Provide brief answer with an example snippet.
+
+* Example:
+
+** Question
+
+How do you define type hints in Python?
+
+** Answer
+
+Type hints use `:` for types and `->` for return values.
+
+*** Example
+```python
+def add_numbers(a: int, b: int) -> int:
+    return a + b
+```
+
+-   *`a: int`*: Parameter ~a~ should be an integer.
+-   *`-> int`*: The function returns an integer."))
+ gptel-backend (gptel-make-ollama "Ollama"
+                 :host "localhost:11434"
+                 :stream t
+                 :request-params '(think "low")
+                 :models '(qwen3.6:27b kimi-k2.6:cloud))
+ gptel-model 'qwen3.6:27b
+ gptel-default-mode 'org-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil Mode
