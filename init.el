@@ -61,6 +61,7 @@
 (require 'vertico)
 (require 'vertico-posframe)
 (require 'which-key)
+(require 'auto-highlight-symbol)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
@@ -87,6 +88,9 @@
 (savehist-mode 1)
 (global-auto-revert-mode t)
 (which-key-mode t)
+
+;; Auto Highlight Symbol
+(setq-default ahs-idle-interval 0.25)
 
 ;; Formatting
 (setq-default fill-column      80
@@ -451,4 +455,5 @@ the project root."
 (put 'narrow-to-region 'disabled nil)
 
 (provide 'init)
+
 ;;; init.el ends here
