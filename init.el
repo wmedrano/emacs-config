@@ -253,6 +253,20 @@ Note: A bit buggy at the moment."
   (interactive)
   (cargo-cmd "fix --allow-dirty"))
 
+;; C / C++
+(setq-default c-default-style '((java-mode . "java")
+                                (awk-mode . "awk")
+                                (other . "k&r"))
+              c-basic-offset 2)
+
+(defun c-mode-setup ()
+  "Setup C/C++ mode configuration."
+  (setq-local tab-width 2)
+  (c-set-offset 'innamespace 0))
+
+(add-hook 'c-mode-hook #'c-mode-setup)
+(add-hook 'c++-mode-hook #'c-mode-setup)
+
 ;; Generate Ninja
 
 (add-to-list 'auto-mode-alist '("\\.gn\\'" . gn-mode))
