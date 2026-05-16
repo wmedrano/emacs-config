@@ -68,6 +68,7 @@
 (require 'vertico-posframe)
 (require 'which-key)
 (require 'auto-highlight-symbol)
+(require 'project-monorepo)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
