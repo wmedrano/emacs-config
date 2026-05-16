@@ -68,12 +68,6 @@
 (require 'vertico-posframe)
 (require 'which-key)
 (require 'auto-highlight-symbol)
-(require 'project-monorepo)
-
-(setq-default project-monorepo-configs
-              (list (project-monorepo-create
-                     :root "~/chromium/src"
-                     :subdirs '("third_party/blink/renderer/core"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
