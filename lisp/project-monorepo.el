@@ -20,11 +20,10 @@
 ;;   (setq project-monorepo-configs
 ;;         (list (project-monorepo-create
 ;;                :root "~/repo/my-workspace"
-;;                :subdirs '("~/repo/my-workspace/crates/foo"
-;;                           "~/repo/my-workspace/crates/bar"))
+;;                :subdirs '("crates/foo" "crates/bar"))
 ;;               (project-monorepo-create
 ;;                :root "~/repo/other-monorepo"
-;;                :subdirs '("~/repo/other-monorepo/services/api"))))
+;;                :subdirs '("services/api"))))
 
 ;;; Code:
 
@@ -35,14 +34,15 @@
                (:copier nil))
   "A monorepo project with sub-project scoping."
   root       ; absolute directory — the sub-project boundary
-  subdirs)   ; list of absolute directories — all sub-project roots
+  subdirs)   ; list of directories relative to root — all sub-project roots
 
 ;;;; Configuration
 
 (defcustom project-monorepo-configs nil
   "List of project-monorepo structs describing known monorepos.
 Each entry has a `root' (monorepo root) and `subdirs' (list of
-sub-project directories).  Relative paths are expanded automatically."
+sub-project directories relative to root).  Paths are expanded
+automatically."
   :type '(repeat (list :tag "Monorepo"
                        (directory :tag "Monorepo root")
                        (repeat :tag "Subdirectories" (directory :tag "Subdirectory"))))
@@ -68,7 +68,7 @@ Return a `project-monorepo' struct, or nil."
             ;; Find the longest matching subdirectory within this config
             (let (match-project)
               (dolist (proj (project-monorepo-subdirs cfg))
-                (let ((proj-expanded (expand-file-name proj)))
+                (let ((proj-expanded (expand-file-name proj root)))
                   (when (and (string-prefix-p (file-name-as-directory proj-expanded) dir-as-dir)
                              (or (null match-project)
                                  (> (length proj-expanded) (length match-project))))
@@ -77,9 +77,11 @@ Return a `project-monorepo' struct, or nil."
                 (setq best-config cfg
                       best-project match-project)))))))
     (when best-config
-      (project-monorepo-create
-       :root best-project
-       :subdirs (mapcar #'expand-file-name (project-monorepo-subdirs best-config))))))
+      (let ((root (expand-file-name (project-monorepo-root best-config))))
+        (project-monorepo-create
+         :root best-project
+         :subdirs (mapcar (lambda (s) (expand-file-name s root))
+                          (project-monorepo-subdirs best-config)))))))
 
 ;;;###autoload
 (add-hook 'project-find-functions #'project-monorepo-try-find)
