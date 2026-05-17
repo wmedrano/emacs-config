@@ -27,7 +27,8 @@
 (column-number-mode t)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-(scroll-bar-mode -1)
+(when (display-graphic-p)
+  (scroll-bar-mode -1))
 (set-face-attribute 'default nil
                     :font "Fira Code"
                     :height 120)

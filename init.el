@@ -44,7 +44,8 @@
 
 
 (require 'ace-window)
-(require 'ace-window-posframe)
+(when (display-graphic-p)
+  (require 'ace-window-posframe))
 (require 'ansi-color)
 (require 'ansi-osc)
 (require 'anzu)
