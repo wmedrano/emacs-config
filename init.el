@@ -354,6 +354,13 @@ the project root."
 (setq-default evil-cross-lines t
               evil-move-beyond-eol t
               evil-move-cursor-back nil)
+(unless (display-graphic-p)
+  (setq-default evil-normal-state-cursor  '(box  . "#51afef")   ; blue
+                evil-insert-state-cursor  '(bar  . "#ff8c00")   ; orange
+                evil-visual-state-cursor  '(box  . "#a9a1e1")   ; purple
+                evil-emacs-state-cursor   '(box  . "#ffffff")   ; white
+                evil-motion-state-cursor  '(box  . "#51afef")   ; blue
+                evil-replace-state-cursor '(hbar . "#ff8c00"))) ; orange
 (evil-mode 1)
 (global-anzu-mode t)
 
