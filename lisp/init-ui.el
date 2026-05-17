@@ -30,7 +30,7 @@
 (when (display-graphic-p)
   (scroll-bar-mode -1))
 (set-face-attribute 'default nil
-                    :font "Fira Code"
+                    :font "Roboto Mono"
                     :height 120)
 (setq-default display-line-numbers-grow-only t
               scroll-conservatively 101
