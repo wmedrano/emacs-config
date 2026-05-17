@@ -10,10 +10,11 @@
  '(package-selected-packages
    '(ace-window anzu auto-highlight-symbol company consult diff-hl doom-modeline
                 doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                evil flycheck flymake gn-mode gnuplot gptel htmlize lua-mode
-                marginalia markdown-mode orderless org package-lint peg posframe
-                python rg rust-mode smartparens tramp transient ttx-mode
-                typescript-mode vertico vertico-posframe vundo which-key))
+                evil evil-terminal-cursor-changer flycheck flymake gn-mode
+                gnuplot gptel htmlize lua-mode marginalia markdown-mode
+                orderless org package-lint peg posframe python rg rust-mode
+                smartparens tramp transient ttx-mode typescript-mode vertico
+                vertico-posframe vundo which-key))
  '(safe-local-variable-values
    '((eval and buffer-file-name (not (eq major-mode 'package-recipe-mode))
            (or (require 'package-recipe-mode nil t)
@@ -121,6 +122,9 @@
 (doom-modeline-mode t)
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+(unless (display-graphic-p)
+  (require 'evil-terminal-cursor-changer-activate)
+  (evil-terminal-cursor-changer-activate))
 
 ;; Custom segment: Python virtualenv indicator
 (doom-modeline-def-segment venv
