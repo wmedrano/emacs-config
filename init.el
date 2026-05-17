@@ -111,12 +111,74 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'init-ui)
+(setq-default dracula-bolder-keywords nil)
+(require 'dracula-theme)
+(let ((color-scheme (string-trim (shell-command-to-string
+                                "gsettings get org.gnome.desktop.interface color-scheme"))))
+  (unless (string-equal color-scheme "'prefer-light'")
+    (load-theme 'dracula t)))
+(setq-default doom-modeline-buffer-encoding nil)
+(doom-modeline-mode t)
+
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; Custom segment: Python virtualenv indicator
+(doom-modeline-def-segment venv
+  "Python virtualenv indicator. Displays a terminal icon when VIRTUAL_ENV is set."
+  (when (getenv "VIRTUAL_ENV")
+    (doom-modeline-icon-with-height
+     (nerd-icons-sucicon "nf-seti-powershell" :face 'doom-modeline-info)
+     (doom-modeline-vspc))))
+;; Add venv segment to modeline after major-mode on the right side
+(doom-modeline-add-segment 'venv 'major-mode :after)
+
+(column-number-mode t)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(when (display-graphic-p)
+  (scroll-bar-mode -1))
+(set-face-attribute 'default nil
+                    :font "Roboto Mono"
+                    :height 120)
+(setq-default display-line-numbers-grow-only t
+              scroll-conservatively 101
+              scroll-margin 0
+              scroll-preserve-screen-position t
+              auto-window-vscroll nil
+              fast-but-imprecise-scrolling t)
+(global-display-line-numbers-mode t)
+(global-hl-line-mode t)
+(blink-cursor-mode -1)
+(setq-default ring-bell-function 'ignore)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Completion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'init-completion)
+(setq-default completion-styles '(orderless basic)
+              completion-category-overrides '((file (styles partial-completion)))
+              completion-category-defaults nil)
+(setq-default enable-recursive-minibuffers t)
+(vertico-mode t)
+
+(setq-default
+ ;; For the rare occasion I feel like `vertico-posframe-mode'.
+ vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
+
+(marginalia-mode t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code Completion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq-default completion-in-region-function #'consult-completion-in-region
+              company-tooltip-minimum-width 64)
+(global-company-mode t)
+(define-key company-active-map (kbd "C-s") #'completion-at-point)
+
+;; Embark
+(setq-default
+ embark-verbose-indicator-display-action
+ '(display-buffer-in-side-window display-buffer-reuse-window))
+
 (require 'project-chromium)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -346,7 +408,56 @@ the project root."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; gptel (Ollama / OpenRouter)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'init-gptel)
+(defvar openrouter-backend
+  (when-let* ((key (getenv "OPENROUTER_API_KEY")))
+    (gptel-make-openai "OpenRouter"
+      :host "openrouter.ai"
+      :endpoint "/api/v1/chat/completions"
+      :stream t
+      :key key
+      :models '(qwen/qwen3.6-35b-a3b
+                nvidia/nemotron-3-super-120b-a12b:free
+                deepseek/deepseek-v4-flash
+                deepseek/deepseek-v4-pro
+                google/gemini-3-flash-preview
+                z-ai/glm-5.1)))
+  "OpenRouter gptel backend, nil when OPENROUTER_API_KEY is unset.")
+
+(defvar ollama-backend
+  (gptel-make-ollama "Ollama"
+    :host "localhost:11434"
+    :stream t
+    :request-params '(think "low")
+    :models '(qwen3.6:35b gemma4:26b gemma4:e4b glm-5.1:cloud deepseek-v4-flash:cloud))
+  "Local Ollama gptel backend.")
+
+(setq-default
+ gptel-directives '((default . "")
+                    (brief . "- You provide succint answer to programming questions.
+- Assume that the person asking the question is already an experienced programmer.
+- Provide brief answer with an example snippet.
+
+* Example:
+
+** Question
+
+How do you define type hints in Python?
+
+** Answer
+
+Type hints use `:` for types and `->` for return values.
+
+*** Example
+```python
+def add_numbers(a: int, b: int) -> int:
+    return a + b
+```
+
+-   *`a: int`*: Parameter ~a~ should be an integer.
+-   *`-> int`*: The function returns an integer."))
+ gptel-backend (or openrouter-backend ollama-backend)
+ gptel-model (if openrouter-backend 'qwen/qwen3.6-35b-a3b 'qwen3.6:35b)
+ gptel-default-mode 'org-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil Mode
