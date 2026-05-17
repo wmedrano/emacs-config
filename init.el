@@ -32,6 +32,8 @@
 ;; Package Management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'package)
+(require 'cl-lib)
+(require 'subr-x)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
@@ -56,6 +58,9 @@
 (require 'consult-imenu)
 (require 'diff-hl)
 (require 'diff-hl-flydiff)
+(require 'doom-modeline)
+(require 'doom-modeline-core)
+(require 'doom-modeline-segments)
 (require 'eglot)
 (require 'embark)
 (require 'evil)
@@ -123,15 +128,16 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (unless (display-graphic-p)
-  (require 'evil-terminal-cursor-changer-activate)
+  (require 'evil-terminal-cursor-changer)
   (evil-terminal-cursor-changer-activate))
 
 ;; Custom segment: Python virtualenv indicator
 (doom-modeline-def-segment venv
   "Python virtualenv indicator. Displays a terminal icon when VIRTUAL_ENV is set."
   (when (getenv "VIRTUAL_ENV")
-    (doom-modeline-icon-with-height
-     (nerd-icons-sucicon "nf-seti-powershell" :face 'doom-modeline-info)
+    (concat
+     (doom-modeline-icon 'sucicon "nf-seti-powershell" nil "venv"
+                         :face 'doom-modeline-info)
      (doom-modeline-vspc))))
 ;; Add venv segment to modeline after major-mode on the right side
 (doom-modeline-add-segment 'venv 'major-mode :after)
@@ -214,11 +220,13 @@
   "Start an HTTP server in DIRECTORY on PORT."
   (interactive
    (list (read-directory-name "Directory: " default-directory)
-         (read-string "Port: " nil nil "8000")))
+         (read-number "Port: " 8000)))
   (let ((default-directory (expand-file-name directory)))
-    (async-shell-command (format "python -m http.server %s" port)
-                         (format "*http-server %s*" port)))
-  (browse-url (format "http://localhost:%s" port)))
+    (make-process
+     :name (format "http-server-%s" port)
+     :buffer (format "*http-server %s*" port)
+     :command (list "python" "-m" "http.server" (number-to-string port))))
+  (browse-url (format "http://localhost:%d" port)))
 
 ;; VC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -368,7 +376,8 @@ Otherwise, call compile interactively."
     (with-current-buffer "*compilation*"
       (recompile)))
    ((or (eq major-mode 'rust-mode)
-        (string-suffix-p "/Cargo.toml" (buffer-file-name)))
+        (when-let ((file (buffer-file-name)))
+          (string-suffix-p "/Cargo.toml" file)))
     (cargo-test))
    ((eq major-mode 'emacs-lisp-mode)
     (eval-buffer))

@@ -10,6 +10,9 @@
 
 ;;; Code:
 
+(require 'asm-mode)
+(require 'subr-x)
+
 (defgroup disasm nil
   "Disassemble binary files."
   :group 'tools)
@@ -37,27 +40,27 @@
 (defun disasm (file)
   "Disassemble FILE and open the result in a buffer."
   (interactive "fBinary file: ")
-  (setq file (expand-file-name file))
-  (unless (file-executable-p file)
-    (user-error "File is not executable: %s" file))
-  (let* ((buf-name (format "*disasm: %s*" (file-name-nondirectory file)))
-         (buf (get-buffer-create buf-name))
-         (args (append disasm-tool-args (list file)))
-         (err-buf (generate-new-buffer " *disasm-stderr*"))
-         (exit-code (with-current-buffer buf
-                      (let ((inhibit-read-only t))
-                        (erase-buffer)
-                        (apply #'call-process disasm-tool nil (list buf (buffer-name err-buf)) nil args)))))
-    (unless (zerop exit-code)
-      (let ((err-msg (with-current-buffer err-buf (buffer-string))))
-        (kill-buffer err-buf)
-        (user-error "Disassembly failed (exit %d): %s" exit-code (string-trim err-msg))))
-    (kill-buffer err-buf)
-    (with-current-buffer buf
-      (disasm-mode)
-      (goto-char (point-min))
-      (read-only-mode 1))
-    (switch-to-buffer buf))))
+  (let ((file (expand-file-name file)))
+    (unless (file-executable-p file)
+      (user-error "File is not executable: %s" file))
+    (let* ((buf-name (format "*disasm: %s*" (file-name-nondirectory file)))
+           (buf (get-buffer-create buf-name))
+           (args (append disasm-tool-args (list file)))
+           (err-buf (generate-new-buffer " *disasm-stderr*"))
+           (exit-code (with-current-buffer buf
+                        (let ((inhibit-read-only t))
+                          (erase-buffer)
+                          (apply #'call-process disasm-tool nil (list buf (buffer-name err-buf)) nil args)))))
+      (unless (zerop exit-code)
+        (let ((err-msg (with-current-buffer err-buf (buffer-string))))
+          (kill-buffer err-buf)
+          (user-error "Disassembly failed (exit %d): %s" exit-code (string-trim err-msg))))
+      (kill-buffer err-buf)
+      (with-current-buffer buf
+        (disasm-mode)
+        (goto-char (point-min))
+        (read-only-mode 1))
+      (switch-to-buffer buf))))
 
 (provide 'disasm)
 

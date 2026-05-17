@@ -6,7 +6,9 @@
 ;;; `project-' protocol.
 ;;; Code:
 
+(require 'cl-lib)
 (require 'project)
+(require 'subr-x)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Chromium
@@ -28,7 +30,8 @@ Slots: `root' (absolute path to source root), `dirs' (sub-dirs relative to root)
 
 (defun chromium-project--files-in-subdir (subdir)
   "Return all regular files under SUBDIR."
-  (process-lines "find" subdir "-type" "f"))
+  (when (file-directory-p subdir)
+    (process-lines "find" subdir "-type" "f")))
 
 (cl-defmethod project-files ((proj chromium-project) &optional _dirs)
   "Return all files across PROJ's configured sub-directories."

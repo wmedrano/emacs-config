@@ -12,6 +12,10 @@
 
 ;;; Code:
 
+(require 'diff-mode)
+(require 'markdown-mode)
+(require 'subr-x)
+
 (defgroup jj nil
   "jj VCS integration."
   :group 'vc)
@@ -24,7 +28,40 @@
 
 (defun jj--root ()
   "Return the root directory of the current jj repository."
-  (string-trim (shell-command-to-string "jj root")))
+  (file-name-as-directory (jj--call-to-string "root")))
+
+(defun jj--call-to-string (&rest args)
+  "Run jj with ARGS and return its trimmed output."
+  (with-temp-buffer
+    (let ((exit-code (apply #'call-process "jj" nil t nil args)))
+      (unless (zerop exit-code)
+        (user-error "jj %s failed (exit %d): %s"
+                    (string-join args " ")
+                    exit-code
+                    (string-trim (buffer-string))))
+      (string-trim (buffer-string)))))
+
+(defun jj--call-buffer (buffer &rest args)
+  "Run jj with ARGS, writing output to BUFFER.
+Signal a `user-error' if jj exits unsuccessfully."
+  (let ((exit-code (apply #'call-process "jj" nil buffer nil args)))
+    (unless (zerop exit-code)
+      (with-current-buffer buffer
+        (user-error "jj %s failed (exit %d): %s"
+                    (string-join args " ")
+                    exit-code
+                    (string-trim (buffer-string)))))))
+
+(defun jj--call-region (start end buffer &rest args)
+  "Run jj with ARGS using region START to END as stdin.
+Write output to BUFFER and signal a `user-error' on failure."
+  (let ((exit-code (apply #'call-process-region start end "jj" nil buffer nil args)))
+    (unless (zerop exit-code)
+      (with-current-buffer buffer
+        (user-error "jj %s failed (exit %d): %s"
+                    (string-join args " ")
+                    exit-code
+                    (string-trim (buffer-string)))))))
 
 (defmacro jj--with-root (&rest body)
   "Evaluate BODY with `default-directory' set to the jj repository root."
@@ -38,7 +75,7 @@
      (with-current-buffer buf
        (let ((inhibit-read-only t))
          (erase-buffer)
-         (apply #'call-process "jj" nil buf nil "diff" "--git" args)
+         (apply #'jj--call-buffer buf "diff" "--git" args)
          (diff-mode)
          (read-only-mode t)
          (goto-char (point-min))))
@@ -76,7 +113,7 @@
      (with-current-buffer buf
        (let ((inhibit-read-only t))
          (erase-buffer)
-         (call-process "jj" nil buf nil "st")
+         (jj--call-buffer buf "st")
          (goto-char (point-min))))
      (with-current-buffer buf
        (jj-status-mode))
@@ -102,14 +139,14 @@
 (defun jj--revsets ()
   "Return a list of change IDs from the jj log."
   (jj--with-root
-   (let ((output (string-trim (shell-command-to-string
-                               "jj log --no-graph -T 'change_id.short() ++ \" \" ++ description.first_line() ++ \"\\n\"'"))))
+   (let ((output (jj--call-to-string
+                  "log" "--no-graph" "-T"
+                  "change_id.short() ++ \" \" ++ description.first_line() ++ \"\\n\"")))
      (split-string output "\n" t))))
 
 (defun jj--current-revset ()
   "Return the short change ID of the current working copy revision."
-  (string-trim (shell-command-to-string
-                "jj log --no-graph -T 'change_id.short()' -r @")))
+  (jj--call-to-string "log" "--no-graph" "-T" "change_id.short()" "-r" "@"))
 
 (defun jj--read-revset ()
   "Prompt for a revset, optionally showing the log side window."
@@ -131,7 +168,7 @@
      (with-current-buffer buf
        (let ((inhibit-read-only t))
          (erase-buffer)
-         (call-process "jj" nil buf nil "edit" revset)
+         (jj--call-buffer buf "edit" revset)
          (goto-char (point-min))))
      (display-buffer buf))))
 
@@ -145,7 +182,7 @@ Defaults to \"@\" (current revision).  With a prefix argument, prompt for REVSET
      (with-current-buffer buf
        (let ((inhibit-read-only t))
          (erase-buffer)
-         (call-process "jj" nil buf nil "new" revset)
+         (jj--call-buffer buf "new" revset)
          (goto-char (point-min))))
      (display-buffer buf))))
 
@@ -184,10 +221,10 @@ Defaults to \"@\" (current revision).  With a prefix argument, prompt for REVSET
       (let ((inhibit-read-only t))
         (erase-buffer)
         (jj--with-root
-         (call-process "jj" nil buf nil "log" "--no-graph" "-T" "description" "-r" revset)
+         (jj--call-buffer buf "log" "--no-graph" "-T" "description" "-r" revset)
          (insert "\n\nJJ: Lines prefixed with JJ: are ignored\n")
          (let ((diff-start (point)))
-           (call-process "jj" nil buf nil "diff" "--stat" "-r" revset)
+           (jj--call-buffer buf "diff" "--stat" "-r" revset)
            (save-excursion
              (goto-char diff-start)
              (while (not (eobp))
@@ -236,8 +273,10 @@ Defaults to \"@\" (current revision).  With a prefix argument, prompt for REVSET
         (let ((inhibit-read-only t))
           (erase-buffer)
           (let ((default-directory root))
-            (call-process-region msg nil "jj" nil buf nil
-                                 "describe" "--stdin" revset))
+            (with-temp-buffer
+              (insert msg)
+              (jj--call-region (point-min) (point-max) buf
+                               "describe" "--stdin" revset)))
           (goto-char (point-min))))
       (jj--display-transient buf))
     (jj--describe-cleanup)))
@@ -277,7 +316,7 @@ Defaults to \"@\" (current revision).  With a prefix argument, prompt for REVSET
      (with-current-buffer buf
        (let ((inhibit-read-only t))
          (erase-buffer)
-         (call-process "jj" nil buf nil "log")
+         (jj--call-buffer buf "log")
          (goto-char (point-min)))
        (jj-log-mode))
      buf)))
