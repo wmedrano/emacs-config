@@ -10,7 +10,7 @@
  '(package-selected-packages
    '(ace-window anzu auto-highlight-symbol company consult diff-hl doom-modeline
                 doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                evil evil-terminal-cursor-changer flycheck flymake gn-mode
+                clang-format evil evil-terminal-cursor-changer flycheck flymake gn-mode
                 gnuplot gptel htmlize lua-mode marginalia markdown-mode
                 orderless org package-lint peg posframe python rg rust-mode
                 smartparens tramp transient ttx-mode typescript-mode vertico
@@ -348,20 +348,29 @@ Note: A bit buggy at the moment."
 ;; Generate Ninja
 
 (add-to-list 'auto-mode-alist '("\\.gn\\'" . gn-mode))
+(add-to-list 'auto-mode-alist '("\\.lock\\'" . conf-toml-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Contextual functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun format-buffer-dwim ()
-  "Format the current buffer."
+  "Format the current buffer.
+Uses `rust-format-buffer' in rust-mode, `clang-format-buffer' in
+c-mode/c++-mode, `eglot-format-buffer' when eglot is active, or
+falls back to `delete-trailing-whitespace'."
   (interactive)
   (cond
+   ((eq major-mode 'rust-mode)
+    (rust-format-buffer))
+   ((memq major-mode '(c-mode c++-mode))
+    (clang-format-buffer))
    ((eglot-managed-p)
     (eglot-format-buffer))
    (t
     (delete-trailing-whitespace))))
 (add-hook 'before-save-hook #'format-buffer-dwim)
+(global-set-key (kbd "C-c C-f") #'format-buffer-dwim)
 
 
 (defun compile-dwim ()
