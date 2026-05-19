@@ -49,7 +49,7 @@ Detects the Chromium source tree by looking for
   (when-let* ((marker (locate-dominating-file dir "LICENSE.chromium_os")))
     (make-chromium-project
      :root (file-name-directory (expand-file-name marker))
-     :dirs '("third_party/blink/renderer" "net/shared_dictionary"))))
+     :dirs '("third_party/blink/renderer" "net/shared_dictionary" "third_party/ots" "third_party/rust"))))
 
 (add-to-list 'project-find-functions #'project-try-chromium)
 
