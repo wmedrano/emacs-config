@@ -25,6 +25,9 @@
   :type 'boolean
   :group 'jj)
 
+(defvar-local jj--diff-args nil
+  "Stored arguments for the current jj-diff buffer.")
+
 
 (defun jj--root ()
   "Return the root directory of the current jj repository."
@@ -75,17 +78,32 @@ Write output to BUFFER and signal a `user-error' on failure."
      (with-current-buffer buf
        (let ((inhibit-read-only t))
          (erase-buffer)
+         (setq-local jj--diff-args args)
          (apply #'jj--call-buffer buf "diff" "--git" args)
-         (diff-mode)
-         (read-only-mode t)
+         (jj-diff-mode)
          (goto-char (point-min))))
      (pop-to-buffer buf))))
 
+(defun jj--revert-diff-buffer (&optional _ignore-auto _noconfirm)
+  "Revert the jj-diff buffer by re-running jj diff with stored args."
+  (let ((args jj--diff-args))
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (apply #'jj--call-buffer (current-buffer) "diff" "--git" args)
+      (goto-char (point-min)))))
+
+(define-derived-mode jj-diff-mode diff-mode "jj-diff"
+  "Major mode for viewing jj diff output.
+\\{jj-diff-mode-map}"
+  (setq-local revert-buffer-function #'jj--revert-diff-buffer))
+
+(define-key jj-diff-mode-map (kbd "g") #'revert-buffer)
+
 ;;;###autoload
-(defun jj-diff ()
-  "Show the current jj diff in a buffer using `diff-mode'."
+(defun jj-diff (&rest args)
+  "Show jj diff output. ARGS are passed to `jj diff --git'."
   (interactive)
-  (jj--show-diff))
+  (apply #'jj--show-diff args))
 
 (defconst jj-status--font-lock-keywords
   `(;; Modified/Added/Deleted file status indicators
