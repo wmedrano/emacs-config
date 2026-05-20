@@ -377,6 +377,7 @@ falls back to `delete-trailing-whitespace'."
 (defun compile-dwim ()
   "Compile based on context.
 If a *compilation* buffer window exists, recompile.
+If in a Chromium project, run autoninja.
 If in `rust-mode' or editing Cargo.toml, run `cargo-test'.
 If in `emacs-lisp-mode', `eval-buffer'.
 Otherwise, call compile interactively."
@@ -385,6 +386,8 @@ Otherwise, call compile interactively."
    ((get-buffer-window "*compilation*")
     (with-current-buffer "*compilation*"
       (recompile)))
+   ((chromium-project-p (project-current))
+    (compile "autoninja -C out/Default chrome"))
    ((or (eq major-mode 'rust-mode)
         (when-let ((file (buffer-file-name)))
           (string-suffix-p "/Cargo.toml" file)))
