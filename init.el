@@ -113,6 +113,7 @@
 (require 'smartparens)
 (require 'smartparens-config)
 (add-hook 'prog-mode-hook #'smartparens-mode)
+(add-hook 'prog-mode-hook #'auto-highlight-symbol-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
