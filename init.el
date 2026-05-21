@@ -287,6 +287,9 @@ Note: A bit buggy at the moment."
 ;; Python
 (add-hook 'python-mode-hook #'eglot-ensure)
 
+;; C++
+(add-hook 'c++-mode-hook #'eglot-ensure)
+
 ;; Rust
 (defun rust-mode-setup ()
   "Setup rust-mode configuration."
