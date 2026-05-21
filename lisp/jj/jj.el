@@ -90,7 +90,8 @@ Write output to BUFFER and signal a `user-error' on failure."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (apply #'jj--call-buffer (current-buffer) "diff" "--git" args)
-      (goto-char (point-min)))))
+      (goto-char (point-min))))
+  (message "jj diff: reloaded"))
 
 (define-derived-mode jj-diff-mode diff-mode "jj-diff"
   "Major mode for viewing jj diff output.
