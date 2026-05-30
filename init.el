@@ -8,13 +8,14 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ace-window anzu auto-highlight-symbol company consult diff-hl doom-modeline
-                doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                clang-format evil evil-terminal-cursor-changer flycheck flymake gn-mode
-                gnuplot gptel htmlize lua-mode marginalia markdown-mode
-                orderless org package-lint peg posframe python rg rust-mode
-                smartparens tramp transient ttx-mode typescript-mode vertico
-                vertico-posframe vundo which-key))
+   '(ace-window anzu auto-highlight-symbol clang-format company consult diff-hl
+                doom-modeline doom-themes dracula-theme eglot eldoc embark
+                embark-consult erc evil evil-terminal-cursor-changer flycheck
+                flymake gn-mode gnuplot gptel htmlize lua-mode marginalia
+                markdown-mode orderless org package-lint peg posframe python rg
+                rust-mode smartparens tramp transient ttx-mode typescript-mode
+                vertico vertico-posframe vundo which-key yaml-mode zig-mode
+                zig-ts-mode))
  '(safe-local-variable-values
    '((eval and buffer-file-name (not (eq major-mode 'package-recipe-mode))
            (or (require 'package-recipe-mode nil t)
@@ -197,7 +198,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq-default
  compilation-scroll-output t
- compile-command "")
+ compile-command ""
+ compilation-environment '("TERM=dumb"))
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter)
 

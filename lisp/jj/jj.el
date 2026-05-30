@@ -74,14 +74,17 @@ Write output to BUFFER and signal a `user-error' on failure."
 (defun jj--show-diff (&rest args)
   "Show jj diff output in a buffer, passing ARGS to the jj diff command."
   (jj--with-root
-   (let ((buf (get-buffer-create "*jj-diff*")))
+   (let ((working-dir default-directory)
+         (buf         (get-buffer-create "*jj-diff*")))
      (with-current-buffer buf
+       (setq-local default-directory working-dir)
        (let ((inhibit-read-only t))
          (erase-buffer)
          (setq-local jj--diff-args args)
          (apply #'jj--call-buffer buf "diff" "--git" args)
          (jj-diff-mode)
-         (goto-char (point-min))))
+         (goto-char (point-min))
+         (read-only-mode t)))
      (pop-to-buffer buf))))
 
 (defun jj--revert-diff-buffer (&optional _ignore-auto _noconfirm)
