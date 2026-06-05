@@ -300,9 +300,16 @@ Note: A bit buggy at the moment."
 (add-hook 'rust-mode-hook #'eglot-ensure)
 (add-hook 'rust-mode-hook #'rust-mode-setup)
 
+(defun cargo-workspace-root (&optional dir)
+  "The root of the current workspace"
+  (let ((default-directory (or dir default-directory)))
+    (s-trim
+     (shell-command-to-string
+      "cargo metadata --format-version 1 | jq -r \".workspace_root\""))))
+
 (defmacro cargo-cmd (command)
   "Run COMMAND with cargo at the project root."
-  `(let ((default-directory (project-root (project-current t))))
+  `(let ((default-directory (cargo-workspace-root)))
      (compile (concat "cargo " ,command))))
 
 (defun cargo-check ()
