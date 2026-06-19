@@ -117,6 +117,8 @@
 (add-hook 'prog-mode-hook #'smartparens-mode)
 (add-hook 'prog-mode-hook #'auto-highlight-symbol-mode)
 
+(setq-default save-interprogram-paste-before-kill t)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -134,22 +136,10 @@
   (require 'evil-terminal-cursor-changer)
   (evil-terminal-cursor-changer-activate))
 
-;; Custom segment: Python virtualenv indicator
-(doom-modeline-def-segment venv
-  "Python virtualenv indicator. Displays a terminal icon when VIRTUAL_ENV is set."
-  (when (getenv "VIRTUAL_ENV")
-    (concat
-     (doom-modeline-icon 'sucicon "nf-seti-powershell" nil "venv"
-                         :face 'doom-modeline-info)
-     (doom-modeline-vspc))))
-;; Add venv segment to modeline after major-mode on the right side
-(doom-modeline-add-segment 'venv 'major-mode :after)
-
 (column-number-mode t)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-(when (display-graphic-p)
-  (scroll-bar-mode -1))
+(scroll-bar-mode -1)
 (set-face-attribute 'default nil
                     :font "Roboto Mono"
                     :height 120)
@@ -177,7 +167,9 @@
  ;; For the rare occasion I feel like `vertico-posframe-mode'.
  vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
 
-(marginalia-mode t)
+(marginalia-mode t) ;; Decorate consult-buffer and consult-find-file and the like
+
+(recentf-mode t) ;; Make recentf available
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Completion
@@ -524,24 +516,19 @@ def add_numbers(a: int, b: int) -> int:
 (defvar leader-map (make-sparse-keymap) "Leader key keymap.")
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
 
-;; SPC a
 (define-key leader-map "aa" #'agent-shell-send-dwim)
 (define-key leader-map "an" #'agent-shell-new-shell)
 (define-key leader-map "at" #'agent-shell-new-temp-shell)
-
-;; SPC e
 (define-key leader-map "ea" #'eglot-code-actions)
 (define-key leader-map "ee" #'consult-flymake)
 (define-key leader-map "ef" #'flymake-eglot-fix-all)
 (define-key leader-map "ei" #'eglot-inlay-hints-mode)
 (define-key leader-map "er" #'eglot-rename)
-
-;; SPC h
 (define-key leader-map "he" #'eldoc)
 (define-key leader-map "hh" #'highlight-symbol-at-point)
 (define-key leader-map "hk" #'unhighlight-regexp)
-
-;; SPC s
+(define-key leader-map "or" #'recentf)
+(define-key leader-map "p" project-prefix-map)
 (define-key leader-map "ss" #'consult-ripgrep)
 (define-key leader-map "sr" #'rg)
 (define-key leader-map "so" #'occur)
@@ -564,6 +551,7 @@ def add_numbers(a: int, b: int) -> int:
 
 ;; Motion modes
 (cl-loop for mode in '(diff-mode
+                       dired-mode
                        xref--xref-buffer-mode
                        ttx-mode)
          do (add-to-list 'evil-motion-state-modes mode))
