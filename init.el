@@ -204,22 +204,6 @@
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter)
 
-(defun wezterm-open (directory)
-  "Open a WezTerm terminal in DIRECTORY."
-  (interactive "DDirectory: ")
-  (start-process "wezterm" nil "wezterm" "start" "--cwd" (expand-file-name directory)))
-
-(defun wezterm-run (directory command)
-  "Run COMMAND in a WezTerm terminal in DIRECTORY."
-  (interactive
-   (let ((dir (read-directory-name "Directory: " default-directory))
-         (cmd (read-string "Command: " (bound-and-true-p compile-command))))
-     (list dir cmd)))
-  (start-process "wezterm" nil "wezterm"
-                 "start" "--cwd" (expand-file-name directory)
-                 "--" "bash" "-ic"
-(concat command "; exec bash")))
-
 (defun http-server (directory port)
   "Start an HTTP server in DIRECTORY on PORT."
   (interactive
