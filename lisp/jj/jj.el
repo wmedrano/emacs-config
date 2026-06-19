@@ -349,6 +349,13 @@ Defaults to \"@\" (current revision).  With a prefix argument, prompt for REVSET
   (interactive)
   (pop-to-buffer (jj--log-buffer)))
 
+;;;###autoload
+(defun jj-git-push ()
+  "Run `jj git push'"
+  (interactive)
+  (message "Running jj git push")
+  (async-shell-command "jj git push"))
+
 (provide 'jj)
 
 ;;; jj.el ends here
