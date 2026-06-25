@@ -68,7 +68,6 @@
 (require 'evil)
 (require 'flymake)
 (require 'gptel)
-(require 'jj)
 (require 'marginalia)
 (require 'posframe)
 (require 'smartparens)
@@ -77,6 +76,9 @@
 (require 'vertico-posframe)
 (require 'which-key)
 (require 'auto-highlight-symbol)
+
+(require 'project-monorepo)
+(require 'jj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
@@ -183,8 +185,6 @@
 (setq-default
  embark-verbose-indicator-display-action
  '(display-buffer-in-side-window display-buffer-reuse-window))
-
-(require 'project-chromium)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Compilation
