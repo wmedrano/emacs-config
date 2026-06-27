@@ -8,14 +8,14 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ace-window agent-shell anzu auto-highlight-symbol clang-format company consult
-                diff-hl doom-modeline doom-themes dracula-theme eglot eldoc
-                embark embark-consult erc evil evil-terminal-cursor-changer
-                flycheck flymake gn-mode gnuplot gptel htmlize lua-mode
-                marginalia markdown-mode orderless org package-lint peg posframe
-                python rg rust-mode smartparens tramp transient ttx-mode
-                typescript-mode vertico vertico-posframe vundo which-key
-                yaml-mode zig-mode zig-ts-mode))
+   '(ace-window agent-shell anzu auto-highlight-symbol catppuccin-theme
+                clang-format company consult consult-eglot diff-hl doom-modeline
+                doom-themes dracula-theme eglot eldoc embark embark-consult erc
+                evil evil-terminal-cursor-changer flycheck flymake gn-mode
+                gnuplot gptel htmlize lua-mode marginalia markdown-mode
+                orderless org package-lint peg posframe python rg rust-mode
+                smartparens tramp transient ttx-mode typescript-mode vertico
+                vertico-posframe vundo which-key yaml-mode zig-mode zig-ts-mode))
  '(safe-local-variable-values
    '((eval and buffer-file-name (not (eq major-mode 'package-recipe-mode))
            (or (require 'package-recipe-mode nil t)
@@ -119,7 +119,12 @@
 (add-hook 'prog-mode-hook #'smartparens-mode)
 (add-hook 'prog-mode-hook #'auto-highlight-symbol-mode)
 
-(setq-default save-interprogram-paste-before-kill t)
+(defun string-filter-whitespace (string)
+  (unless (string-match-p "\\`[[:space:]]*\\'" string)
+       string))
+
+(setq-default save-interprogram-paste-before-kill t
+              kill-transform-function #'string-filter-whitespace)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
@@ -129,7 +134,7 @@
 (let ((color-scheme (string-trim (shell-command-to-string
                                 "gsettings get org.gnome.desktop.interface color-scheme"))))
   (unless (string-equal color-scheme "'prefer-light'")
-    (load-theme 'dracula t)))
+    (load-theme 'catppuccin t)))
 (setq-default doom-modeline-buffer-encoding nil)
 (doom-modeline-mode t)
 
@@ -181,6 +186,11 @@
 (global-company-mode t)
 (define-key company-active-map (kbd "C-s") #'completion-at-point)
 
+;; References
+(setq-default
+ xref-show-xrefs-function       #'consult-xref
+ xref-show-definitions-function #'consult-xref)
+
 ;; Embark
 (setq-default
  embark-verbose-indicator-display-action
@@ -195,18 +205,6 @@
  compilation-environment '("TERM=dumb"))
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter)
-
-(defun http-server (directory port)
-  "Start an HTTP server in DIRECTORY on PORT."
-  (interactive
-   (list (read-directory-name "Directory: " default-directory)
-         (read-number "Port: " 8000)))
-  (let ((default-directory (expand-file-name directory)))
-    (make-process
-     :name (format "http-server-%s" port)
-     :buffer (format "*http-server %s*" port)
-     :command (list "python" "-m" "http.server" (number-to-string port))))
-  (browse-url (format "http://localhost:%d" port)))
 
 ;; VC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -351,14 +349,15 @@ c-mode/c++-mode, `eglot-format-buffer' when eglot is active, or
 falls back to `delete-trailing-whitespace'."
   (interactive)
   (cond
-   ((eq major-mode 'rust-mode)
-    (rust-format-buffer))
    ((memq major-mode '(c-mode c++-mode))
     (clang-format-buffer))
    ((eglot-managed-p)
     (eglot-format-buffer))
+   ((eq major-mode 'rust-mode)
+    (rust-format-buffer))
    (t
     (delete-trailing-whitespace))))
+
 (add-hook 'before-save-hook #'format-buffer-dwim)
 (global-set-key (kbd "C-c C-f") #'format-buffer-dwim)
 
@@ -375,8 +374,6 @@ Otherwise, call compile interactively."
    ((get-buffer-window "*compilation*")
     (with-current-buffer "*compilation*"
       (recompile)))
-   ((chromium-project-p (project-current))
-    (compile "autoninja -C out/Default chrome"))
    ((or (eq major-mode 'rust-mode)
         (when-let ((file (buffer-file-name)))
           (string-suffix-p "/Cargo.toml" file)))
@@ -408,7 +405,7 @@ the project root."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq-default
  initial-major-mode 'org-mode
- initial-scratch-message "\n#+BEGIN_SRC\n#+END_SRC\n"
+ initial-scratch-message "\n#+BEGIN_SRC emacs-lisp\n#+END_SRC\n"
  org-src-preserve-indentation t
  org-html-postamble nil
  org-use-sub-superscripts nil
@@ -424,19 +421,20 @@ the project root."
 ;; gptel (Ollama / OpenRouter)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar openrouter-backend
-  (when-let* ((key (getenv "OPENROUTER_API_KEY")))
-    (gptel-make-openai "OpenRouter"
-      :host "openrouter.ai"
-      :endpoint "/api/v1/chat/completions"
-      :stream t
-      :key key
-      :models '(qwen/qwen3.6-35b-a3b
-                nvidia/nemotron-3-super-120b-a12b:free
-                deepseek/deepseek-v4-flash
-                deepseek/deepseek-v4-pro
-                google/gemini-3-flash-preview
-                z-ai/glm-5.1)))
-  "OpenRouter gptel backend, nil when OPENROUTER_API_KEY is unset.")
+  (let ((key (getenv "OPENROUTER_API_KEY")))
+    (when (and key (not (string= key "")))
+      (gptel-make-openai "OpenRouter"
+        :host "openrouter.ai"
+        :endpoint "/api/v1/chat/completions"
+        :stream t
+        :key key
+        :models '(qwen/qwen3.6-35b-a3b
+                  nvidia/nemotron-3-super-120b-a12b:free
+                  deepseek/deepseek-v4-flash
+                  deepseek/deepseek-v4-pro
+                  google/gemini-3-flash-preview
+                  z-ai/glm-5.1)))
+    "OpenRouter gptel backend, nil when OPENROUTER_API_KEY is unset."))
 
 (defvar ollama-backend
   (gptel-make-ollama "Ollama"
@@ -445,6 +443,16 @@ the project root."
     :request-params '(think "low")
     :models '(qwen3.6:35b gemma4:26b gemma4:e4b glm-5.1:cloud deepseek-v4-flash:cloud))
   "Local Ollama gptel backend.")
+
+(defvar cerebras-backend
+  (let ((key (getenv "CEREBRAS_API_KEY")))
+    (when (and key (not (string= key "")))
+      (gptel-make-openai "Cerebras"
+        :host "api.cerebras.ai"
+        :endpoint "/v1/chat/completions"
+        :stream nil
+        :key (getenv "CEREBRAS_API_KEY")
+        :models '(gemma-4-31b)))))
 
 (setq-default
  gptel-directives '((default . "")
@@ -470,9 +478,52 @@ def add_numbers(a: int, b: int) -> int:
 
 -   *`a: int`*: Parameter ~a~ should be an integer.
 -   *`-> int`*: The function returns an integer."))
- gptel-backend (or openrouter-backend ollama-backend)
- gptel-model (if openrouter-backend 'qwen/qwen3.6-35b-a3b 'qwen3.6:35b)
  gptel-default-mode 'org-mode)
+
+(defvar gptel-ollama-backend
+  (gptel-make-ollama "Ollama"
+    :host "localhost:11434"
+    :stream t
+    :request-params '(think "low")
+    :models '(qwen3.6:35b gemma4:26b gemma4:e4b glm-5.1:cloud deepseek-v4-flash:cloud)))
+
+(defun gptel-set-backend ()
+  "Interactively query for a backend and optionally an API key."
+  (interactive)
+  (let* ((choice (completing-read "Choose backend: " '("openrouter" "cerebras" "ollama")))
+         (backend
+          (pcase choice
+            ("openrouter"
+             (let ((key (or (getenv "OPENROUTER_API_KEY")
+                            (read-string "OpenRouter API Key (press RET to skip): "))))
+               (unless (string= key "") (setenv "OPENROUTER_API_KEY" key))
+               (setq-default
+                gptel-backend (gptel-make-openai "OpenRouter"
+                                :host "openrouter.ai"
+                                :endpoint "/api/v1/chat/completions"
+                                :stream t
+                                :key key
+                                :models '(qwen/qwen3.6-35b-a3b
+                                          nvidia/nemotron-3-super-120b-a12b:free
+                                          deepseek/deepseek-v4-flash
+                                          deepseek/deepseek-v4-pro
+                                          google/gemini-3-flash-preview
+                                          z-ai/glm-5.1))
+                gptel-model 'deepseek/deepseek-v4-flash))
+             ("cerebras"
+              (let ((key (or (getenv "CEREBRAS_API_KEY")
+                             (read-string "Cerebras API Key (press RET to skip): "))))
+                (unless (string= key "") (setenv "CEREBRAS_API_KEY" key))
+                (setq-default
+                 gptel-backend (gptel-make-openai "Cerebras"
+                                 :host "api.cerebras.ai"
+                                 :endpoint "/v1/chat/completions"
+                                 :stream nil
+                                 :key key
+                                 :models '(gpt-oss-120b gemma-4-31b))
+                 gptel-model 'gpt-oss-120b)))
+             ("ollama" (setq-default gptel-backend gptel-ollama-backend
+                                     gptel-model 'gemma4:26b))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent Shell
@@ -516,27 +567,35 @@ def add_numbers(a: int, b: int) -> int:
 (defvar leader-map (make-sparse-keymap) "Leader key keymap.")
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
 
+(define-key leader-map "B" #'consult-buffer-other-window)
 (define-key leader-map "aa" #'agent-shell-send-dwim)
 (define-key leader-map "an" #'agent-shell-new-shell)
 (define-key leader-map "at" #'agent-shell-new-temp-shell)
+(define-key leader-map "b" #'consult-buffer)
 (define-key leader-map "ea" #'eglot-code-actions)
 (define-key leader-map "ee" #'consult-flymake)
 (define-key leader-map "ef" #'flymake-eglot-fix-all)
 (define-key leader-map "ei" #'eglot-inlay-hints-mode)
 (define-key leader-map "er" #'eglot-rename)
+(define-key leader-map "es" #'eglot)
 (define-key leader-map "he" #'eldoc)
 (define-key leader-map "hh" #'highlight-symbol-at-point)
 (define-key leader-map "hk" #'unhighlight-regexp)
-(define-key leader-map "or" #'recentf)
+(define-key leader-map "nf" #'format-buffer-dwim)
+(define-key leader-map "nk" #'consult-keep-lines)
+(define-key leader-map "ns" #'sort-lines)
+(define-key leader-map "oe" #'consult-eglot-symbols)
+(define-key leader-map "of" #'project-find-file)
+(define-key leader-map "or" #'consult-recent-file)
 (define-key leader-map "p" project-prefix-map)
-(define-key leader-map "ss" #'consult-ripgrep)
-(define-key leader-map "sr" #'rg)
-(define-key leader-map "so" #'occur)
-(define-key leader-map "sa" #'consult-line)
 (define-key leader-map "sA" #'consult-line-multi)
-(define-key leader-map "si" #'consult-imenu)
 (define-key leader-map "sI" #'consult-imenu-multi)
+(define-key leader-map "sa" #'consult-line)
 (define-key leader-map "sf" #'consult-flymake)
+(define-key leader-map "si" #'consult-imenu)
+(define-key leader-map "so" #'occur)
+(define-key leader-map "sr" #'rg)
+(define-key leader-map "ss" #'consult-ripgrep)
 
 ;; Ace Window
 (setq-default aw-dispatch-always t)
