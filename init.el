@@ -129,12 +129,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default dracula-bolder-keywords nil)
-(require 'dracula-theme)
-(let ((color-scheme (string-trim (shell-command-to-string
-                                "gsettings get org.gnome.desktop.interface color-scheme"))))
-  (unless (string-equal color-scheme "'prefer-light'")
-    (load-theme 'catppuccin t)))
+(defun use-light-theme ()
+  (let ((color-scheme (string-trim (shell-command-to-string
+                                    "gsettings get org.gnome.desktop.interface color-scheme"))))
+    (string-equal color-scheme "'prefer-light'")))
+
+(setq-default dracula-bolder-keywords nil
+              catppuccin-flavor (if (use-light-theme)
+                                    'latte
+                                  'mocha))
+
+(require 'catppuccin-theme)
+(load-theme 'catppuccin t)
 (setq-default doom-modeline-buffer-encoding nil)
 (doom-modeline-mode t)
 
