@@ -608,6 +608,7 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "so" #'occur)
 (define-key leader-map "sr" #'rg)
 (define-key leader-map "ss" #'consult-ripgrep)
+(define-key leader-map "w" #'ace-window)
 
 ;; Ace Window
 (setq-default aw-dispatch-always t)
