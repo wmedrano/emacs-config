@@ -135,6 +135,9 @@
     (string-equal color-scheme "'prefer-light'")))
 
 (setq-default dracula-bolder-keywords nil
+              catppuccin-dark-line-numbers-background t
+              catppuccin-highlight-matches t
+              catppuccin-italic-comments t
               catppuccin-flavor (if (use-light-theme)
                                     'latte
                                   'mocha))
