@@ -194,6 +194,9 @@
               company-tooltip-minimum-width 64)
 (global-company-mode t)
 (define-key company-active-map (kbd "C-s") #'completion-at-point)
+(define-key company-active-map (kbd "TAB") #'company-complete-selection)
+(define-key company-active-map (kbd "RET") nil)
+(define-key company-active-map (kbd "<return>") nil)
 
 ;; References
 (setq-default
@@ -613,10 +616,13 @@ def add_numbers(a: int, b: int) -> int:
 ;; Ace Window
 (setq-default aw-dispatch-always t)
 (when (posframe-workable-p)
-  (ace-window-posframe-mode t))
+  (ace-window-posframe-mode t)
+  ;; Delete all active posframe windows. Fixes buggy posframe when refreshing
+  ;; the config file.
+  (run-with-timer 0.2 nil #'posframe-delete-all))
 (set-face-attribute 'aw-leading-char-face nil
                     :foreground "#FF5555"
-                    :height 1024
+                    :height 1536
                     :font "Lobster")
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
