@@ -594,6 +594,9 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "of" #'project-find-file)
 (define-key leader-map "or" #'consult-recent-file)
 (define-key leader-map "p" project-prefix-map)
+(define-key leader-map "rd" #'jj-diff)
+(define-key leader-map "rm" #'jj-describe)
+(define-key leader-map "rn" #'jj-new)
 (define-key leader-map "sA" #'consult-line-multi)
 (define-key leader-map "sI" #'consult-imenu-multi)
 (define-key leader-map "sa" #'consult-line)
@@ -620,6 +623,7 @@ def add_numbers(a: int, b: int) -> int:
                        xref--xref-buffer-mode
                        ttx-mode)
          do (add-to-list 'evil-motion-state-modes mode))
+(add-to-list 'evil-insert-state-modes 'jj-describe-mode)
 
 ;; Global Keybindings
 (global-set-key (kbd "C-x b") #'consult-buffer)
