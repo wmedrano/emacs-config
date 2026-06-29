@@ -322,6 +322,11 @@ Note: A bit buggy at the moment."
   (interactive)
   (cargo-cmd "nextest run"))
 
+(defun cargo-doc ()
+  "Run cargo doc at the project root."
+  (interactive)
+  (cargo-cmd "doc"))
+
 (defun cargo-clippy ()
   "Run cargo clippy at the project root."
   (interactive)
