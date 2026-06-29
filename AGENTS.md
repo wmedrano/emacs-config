@@ -13,7 +13,4 @@ Installed packages live in `elpa/`.
 
 
 ## Custom Lisp
-Local packages live under `lisp/` and are loaded via `load-path`:
-- `lisp/disasm.el` — disassembly helper
-- `lisp/consult-agent-shell.el` — Consult interface for agent-shell
-- `lisp/ttx-mode/ttx-mode.el` — ttx major mode
+Local packages live under `lisp/` and are loaded via `load-path`.

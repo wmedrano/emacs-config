@@ -108,6 +108,11 @@
 ;; Auto Highlight Symbol
 (setq-default ahs-idle-interval 0.25)
 
+(defun unhighlight-all ()
+  "Remove all highlighting from the current buffer."
+  (interactive)
+  (unhighlight-regexp t))
+
 ;; Formatting
 (setq-default fill-column      80
               indent-tabs-mode nil
@@ -135,7 +140,7 @@
 
 (setq-default dracula-bolder-keywords nil
               catppuccin-dark-line-numbers-background t
-              catppuccin-highlight-matches t
+              ;; catppuccin-highlight-matches t
               catppuccin-italic-comments t
               catppuccin-flavor (if (use-light-theme)
                                     'latte
@@ -590,9 +595,10 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "ei" #'eglot-inlay-hints-mode)
 (define-key leader-map "er" #'eglot-rename)
 (define-key leader-map "es" #'eglot)
+(define-key leader-map "hK" #'unhighlight-regexp)
 (define-key leader-map "he" #'eldoc)
 (define-key leader-map "hh" #'highlight-symbol-at-point)
-(define-key leader-map "hk" #'unhighlight-regexp)
+(define-key leader-map "hk" #'unhighlight-all)
 (define-key leader-map "nf" #'format-buffer-dwim)
 (define-key leader-map "nk" #'consult-keep-lines)
 (define-key leader-map "ns" #'sort-lines)
