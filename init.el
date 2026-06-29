@@ -8,14 +8,14 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ace-window agent-shell anzu auto-highlight-symbol catppuccin-theme
-                clang-format company consult consult-eglot diff-hl doom-modeline
-                doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                evil evil-terminal-cursor-changer flycheck flymake gn-mode
-                gnuplot gptel htmlize lua-mode marginalia markdown-mode
-                orderless org package-lint peg posframe python rg rust-mode
-                smartparens tramp transient ttx-mode typescript-mode vertico
-                vertico-posframe vundo which-key yaml-mode zig-mode zig-ts-mode))
+   '(ace-window anzu auto-highlight-symbol catppuccin-theme clang-format company
+                consult consult-eglot diff-hl doom-modeline doom-themes
+                dracula-theme eglot eldoc embark embark-consult erc evil
+                evil-terminal-cursor-changer flymake gn-mode gnuplot gptel
+                htmlize lua-mode marginalia markdown-mode orderless org
+                package-lint peg posframe python rg rust-mode smartparens tramp
+                transient ttx-mode typescript-mode vertico vertico-posframe
+                vundo which-key yaml-mode zig-mode zig-ts-mode))
  '(safe-local-variable-values
    '((eval and buffer-file-name (not (eq major-mode 'package-recipe-mode))
            (or (require 'package-recipe-mode nil t)
@@ -50,7 +50,6 @@
 (require 'ace-window)
 (when (display-graphic-p)
   (require 'ace-window-posframe))
-(require 'agent-shell)
 (require 'ansi-color)
 (require 'ansi-osc)
 (require 'anzu)
@@ -538,11 +537,6 @@ def add_numbers(a: int, b: int) -> int:
                                      gptel-model 'gemma4:26b))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Agent Shell
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default agent-shell-preferred-agent-config 'opencode)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq-default evil-cross-lines t
@@ -580,9 +574,6 @@ def add_numbers(a: int, b: int) -> int:
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
 
 (define-key leader-map "B" #'consult-buffer-other-window)
-(define-key leader-map "aa" #'agent-shell-send-dwim)
-(define-key leader-map "an" #'agent-shell-new-shell)
-(define-key leader-map "at" #'agent-shell-new-temp-shell)
 (define-key leader-map "b" #'consult-buffer)
 (define-key leader-map "ea" #'eglot-code-actions)
 (define-key leader-map "ee" #'consult-flymake)
