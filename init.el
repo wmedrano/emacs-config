@@ -560,11 +560,13 @@ def add_numbers(a: int, b: int) -> int:
 (global-anzu-mode t)
 
 ;; Keybinds
-(dolist (map (list evil-motion-state-map evil-normal-state-map evil-visual-state-map))
-  (define-key map "h" #'evil-backward-char)
-  (define-key map "n" #'evil-next-line)
-  (define-key map "e" #'evil-previous-line)
-  (define-key map "i" #'evil-forward-char))
+(cl-loop for map in (list evil-motion-state-map evil-normal-state-map evil-visual-state-map)
+         do (progn
+              (define-key map "h" #'evil-backward-char)
+              (define-key map "n" #'evil-next-line)
+              (define-key map "e" #'evil-previous-line)
+              (define-key map "i" #'evil-forward-char)
+              (define-key map "gx" #'xref-find-references)))
 (define-key evil-normal-state-map "[" nil)
 (define-key evil-normal-state-map "]" nil)
 (define-key evil-motion-state-map (kbd "RET") nil)
@@ -577,9 +579,9 @@ def add_numbers(a: int, b: int) -> int:
 (define-key evil-motion-state-map "?" #'consult-line-multi)
 (define-key evil-motion-state-map (kbd "C-.") #'embark-act)
 (define-key evil-normal-state-map (kbd "TAB") #'indent-for-tab-command)
+
 (defvar leader-map (make-sparse-keymap) "Leader key keymap.")
 (define-key evil-motion-state-map (kbd "SPC") leader-map)
-
 (define-key leader-map "B" #'consult-buffer-other-window)
 (define-key leader-map "b" #'consult-buffer)
 (define-key leader-map "ea" #'eglot-code-actions)
