@@ -198,11 +198,7 @@
               company-tooltip-minimum-width 64)
 (global-company-mode t)
 (define-key company-active-map (kbd "C-s") #'completion-at-point)
-(define-key company-active-map (kbd "TAB") #'company-complete-selection)
-(define-key company-active-map (kbd "<tab>") #'company-complete-selection)
 (define-key company-active-map (kbd "C-h") nil)
-(define-key company-active-map (kbd "RET") nil)
-(define-key company-active-map (kbd "<return>") nil)
 
 ;; References
 (setq-default
