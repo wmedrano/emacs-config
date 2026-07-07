@@ -140,14 +140,15 @@
 
 (setq-default dracula-bolder-keywords nil
               catppuccin-dark-line-numbers-background t
-              ;; catppuccin-highlight-matches t
               catppuccin-italic-comments t
               catppuccin-flavor (if (use-light-theme)
                                     'latte
                                   'mocha))
 
-(require 'catppuccin-theme)
-(load-theme 'catppuccin t)
+(require 'dracula-theme)
+(cl-loop for theme in custom-enabled-themes
+         do (disable-theme theme))
+(load-theme 'dracula t)
 (setq-default doom-modeline-buffer-encoding nil)
 (doom-modeline-mode t)
 
