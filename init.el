@@ -420,6 +420,15 @@ the project root."
     (kill-new name)
     (message "Copied: %s" name)))
 
+(defun copy-absolute-filename ()
+  "Copy the current aboslute file name to `kill-new'."
+  (interactive)
+  (let ((name (buffer-file-name)))
+    (unless name
+      (user-error "No file name for current buffer"))
+    (kill-new name)
+    (message "Copied: %s" name)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
