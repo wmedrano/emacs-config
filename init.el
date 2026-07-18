@@ -279,6 +279,15 @@ Note: A bit buggy at the moment."
 ;; Python
 (add-hook 'python-mode-hook #'eglot-ensure)
 
+;; Typescript
+(setq-default js-indent-level 2
+              typescript-indent-level 2)
+(defun typescript-mode-setup ()
+  "Setup C/C++ mode configuration."
+  (setq-local tab-width 2))
+(add-hook 'typescript-mode-hook #'typescript-mode-setup)
+(add-hook 'typescript-mode-hook #'eglot-ensure)
+
 ;; C++
 (add-hook 'c++-mode-hook #'eglot-ensure)
 
