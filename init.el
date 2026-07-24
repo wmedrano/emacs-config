@@ -76,7 +76,7 @@
 (require 'which-key)
 (require 'auto-highlight-symbol)
 
-(require 'project-monorepo)
+(require 'monorepo)
 (require 'jj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
