@@ -1,3 +1,4 @@
+*.elc
 .#*
 .hermes/
 .org-id-locations
