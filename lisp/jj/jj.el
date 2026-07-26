@@ -162,7 +162,16 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
       (jj-call-process "log" nil buffer)
       (jj-log-mode)
       (when interactive-p
-        (display-buffer buffer)))))
+        (display-buffer buffer))
+      buffer)))
+
+(defun jj--read-revision ()
+  (let ((window (display-buffer-in-side-window (jj-log) '((side . bottom)))))
+    (unwind-protect
+        (let ((revision (read-string "Revision (default @): " "")))
+          (if (string-equal revision "") "@" revision))
+      (when (window-live-p window)
+        (delete-window window)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
@@ -180,11 +189,12 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
     buffer))
 
 ;;;###autoload
-(defun jj-diff ()
-  "Run jj diff."
-  (interactive)
+(defun jj-diff (&optional rev)
+  "Run jj diff with REV or @ when rev is not specified."
+  (interactive "P")
   (with-jj-root
-    (display-buffer (jj-diff--run "@"))))
+    (display-buffer
+     (jj-diff--run (if rev (jj--read-revision) "@")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; describe
