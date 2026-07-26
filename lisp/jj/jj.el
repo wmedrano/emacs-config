@@ -173,6 +173,15 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
       (when (window-live-p window)
         (delete-window window)))))
 
+(defun jj--maybe-read-revision (arg)
+  "Resolve ARG to a revision string.
+If ARG is nil, return \"@\".  If ARG is a string, return it.
+Otherwise, prompt for a revision via `jj--read-revision'."
+  (cond
+   ((null arg) "@")
+   ((stringp arg) arg)
+   (t (jj--read-revision))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -194,7 +203,7 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
   (interactive "P")
   (with-jj-root
     (display-buffer
-     (jj-diff--run (if rev (jj--read-revision) "@")))))
+     (jj-diff--run (jj--maybe-read-revision rev)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; describe
@@ -263,11 +272,11 @@ Signals an error if REVISION cannot be resolved."
      jj-describe--change-id (jj-revision-to-change-id revision))
     (goto-char (point-min))))
 
-(defun jj-describe ()
-  "Edit the description of the current revision."
-  (interactive)
-  (let ((buffer (get-buffer-create "*jj-describe*"))
-        (revision "@"))
+(defun jj-describe (&optional rev)
+  "Edit the description of REV or @ when rev is not specified."
+  (interactive "P")
+  (let ((revision (jj--maybe-read-revision rev))
+        (buffer (get-buffer-create "*jj-describe*")))
     (jj-describe--run buffer revision)
     (pop-to-buffer buffer)))
 
