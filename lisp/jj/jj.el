@@ -125,6 +125,46 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
          args))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; log
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar jj-log-font-lock-keywords
+  '(
+    ;; Graph characters (handles various Unicode drawing characters used by jj)
+    ("^\\([ @◆○×│~├─╮╯╰╭]+\\)" 1 'font-lock-keyword-face)
+    ;; Change ID (the string of lowercase letters immediately following the graph)
+    ("^[ @◆○×│~├─╮╯╰╭]+\\s-+\\([a-z]+\\)\\b" 1 'font-lock-constant-face)
+    ;; Author Email
+    ("\\b\\([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]\\{2,\\}\\)\\b" 1 'font-lock-string-face)
+    ;; Date and Time (YYYY-MM-DD HH:MM:SS)
+    ("\\b\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\)\\b" 1 'font-lock-type-face)
+    ;; Commit Hash (the hex string at the end of a log entry line)
+    ("\\b\\([0-9a-f]\\{8,\\}\\)$" 1 'font-lock-comment-face)
+    ;; Branches/Bookmarks (Matches text sitting between the timestamp and commit hash)
+    ;; E.g., `... 19:22:47 main 39049392` -> matches and highlights `main`
+    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'font-lock-builtin-face)
+    ;; Empty description placeholder
+    ("\\((no description set)\\)" 1 'font-lock-doc-face))
+  "Highlighting expressions for `jj-log-mode`.")
+
+(define-derived-mode jj-log-mode special-mode "jj-log"
+  "Major mode for jj log buffers."
+  (setq-local
+   font-lock-defaults '(jj-log-font-lock-keywords))
+  (read-only-mode t))
+
+(defun jj-log (&optional interactive-p)
+  "Execute jj log."
+  (interactive "p")
+  (with-current-buffer (get-buffer-create "*jj-log*")
+    (let ((buffer (current-buffer))
+          (inhibit-read-only t))
+      (erase-buffer)
+      (jj-call-process "log" nil buffer)
+      (jj-log-mode)
+      (when interactive-p
+        (display-buffer buffer)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun jj-diff--run (revision)
