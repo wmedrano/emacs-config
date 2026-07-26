@@ -2,6 +2,21 @@
 ;;; Commentary:
 
 ;; Jujutsu VCS integration for Emacs.
+;;
+;; This library provides several interactive commands for working with
+;; Jujutsu (jj) repositories from within Emacs:
+;;
+;;   - `jj-log'         Display the jj log output in a dedicated buffer.
+;;   - `jj-diff'        Show a diff for a given revision.
+;;   - `jj-diff-from'   Show a diff between two revisions.
+;;   - `jj-describe'    Edit a revision's description in a dedicated buffer.
+;;
+;; The non-interactive helpers `jj-root', `jj-call-process', and
+;; `jj-call-process-region' can be used to build additional jj-based
+;; commands.
+;;
+;; The library is currently under development and new commands may be
+;; added.
 
 ;;; Code:
 
@@ -38,44 +53,13 @@ be more stable."
     (string-trim (buffer-string))))
 
 (defun jj-call-process (command &optional infile destination &rest args)
-  "Call COMMAND synchronously in separate process.
-The remaining arguments are optional.
+  "Invoke the jj COMMAND synchronously.
+This is a wrapper around `call-process' that runs the jj executable with
+`--color' never and `--no-pager'.  COMMAND is the jj subcommand to invoke.
+INFILE, DESTINATION, and ARGS have the same meaning as in `call-process'.
 
-The program’s input comes from file INFILE (nil means /dev/null).
-If INFILE is a relative path, it will be looked for relative to the
-directory where the process is run (see below).  If you want to make the
-input come from an Emacs buffer, use ‘jj-call-process-region’ instead.
-
-Third argument DESTINATION specifies how to handle program’s output.
-\(\"Output\" here means both standard output and standard error
-output.)
-If DESTINATION is a buffer or the name of a buffer, or t (which stands for
-the current buffer), it means insert output in that buffer before point.
-If DESTINATION is nil, it means discard output; 0 means discard
- and don’t wait for the program to terminate.
-If DESTINATION is ‘(:file FILE)’, where FILE is a file name string,
- it means that output should be written to that file (if the file
- already exists it is overwritten).
-DESTINATION can also have the form (REAL-BUFFER STDERR-FILE); in that case,
- REAL-BUFFER says what to do with standard output, as above,
- while STDERR-FILE says what to do with standard error in the child.
- STDERR-FILE may be nil (discard standard error output),
- t (mix it with ordinary output), or a file name string.
-
-Remaining arguments ARGS are strings passed as command arguments to the jj
-COMMAND.
-
-The jj executable is searched for in variable ‘exec-path’
-\(which is a list of directories).
-
-If executable jj can’t be found as an executable, ‘jj-call-process’
-signals a Lisp error.  ‘jj-call-process’ reports errors in execution of
-the program only through its return and output.
-
-If DESTINATION is 0, ‘jj-call-process’ returns immediately with value nil.
-Otherwise it waits for jj to terminate
-and returns a numeric exit status or a signal description string.
-If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
+Returns the numeric exit status of jj, or a signal description string if
+jj is interrupted."
   (apply #'call-process "jj" infile destination nil
          command
          "--color" "never"
@@ -83,40 +67,13 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
          args))
 
 (defun jj-call-process-region (start end command &optional delete buffer &rest args)
-  "Send text from START to END to a synchronous process running jj.
-COMMAND is the jj subcommand to invoke.
-The remaining arguments are optional.
+  "Send text from START to END to a synchronous jj process.
+This is a wrapper around `call-process-region' that runs jj with COMMAND
+and adds `--color' never and `--no-pager'.  START, END, DELETE, BUFFER,
+and ARGS have the same meaning as in `call-process-region'.
 
-START and END are normally buffer positions specifying the part of the
-buffer to send to the process.
-If START is nil, that means to use the entire buffer contents; END is
-ignored.
-If START is a string, then send that string to the process
-instead of any buffer contents; END is ignored.
-The remaining arguments are optional.
-Delete the text if fourth arg DELETE is non-nil.
-
-Insert output in BUFFER before point; t means current buffer; nil for
- BUFFER means discard it; 0 means discard and don’t wait; and ‘(:file
- FILE)’, where FILE is a file name string, means that it should be
- written to that file (if the file already exists it is overwritten).
-BUFFER can be a string which is the name of a buffer.
-BUFFER can also have the form (REAL-BUFFER STDERR-FILE); in that case,
-REAL-BUFFER says what to do with standard output, as above,
-while STDERR-FILE says what to do with standard error in the child.
-STDERR-FILE may be nil (discard standard error output),
-t (mix it with ordinary output), or a file name string.
-
-Remaining arguments ARGS are strings passed as command arguments to the jj
-COMMAND.
-
-The jj executable is searched for in variable ‘exec-path’
-\(which is a list of directories).
-
-If BUFFER is 0, ‘jj-call-process-region’ returns immediately with value nil.
-Otherwise it waits for jj to terminate
-and returns a numeric exit status or a signal description string.
-If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
+Returns the numeric exit status of jj, or a signal description string if
+jj is interrupted."
   (apply #'call-process-region start end "jj"
          delete buffer nil
          command
@@ -153,7 +110,9 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
   (read-only-mode t))
 
 (defun jj-log (&optional interactive-p)
-  "Execute jj log."
+  "Display the output of `jj log' in a dedicated buffer.
+When called interactively (INTERACTIVE-P non-nil), the buffer is displayed
+to the user.  Returns the log buffer."
   (interactive "p")
   (with-current-buffer (get-buffer-create "*jj-log*")
     (let ((buffer (current-buffer))
@@ -166,6 +125,9 @@ If you quit, the process is killed with SIGINT, or SIGKILL if you quit again."
       buffer)))
 
 (defun jj--read-revision ()
+  "Prompt for a revision using the jj log buffer as a reference.
+Displays the jj log buffer in a side window below the current frame.
+Returns \"@\" if the user enters an empty string."
   (let ((window (display-buffer-in-side-window (jj-log) '((side . bottom)))))
     (unwind-protect
         (let ((revision (read-string "Revision (default @): " "")))
@@ -185,13 +147,18 @@ Otherwise, prompt for a revision via `jj--read-revision'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun jj-diff--run (revision)
-  "Execute jj diff on REVISION and output results to BUFFER."
+(defun jj-diff--run (revision &optional from-rev)
+  "Execute jj diff for REVISION and return the diff buffer.
+If FROM-REV is non-nil, diff FROM-REV against REVISION.
+Otherwise, diff REVISION against the working copy.
+The output is displayed in `*jj-diff*' using `diff-mode'."
   (let ((buffer (get-buffer-create "*jj-diff*")))
     (with-current-buffer buffer
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (jj-call-process "diff" nil buffer "--git" "-r" revision)
+        (if from-rev
+            (jj-call-process "diff" nil buffer "--git" "--from" from-rev)
+          (jj-call-process "diff" nil buffer "--git" "-r" revision))
         (goto-char (point-min))
         (diff-mode)
         (read-only-mode t)))
@@ -199,22 +166,30 @@ Otherwise, prompt for a revision via `jj--read-revision'."
 
 ;;;###autoload
 (defun jj-diff (&optional rev)
-  "Run jj diff with REV or @ when rev is not specified."
+  "Run jj diff with REV or @ when REV is not specified."
   (interactive "P")
   (with-jj-root
     (display-buffer
      (jj-diff--run (jj--maybe-read-revision rev)))))
 
+;;;###autoload
+(defun jj-diff-from (&optional from-rev)
+  "Run jj diff to compare the current revision against FROM-REV."
+  (interactive "P")
+  (with-jj-root
+    (display-buffer
+     (jj-diff--run "@" (or from-rev (jj--read-revision))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; describe
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar jj-describe--change-id nil
-  "The change_id for the current JJ-DESCRIBE-MODE buffer.")
+  "The change id for the current `jj-describe-mode' buffer.")
 (defvar jj-describe--revision nil
-  "The revision for the current JJ-DESCRIBE-MODE buffer.")
+  "The revision for the current `jj-describe-mode' buffer.")
 
 (defun jj-describe-submit ()
-  "Update the description for the current JJ-DESCRIBE buffer."
+  "Update the description for the current `jj-describe-mode' buffer."
   (interactive)
   (let ((buffer (current-buffer)))
     (unless jj-describe--change-id
@@ -256,8 +231,10 @@ Otherwise, prompt for a revision via `jj--read-revision'."
 (define-key jj-describe-mode-map (kbd "C-c C-k") #'kill-buffer)
 
 (defun jj-describe--run (buffer revision)
-  "Dump the description of REVISION onto BUFFER.
-Signals an error if REVISION cannot be resolved."
+  "Populate BUFFER with the description of REVISION.
+Switches to `jj-describe-mode' and stores the revision and its
+corresponding change id in buffer-local variables.  Signals an error if
+REVISION cannot be resolved."
   (with-current-buffer buffer
     (erase-buffer)
     (let ((status (jj-call-process "log" nil buffer
@@ -273,7 +250,9 @@ Signals an error if REVISION cannot be resolved."
     (goto-char (point-min))))
 
 (defun jj-describe (&optional rev)
-  "Edit the description of REV or @ when rev is not specified."
+  "Edit the description of REV or @ when REV is not specified.
+Opens a `jj-describe-mode' buffer where the description can be edited and
+submitted with `jj-describe-submit'."
   (interactive "P")
   (let ((revision (jj--maybe-read-revision rev))
         (buffer (get-buffer-create "*jj-describe*")))
