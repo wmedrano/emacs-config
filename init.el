@@ -624,6 +624,8 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "rD" #'jj-diff-from)
 (define-key leader-map "rd" #'jj-diff)
 (define-key leader-map "rl" #'jj-log)
+(define-key leader-map "re" #'jj-edit)
+(define-key leader-map "rn" #'jj-new)
 (define-key leader-map "rm" #'jj-describe)
 (define-key leader-map "rr" #'jj-log)
 (define-key leader-map "sA" #'consult-line-multi)

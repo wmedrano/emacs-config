@@ -10,6 +10,8 @@
 ;;   - `jj-diff'        Show a diff for a given revision.
 ;;   - `jj-diff-from'   Show a diff between two revisions.
 ;;   - `jj-describe'    Edit a revision's description in a dedicated buffer.
+;;   - `jj-edit'        Set a revision as the working-copy revision.
+;;   - `jj-new'         Create a new empty change on top of a revision.
 ;;
 ;; The non-interactive helpers `jj-root', `jj-call-process', and
 ;; `jj-call-process-region' can be used to build additional jj-based
@@ -21,6 +23,17 @@
 ;;; Code:
 
 (require 'markdown-mode)
+
+(defgroup jj nil
+  "Jujutsu VCS integration."
+  :group 'vc)
+
+(defcustom jj-autorevert-repo-buffers nil
+  "When non-nil, revert unmodified file-visiting buffers under the jj root.
+This happens after commands that change the working copy, such as
+`jj-edit' and `jj-new'."
+  :type 'boolean
+  :group 'jj)
 
 (defun jj-root ()
   "Get the root of the jj repository.
@@ -214,14 +227,17 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
     (user-error "Not a valid jj-describe buffer"))
   (display-buffer (jj-diff--run jj-describe--change-id)))
 
+
 (define-derived-mode jj-describe-mode markdown-mode "jj-describe"
   "Major mode for editing jj descriptions."
   (setq-local
    comment-start "JJ: "
    comment-start-skip "^JJ:[ \t]*"
-   comment-use-syntax nil
-   header-line-format (substitute-command-keys
-                       "JJ Describe | Submit (\\[jj-describe-submit]) | View Diff (\\[jj-describe-diff]) | Quit (\\[kill-buffer])"))
+   comment-use-syntax nil)
+  (setq-local
+   header-line-format
+   (substitute-command-keys
+    "JJ Describe | Submit (\\[jj-describe-submit]) | View Diff (\\[jj-describe-diff]) | Quit (\\[kill-buffer])"))
   (font-lock-add-keywords
    nil
    '(("^JJ:.*" . font-lock-comment-face))))
@@ -232,6 +248,7 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
 
 (defun jj-describe--run (buffer revision)
   "Populate BUFFER with the description of REVISION.
+
 Switches to `jj-describe-mode' and stores the revision and its
 corresponding change id in buffer-local variables.  Signals an error if
 REVISION cannot be resolved."
@@ -251,6 +268,7 @@ REVISION cannot be resolved."
 
 (defun jj-describe (&optional rev)
   "Edit the description of REV or @ when REV is not specified.
+
 Opens a `jj-describe-mode' buffer where the description can be edited and
 submitted with `jj-describe-submit'."
   (interactive "P")
@@ -258,6 +276,55 @@ submitted with `jj-describe-submit'."
         (buffer (get-buffer-create "*jj-describe*")))
     (jj-describe--run buffer revision)
     (pop-to-buffer buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; edit & new
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun jj--autorevert-repo-buffers ()
+  "Revert unmodified file-visiting buffers under the jj root.
+
+Does nothing unless `jj-autorevert-repo-buffers' is non-nil."
+  (when jj-autorevert-repo-buffers
+    (let ((root (jj-root)))
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (when (and buffer-file-name
+                     (not (buffer-modified-p))
+                     (file-in-directory-p buffer-file-name root))
+            (revert-buffer nil t)))))))
+
+(defun jj-edit (&optional rev)
+  "Run jj edit with REV.
+
+Prompts for a revision (showing the jj log in a side window) when REV is nil,
+since editing \"@\" is a no-op.  When `jj-autorevert-repo-buffers' is non-nil,
+also reverts unmodified file-visiting buffers under the jj root."
+  (interactive "P")
+  (with-jj-root
+    (let ((revision (if (stringp rev) rev (jj--read-revision))))
+      (with-temp-buffer
+        (let ((status (jj-call-process "edit" nil (list (current-buffer) t) revision)))
+          (unless (eq 0 status)
+            (error "jj edit failed: %s" (string-trim (buffer-string))))))
+      (message "Now editing %s" revision)
+      (jj--autorevert-repo-buffers))))
+
+(defun jj-new (&optional rev)
+  "Run jj new with REV or @ when REV is not specified.
+
+Creates a new empty change on top of REV and makes it the working-copy revision.
+With a prefix argument, prompts for a revision.  When
+`jj-autorevert-repo-buffers' is non-nil, also reverts unmodified file-visiting
+buffers under the jj root."
+  (interactive "P")
+  (with-jj-root
+    (let ((revision (jj--maybe-read-revision rev)))
+      (with-temp-buffer
+        (let ((status (jj-call-process "new" nil (list (current-buffer) t) revision)))
+          (unless (eq 0 status)
+            (error "jj new failed: %s" (string-trim (buffer-string))))))
+      (message "Created new change on top of %s" revision)
+      (jj--autorevert-repo-buffers))))
 
 (provide 'jj)
 ;;; jj.el ends here
