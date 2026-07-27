@@ -215,12 +215,20 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
         (read-only-mode t)))
     buffer))
 
+(defun jj--display-buffer-other-window (buffer)
+  "Display BUFFER in a window other than the selected one.
+Reuses a window already showing BUFFER or pops up a new window, but
+never takes over the selected window."
+  (display-buffer buffer
+                  '((display-buffer-reuse-window display-buffer-pop-up-window)
+                    (inhibit-same-window . t))))
+
 ;;;###autoload
 (defun jj-diff (&optional rev)
   "Run jj diff with REV or @ when REV is not specified."
   (interactive "P")
   (with-jj-root
-    (display-buffer
+    (jj--display-buffer-other-window
      (jj-diff--run (jj--maybe-read-revision rev)))))
 
 ;;;###autoload
@@ -228,7 +236,7 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
   "Run jj diff to compare the current revision against FROM-REV."
   (interactive "P")
   (with-jj-root
-    (display-buffer
+    (jj--display-buffer-other-window
      (jj-diff--run "@" (or from-rev (jj--read-revision))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,7 +268,7 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
   (interactive)
   (unless jj-describe--change-id
     (user-error "Not a valid jj-describe buffer"))
-  (display-buffer (jj-diff--run jj-describe--change-id)))
+  (jj--display-buffer-other-window (jj-diff--run jj-describe--change-id)))
 
 
 (define-derived-mode jj-describe-mode markdown-mode "jj-describe"
