@@ -135,6 +135,106 @@ be more stable."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; log
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defconst jj-log--graph-node-chars "@◆○×"
+  "Node glyphs that mark revisions in jj log graph output.")
+
+(defconst jj-log--graph-edge-chars " │~├─╮╯╰╭┤┬┴┼"
+  "Characters that draw graph edges in jj log output.")
+
+(defconst jj-log--revision-header-regexp
+  (concat
+   "^[" jj-log--graph-edge-chars "]*"
+   "\\([" jj-log--graph-node-chars "]\\)"
+   "[" jj-log--graph-edge-chars "]*"
+   "[ \t]+"
+   "\\([a-z]+\\)"                       ; 2: change id
+   "[ \t]+"
+   "\\([^ \t]+\\)"                      ; 3: author
+   "\\(?:[ \t]+\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}"
+   " [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\)\\)?" ; 4: timestamp (optional)
+   "\\(?:[ \t]+\\(.+?\\)\\)?"            ; 5: bookmarks (optional)
+   "[ \t]+"
+   "\\([0-9a-f]\\{8,\\}\\)"               ; 6: commit id
+   "\\(?:[ \t]+\\((conflict)\\)\\)?$")      ; 7: conflict marker (optional)
+  "Regexp matching the header line of a revision in jj log output.
+Group 1 is the node glyph, 2 the change id, 3 the author, 4 the
+timestamp (nil for the root commit), 5 the bookmarks text (nil when
+there are none), 6 the commit id, and 7 the \"(conflict)\" marker
+\(nil when there is no conflict).")
+
+(defconst jj-log--description-line-regexp
+  (concat "^[" jj-log--graph-edge-chars "]+[ \t]*\\(.*\\)$")
+  "Regexp matching a description continuation line in jj log output.
+Group 1 is the description text with the graph prefix stripped; it is
+empty for graph-only lines such as \"├─╯\" or \"~\".")
+
+;; TODO(unslop): Vibecoded with kimi-k3
+(defun jj-log--parse-revisions ()
+  "Parse the jj log output from the current buffer into a list of revisions.
+
+The current buffer and is expected to contain jj log output in the default
+template format, e.g. a `jj-log-mode' buffer created by `jj-log'.
+
+The return value is a list with one plist per revision, in buffer
+order (newest first), with the following keys:
+
+  :change-id      displayed change id (an abbreviated prefix)
+  :commit-id      displayed commit id (an abbreviated prefix)
+  :author         author, typically an email address
+  :timestamp      author timestamp, or nil (e.g. for the root commit)
+  :bookmarks      list of bookmark names, or nil
+  :description    displayed description line, or nil
+  :working-copy-p non-nil for the working copy (@) revision
+  :conflicted-p   non-nil if the revision has conflicts
+  :immutable-p    non-nil if the revision is immutable
+  :position       buffer position of the revision's header line"
+  (save-excursion
+    (goto-char (point-min))
+    (let ((revisions nil)
+          (current nil)
+          (in-description nil))
+      (while (not (eobp))
+        (cond
+         ;; Header line: start a new revision.
+         ((looking-at jj-log--revision-header-regexp)
+          (when current
+            (push current revisions))
+          (let ((node (match-string-no-properties 1))
+                (bookmarks (match-string-no-properties 5)))
+            (setq current
+                  (list :change-id (match-string-no-properties 2)
+                        :commit-id (match-string-no-properties 6)
+                        :author (match-string-no-properties 3)
+                        :timestamp (match-string-no-properties 4)
+                        :bookmarks (when bookmarks
+                                     (split-string bookmarks nil t))
+                        :description nil
+                        :working-copy-p (string-equal node "@")
+                        :conflicted-p (if (or (string-equal node "×")
+                                              (match-string-no-properties 7))
+                                          t
+                                        nil)
+                        :immutable-p (string-equal node "◆")
+                        :position (match-beginning 0))
+                  in-description t)))
+         ;; Description continuation line: append to the current
+         ;; revision.  Graph-only lines (empty group 1) end it.
+         ((and in-description
+               (looking-at jj-log--description-line-regexp)
+               (not (string-empty-p (match-string-no-properties 1))))
+          (let ((text (string-trim-right (match-string-no-properties 1)))
+                (old (plist-get current :description)))
+            (setq current
+                  (plist-put current :description
+                             (if old (concat old "\n" text) text)))))
+         ;; Graph-only or unrecognized line: no more description
+         ;; lines belong to the current revision.
+         (t (setq in-description nil)))
+        (forward-line 1))
+      (when current
+        (push current revisions))
+      (nreverse revisions))))
+
 (defvar jj-log-font-lock-keywords
   '(
     ;; Graph characters (handles various Unicode drawing characters used by jj)
@@ -160,6 +260,20 @@ be more stable."
    font-lock-defaults '(jj-log-font-lock-keywords))
   (read-only-mode t))
 
+(defvar jj-log-revisions nil "List of jj log revisions.
+
+A revision is a plist with the following elements:
+  :change-id      displayed change id (an abbreviated prefix)
+  :commit-id      displayed commit id (an abbreviated prefix)
+  :author         author, typically an email address
+  :timestamp      author timestamp, or nil (e.g. for the root commit)
+  :bookmarks      list of bookmark names, or nil
+  :description    displayed description line, or nil
+  :working-copy-p non-nil for the working copy (@) revision
+  :conflicted-p   non-nil if the revision has conflicts
+  :immutable-p    non-nil if the revision is immutable
+  :position       buffer position of the revision's header line")
+
 (defun jj-log (&optional interactive-p)
   "Display the output of `jj log' in a dedicated buffer.
 When called interactively (INTERACTIVE-P non-nil), the buffer is displayed
@@ -171,6 +285,7 @@ to the user.  Returns the log buffer."
       (erase-buffer)
       (jj-run-into-buffer buffer "log")
       (jj-log-mode)
+      (setq-local jj-log-revisions (jj-log--parse-revisions))
       (when interactive-p
         (display-buffer buffer))
       buffer)))
@@ -179,10 +294,25 @@ to the user.  Returns the log buffer."
   "Prompt for a revision using the jj log buffer as a reference.
 Displays the jj log buffer in a side window below the current frame.
 Returns \"@\" if the user enters an empty string."
-  (let ((window (display-buffer-in-side-window (jj-log) '((side . bottom)))))
+  (let* ((jj-log-buffer (jj-log))
+         (window (display-buffer-in-side-window jj-log-buffer '((side . bottom))))
+         (revisions (mapcar (lambda (x) (cons
+                                         (message "%s %s"
+                                                  (plist-get x :change-id)
+                                                  (plist-get x :description))
+                                         (plist-get x :change-id)))
+                            (buffer-local-value 'jj-log-revisions jj-log-buffer))))
     (unwind-protect
-        (let ((revision (read-string "Revision (default @): " "")))
-          (if (string-equal revision "") "@" revision))
+        (let* ((revision (completing-read "Revision (default @): "
+                                          revisions
+                                          nil
+                                          nil
+                                          ""
+                                          nil
+                                          "")))
+          (if (string-equal revision "")
+              "@"
+            (alist-get revision revisions revision nil #'string-equal)))
       (when (window-live-p window)
         (delete-window window)))))
 
