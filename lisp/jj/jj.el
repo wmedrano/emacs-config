@@ -219,9 +219,10 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
   "Display BUFFER in a window other than the selected one.
 Reuses a window already showing BUFFER or pops up a new window, but
 never takes over the selected window."
-  (display-buffer buffer
-                  '((display-buffer-reuse-window display-buffer-pop-up-window)
-                    (inhibit-same-window . t))))
+  (unless (eq buffer (window-buffer))
+    (display-buffer buffer
+                    '((display-buffer-reuse-window display-buffer-pop-up-window)
+                      (inhibit-same-window . t)))))
 
 ;;;###autoload
 (defun jj-diff (&optional rev)
