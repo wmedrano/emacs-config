@@ -264,6 +264,12 @@ never takes over the selected window."
       (message "Set description for %s(%s)" jj-describe--revision jj-describe--change-id))
     (kill-buffer buffer)))
 
+(defun jj-describe-quit ()
+  "Quit editing the description for the current `jj-describe-mode' buffer."
+  (interactive)
+  (when (derived-mode-p '(jj-describe-mode))
+    (kill-this-buffer)))
+
 (defun jj-describe-diff ()
   "View the diff for the jj describe buffer."
   (interactive)
@@ -281,14 +287,14 @@ never takes over the selected window."
   (setq-local
    header-line-format
    (substitute-command-keys
-    "JJ Describe | Submit (\\[jj-describe-submit]) | View Diff (\\[jj-describe-diff]) | Quit (\\[kill-buffer])"))
+    "JJ Describe | Submit (\\[jj-describe-submit]) | View Diff (\\[jj-describe-diff]) | Quit (\\[jj-describe-quit])"))
   (font-lock-add-keywords
    nil
    '(("^JJ:.*" . font-lock-comment-face))))
 
 (define-key jj-describe-mode-map (kbd "C-c C-c") #'jj-describe-submit)
 (define-key jj-describe-mode-map (kbd "C-c C-d") #'jj-describe-diff)
-(define-key jj-describe-mode-map (kbd "C-c C-k") #'kill-buffer)
+(define-key jj-describe-mode-map (kbd "C-c C-k") #'jj-describe-quit)
 
 (defun jj-describe--run (buffer revision)
   "Populate BUFFER with the description of REVISION.
