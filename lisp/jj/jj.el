@@ -125,6 +125,20 @@ Signals an error if not inside a jj repository."
   `(let ((default-directory (jj-root)))
      ,@body))
 
+(defun jj--get-buffer (name)
+  "Get or create buffer NAME with `default-directory' set to the jj root.
+
+The root is computed in the calling buffer's context, before switching
+buffers, so that a reused buffer always points at the repository the
+command was invoked from.  This matters because `default-directory' is
+buffer-local: a cached buffer would otherwise keep running jj in the
+repository that was current when it was created."
+  (let ((root (jj-root))
+        (buffer (get-buffer-create name)))
+    (with-current-buffer buffer
+      (setq-local default-directory root))
+    buffer))
+
 (defun jj-revision-to-change-id (revision)
   "Convert a REVISION to a change id.
 
@@ -279,7 +293,7 @@ A revision is a plist with the following elements:
 When called interactively (INTERACTIVE-P non-nil), the buffer is displayed
 to the user.  Returns the log buffer."
   (interactive "p")
-  (with-current-buffer (get-buffer-create "*jj-log*")
+  (with-current-buffer (jj--get-buffer "*jj-log*")
     (let ((buffer (current-buffer))
           (inhibit-read-only t))
       (erase-buffer)
@@ -324,7 +338,7 @@ Returns \"@\" if the user enters an empty string."
 If FROM-REV is non-nil, diff FROM-REV against REVISION.
 Otherwise, diff REVISION against the working copy.
 The output is displayed in `*jj-diff*' using `diff-mode'."
-  (let ((buffer (get-buffer-create "*jj-diff*")))
+  (let ((buffer (jj--get-buffer "*jj-diff*")))
     (with-current-buffer buffer
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -351,9 +365,8 @@ never takes over the selected window."
 
 Prompts for the revision if REV is nil."
   (interactive)
-  (with-jj-root
-    (jj--display-buffer-other-window
-     (jj-diff--run (or rev (jj--read-revision))))))
+  (jj--display-buffer-other-window
+   (jj-diff--run (or rev (jj--read-revision)))))
 
 ;;;###autoload
 (defun jj-diff-from (&optional from-rev)
@@ -361,9 +374,8 @@ Prompts for the revision if REV is nil."
 
 Prompts for revision if FROM-REV is nil."
   (interactive)
-  (with-jj-root
-    (jj--display-buffer-other-window
-     (jj-diff--run "@" (or from-rev (jj--read-revision))))))
+  (jj--display-buffer-other-window
+   (jj-diff--run "@" (or from-rev (jj--read-revision)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; describe
@@ -444,7 +456,7 @@ Prompts for a revision if REV is nil.
 Opens a `jj-describe-mode' buffer where the description can be edited and
 submitted with `jj-describe-submit'."
   (interactive)
-  (let ((buffer (get-buffer-create "*jj-describe*")))
+  (let ((buffer (jj--get-buffer "*jj-describe*")))
     (jj-describe--run buffer (or rev (jj--read-revision)))
     (pop-to-buffer buffer)))
 
