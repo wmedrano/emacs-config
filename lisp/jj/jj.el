@@ -40,6 +40,15 @@ This happens after commands that change the working copy, such as
   :type 'string
   :group 'jj)
 
+(defcustom jj-log-side-window-height 'fit-window-to-buffer
+  "Height of the side window showing the jj log when prompting for a revision.
+Either an integer number of lines, a float fraction of the frame height,
+or the function `fit-window-to-buffer' to size the window to its contents."
+  :type '(choice (integer :tag "Lines")
+                 (float :tag "Fraction of frame height")
+                 (const :tag "Fit to contents" fit-window-to-buffer))
+  :group 'jj)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; process plumbing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -309,7 +318,10 @@ to the user.  Returns the log buffer."
 Displays the jj log buffer in a side window below the current frame.
 Returns \"@\" if the user enters an empty string."
   (let* ((jj-log-buffer (jj-log))
-         (window (display-buffer-in-side-window jj-log-buffer '((side . bottom))))
+         (window (display-buffer-in-side-window
+                  jj-log-buffer
+                  `((side . bottom)
+                    (window-height . ,jj-log-side-window-height))))
          (revisions (mapcar (lambda (x) (cons
                                          (message "%s %s"
                                                   (plist-get x :change-id)
