@@ -1,6 +1,7 @@
 ;;; init.el --- Emacs configuration -*- lexical-binding: t; -*-
 ;;; Commentary:
 ;;; Code:
+
 ;; Custom (managed by Emacs, do not edit by hand)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -17,11 +18,7 @@
                 transient ttx-mode typescript-mode vertico vertico-posframe
                 vundo which-key yaml-mode zig-mode zig-ts-mode))
  '(safe-local-variable-values
-   '((eval and buffer-file-name (not (eq major-mode 'package-recipe-mode))
-           (or (require 'package-recipe-mode nil t)
-               (let ((load-path (cons "../package-build" load-path)))
-                 (require 'package-recipe-mode nil t)))
-           (package-recipe-mode)))))
+   '((vc-handled-backends nil))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
