@@ -316,15 +316,6 @@ Returns \"@\" if the user enters an empty string."
       (when (window-live-p window)
         (delete-window window)))))
 
-(defun jj--maybe-read-revision (arg)
-  "Resolve ARG to a revision string.
-If ARG is nil, return \"@\".  If ARG is a string, return it.
-Otherwise, prompt for a revision via `jj--read-revision'."
-  (cond
-   ((null arg) "@")
-   ((stringp arg) arg)
-   (t (jj--read-revision))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -356,16 +347,20 @@ never takes over the selected window."
 
 ;;;###autoload
 (defun jj-diff (&optional rev)
-  "Run jj diff with REV or @ when REV is not specified."
-  (interactive "P")
+  "Run jj diff with REV.
+
+Prompts for the revision if REV is nil."
+  (interactive)
   (with-jj-root
     (jj--display-buffer-other-window
-     (jj-diff--run (jj--maybe-read-revision rev)))))
+     (jj-diff--run (or rev (jj--read-revision))))))
 
 ;;;###autoload
 (defun jj-diff-from (&optional from-rev)
-  "Run jj diff to compare the current revision against FROM-REV."
-  (interactive "P")
+  "Run jj diff to compare the current revision against FROM-REV.
+
+Prompts for revision if FROM-REV is nil."
+  (interactive)
   (with-jj-root
     (jj--display-buffer-other-window
      (jj-diff--run "@" (or from-rev (jj--read-revision))))))
@@ -442,14 +437,15 @@ REVISION cannot be resolved."
     (goto-char (point-min))))
 
 (defun jj-describe (&optional rev)
-  "Edit the description of REV or @ when REV is not specified.
+  "Edit the description of REV.
+
+Prompts for a revision if REV is nil.
 
 Opens a `jj-describe-mode' buffer where the description can be edited and
 submitted with `jj-describe-submit'."
-  (interactive "P")
-  (let ((revision (jj--maybe-read-revision rev))
-        (buffer (get-buffer-create "*jj-describe*")))
-    (jj-describe--run buffer revision)
+  (interactive)
+  (let ((buffer (get-buffer-create "*jj-describe*")))
+    (jj-describe--run buffer (or rev (jj--read-revision)))
     (pop-to-buffer buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -471,28 +467,31 @@ Does nothing unless `jj-autorevert-repo-buffers' is non-nil."
 (defun jj-edit (&optional rev)
   "Run jj edit with REV.
 
-Prompts for a revision (showing the jj log in a side window) when REV is nil,
-since editing \"@\" is a no-op.  When `jj-autorevert-repo-buffers' is non-nil,
-also reverts unmodified file-visiting buffers under the jj root."
-  (interactive "P")
+Prompts for a revision (showing the jj log in a side window) when REV is nil.
+
+When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
+file-visiting buffers under the jj root."
+  (interactive)
   (with-jj-root
-    (let ((revision (if (stringp rev) rev (jj--read-revision))))
-      (jj-run "edit" revision)
-      (message "Now editing %s" revision)
+    (let ((rev (or rev (jj--read-revision))))
+      (jj-run "edit" rev)
+      (message "Now editing %s" rev)
       (jj--autorevert-repo-buffers))))
 
 (defun jj-new (&optional rev)
-  "Run jj new with REV or @ when REV is not specified.
+  "Run jj new with REV.
+
+Prompts for a revision if REV is nil.
 
 Creates a new empty change on top of REV and makes it the working-copy revision.
-With a prefix argument, prompts for a revision.  When
-`jj-autorevert-repo-buffers' is non-nil, also reverts unmodified file-visiting
-buffers under the jj root."
-  (interactive "P")
+
+When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
+file-visiting buffers under the jj root."
+  (interactive)
   (with-jj-root
-    (let ((revision (jj--maybe-read-revision rev)))
-      (jj-run "new" revision)
-      (message "Created new change on top of %s" revision)
+    (let ((rev (or rev (jj--read-revision))))
+      (jj-run "new" rev)
+      (message "Created new change on top of %s" rev)
       (jj--autorevert-repo-buffers))))
 
 (provide 'jj)
