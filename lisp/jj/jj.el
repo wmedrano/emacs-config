@@ -307,6 +307,7 @@ to the user.  Returns the log buffer."
           (inhibit-read-only t))
       (erase-buffer)
       (jj-run-into-buffer buffer "log")
+      (goto-char (point-min))
       (jj-log-mode)
       (setq-local jj-log-revisions (jj-log--parse-revisions))
       (when interactive-p
