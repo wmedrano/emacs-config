@@ -54,6 +54,13 @@ or the function `fit-window-to-buffer' to size the window to its contents."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-error 'jj-error "jj command failed")
 
+(defun jj--args (cmd &rest args)
+  "Get the jj arguments to use for CMD with ARGS."
+  `(,cmd
+    "--color" "never"
+    "--no-pager"
+    ,@args))
+
 (defun jj--run (infile destination args)
   "Run the jj executable synchronously with ARGS.
 
@@ -124,15 +131,8 @@ Signals `jj-error' on failure."
   "Get the root of the jj repository.
 
 Signals an error if not inside a jj repository."
-  (condition-case nil
-      (jj-run-to-string "root")
-    (jj-error (error "Not inside a jj repository"))))
-
-(defmacro with-jj-root (&rest body)
-  "Run BODY at the jj root."
-  (declare (indent 0) (debug t))
-  `(let ((default-directory (jj-root)))
-     ,@body))
+  (let ((args (jj--args "root")))
+    (car (apply #'process-lines jj-executable args))))
 
 (defun jj--get-buffer (name)
   "Get or create buffer NAME with `default-directory' set to the jj root.
@@ -324,9 +324,10 @@ Returns \"@\" if the user enters an empty string."
                   `((side . bottom)
                     (window-height . ,jj-log-side-window-height))))
          (revisions (mapcar (lambda (x) (cons
-                                         (message "%s %s"
-                                                  (plist-get x :change-id)
-                                                  (plist-get x :description))
+                                         (format "%s %s %s"
+                                                  (or (plist-get x :change-id) "")
+                                                  (or (plist-get x :description) "")
+                                                  (or (plist-get x :bookmarks) ""))
                                          (plist-get x :change-id)))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
     (unwind-protect
@@ -348,16 +349,22 @@ Returns \"@\" if the user enters an empty string."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun jj-diff--run (revision &optional from-rev)
   "Execute jj diff for REVISION and return the diff buffer.
+
 If FROM-REV is non-nil, diff FROM-REV against REVISION.
 Otherwise, diff REVISION against the working copy.
 The output is displayed in `*jj-diff*' using `diff-mode'."
   (let ((buffer (jj--get-buffer "*jj-diff*")))
     (with-current-buffer buffer
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (args              (if from-rev
+                                   (jj--args "diff" "--git" "--from" from-rev)
+                                 (jj--args "diff" "--git" "-r" revision)))
+            (err-file          (make-temp-file "*jj-diff-stderr*")))
         (erase-buffer)
-        (if from-rev
-            (jj-run-into-buffer buffer "diff" "--git" "--from" from-rev)
-          (jj-run-into-buffer buffer "diff" "--git" "-r" revision))
+        (let ((status (apply #'call-process jj-executable nil (cons t err-file) nil args)))
+          (unless (= status 0)
+            (insert-file-contents err-file)
+            (error "jj diff failed with status: %0, see %s" status (buffer-name buffer))))
         (goto-char (point-min))
         (diff-mode)
         (read-only-mode t)))
@@ -497,11 +504,10 @@ Prompts for a revision (showing the jj log in a side window) when REV is nil.
 When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
 file-visiting buffers under the jj root."
   (interactive)
-  (with-jj-root
-    (let ((rev (or rev (jj--read-revision))))
-      (jj-run "edit" rev)
-      (message "Now editing %s" rev)
-      (jj--autorevert-repo-buffers))))
+  (let ((rev (or rev (jj--read-revision))))
+    (jj-run "edit" rev)
+    (message "Now editing %s" rev)
+    (jj--autorevert-repo-buffers)))
 
 (defun jj-new (&optional rev)
   "Run jj new with REV.
@@ -513,11 +519,10 @@ Creates a new empty change on top of REV and makes it the working-copy revision.
 When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
 file-visiting buffers under the jj root."
   (interactive)
-  (with-jj-root
-    (let ((rev (or rev (jj--read-revision))))
-      (jj-run "new" rev)
-      (message "Created new change on top of %s" rev)
-      (jj--autorevert-repo-buffers))))
+  (let ((rev (or rev (jj--read-revision))))
+    (jj-run "new" rev)
+    (message "Created new change on top of %s" rev)
+    (jj--autorevert-repo-buffers)))
 
 (provide 'jj)
 ;;; jj.el ends here
