@@ -314,24 +314,25 @@ to the user.  Returns the log buffer."
         (display-buffer buffer))
       buffer)))
 
-(defun jj--read-revision ()
+(defun jj--read-revision (&optional prompt-prefix)
   "Prompt for a revision using the jj log buffer as a reference.
 Displays the jj log buffer in a side window below the current frame.
 Returns \"@\" if the user enters an empty string."
   (let* ((jj-log-buffer (jj-log))
-         (window (display-buffer-in-side-window
-                  jj-log-buffer
-                  `((side . bottom)
-                    (window-height . ,jj-log-side-window-height))))
+         (revision-window (display-buffer-in-side-window
+                           jj-log-buffer
+                           `((side . bottom)
+                             (window-height . ,jj-log-side-window-height))))
          (revisions (mapcar (lambda (x) (cons
                                          (format "%s %s %s"
-                                                  (or (plist-get x :change-id) "")
-                                                  (or (plist-get x :description) "")
-                                                  (or (plist-get x :bookmarks) ""))
+                                                 (or (plist-get x :change-id) "")
+                                                 (or (plist-get x :description) "")
+                                                 (or (plist-get x :bookmarks) ""))
                                          (plist-get x :change-id)))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
+    (set-window-parameter revision-window 'mode-line-format 'none)
     (unwind-protect
-        (let* ((revision (completing-read "Revision (default @): "
+        (let* ((revision (completing-read (format "%sRevision (default @): " (or prompt-prefix ""))
                                           revisions
                                           nil
                                           nil
@@ -341,8 +342,8 @@ Returns \"@\" if the user enters an empty string."
           (if (string-equal revision "")
               "@"
             (alist-get revision revisions revision nil #'string-equal)))
-      (when (window-live-p window)
-        (delete-window window)))))
+      (when (window-live-p revision-window)
+        (delete-window revision-window)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
@@ -364,7 +365,7 @@ The output is displayed in `*jj-diff*' using `diff-mode'."
         (let ((status (apply #'call-process jj-executable nil (cons t err-file) nil args)))
           (unless (= status 0)
             (insert-file-contents err-file)
-            (error "jj diff failed with status: %0, see %s" status (buffer-name buffer))))
+            (error "jj diff failed with status: %d, see %s" status (buffer-name buffer))))
         (goto-char (point-min))
         (diff-mode)
         (read-only-mode t)))
@@ -380,13 +381,13 @@ never takes over the selected window."
                       (inhibit-same-window . t)))))
 
 ;;;###autoload
-(defun jj-diff (&optional rev)
+(defun jj-diff-at (&optional rev)
   "Run jj diff with REV.
 
 Prompts for the revision if REV is nil."
   (interactive)
   (jj--display-buffer-other-window
-   (jj-diff--run (or rev (jj--read-revision)))))
+   (jj-diff--run (or rev (jj--read-revision "jj-diff-at ")))))
 
 ;;;###autoload
 (defun jj-diff-from (&optional from-rev)
@@ -395,7 +396,19 @@ Prompts for the revision if REV is nil."
 Prompts for revision if FROM-REV is nil."
   (interactive)
   (jj--display-buffer-other-window
-   (jj-diff--run "@" (or from-rev (jj--read-revision)))))
+   (jj-diff--run "@" (or from-rev (jj--read-revision "jj-diff-from ")))))
+
+(defun jj-diff ()
+  "Prompt for a revision and display its diff.
+
+With a prefix argument, compare the current revision against the selected
+revision instead."
+  (interactive)
+  (let ((revision (jj--read-revision
+                   (if current-prefix-arg "jj-diff-from " "jj-diff-at "))))
+    (if current-prefix-arg
+        (jj-diff-from revision)
+      (jj-diff-at revision))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; describe
@@ -477,7 +490,7 @@ Opens a `jj-describe-mode' buffer where the description can be edited and
 submitted with `jj-describe-submit'."
   (interactive)
   (let ((buffer (jj--get-buffer "*jj-describe*")))
-    (jj-describe--run buffer (or rev (jj--read-revision)))
+    (jj-describe--run buffer (or rev (jj--read-revision "jj-describe ")))
     (pop-to-buffer buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -504,7 +517,7 @@ Prompts for a revision (showing the jj log in a side window) when REV is nil.
 When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
 file-visiting buffers under the jj root."
   (interactive)
-  (let ((rev (or rev (jj--read-revision))))
+  (let ((rev (or rev (jj--read-revision "jj-edit "))))
     (jj-run "edit" rev)
     (message "Now editing %s" rev)
     (jj--autorevert-repo-buffers)))
@@ -519,7 +532,7 @@ Creates a new empty change on top of REV and makes it the working-copy revision.
 When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
 file-visiting buffers under the jj root."
   (interactive)
-  (let ((rev (or rev (jj--read-revision))))
+  (let ((rev (or rev (jj--read-revision "jj-new "))))
     (jj-run "new" rev)
     (message "Created new change on top of %s" rev)
     (jj--autorevert-repo-buffers)))
