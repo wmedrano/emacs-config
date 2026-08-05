@@ -12,6 +12,8 @@
 ;;   - `jj-describe'    Edit a revision's description in a dedicated buffer.
 ;;   - `jj-edit'        Set a revision as the working-copy revision.
 ;;   - `jj-new'         Create a new empty change on top of a revision.
+;;   - `jj-restore-file' Restore a file from its parent revision (with confirmation).
+;;   - `jj-restore-all'  Restore all files from the parent revision (with confirmation).
 ;;
 ;; The non-interactive helpers `jj-run' and `jj-run-into-buffer' can be used to
 ;; build additional jj-based commands.  They signal `jj-error' when jj fails.
@@ -53,6 +55,15 @@ or the function `fit-window-to-buffer' to size the window to its contents."
 
 Can be set to a bookmark like \"main\" for quicker diffing."
   :type 'string
+  :group 'jj)
+
+(defcustom jj-restore-file-confirm t
+  "Whether `jj-restore-file' asks for confirmation before restoring.
+
+When non-nil (the default), `jj-restore-file' asks the user to
+confirm before running `jj restore'.  Set to nil to skip the
+confirmation and restore immediately."
+  :type 'boolean
   :group 'jj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -549,6 +560,45 @@ file-visiting buffers under the jj root."
   (let ((rev (or rev (jj--read-revision "jj-new "))))
     (jj-run "new" rev)
     (message "Created new change on top of %s" rev)
+    (jj--autorevert-repo-buffers)))
+
+;;;###autoload
+(defun jj-restore-file (&optional file)
+  "Restore FILE from its parent revision, discarding working copy changes.
+
+Interactively, prompts for the file to restore, defaulting to the file
+visited by the current buffer.  Unless `jj-restore-file-confirm' is
+nil, asks for confirmation before running `jj restore FILE'."
+  (interactive
+   (let ((file (and buffer-file-name
+                    (file-relative-name buffer-file-name))))
+     (list (read-file-name "jj restore file: "
+                           nil
+                           file
+                           nil
+                           file))))
+  (unless file
+    (user-error "jj-restore-file requires a file argument"))
+  (when (or (not jj-restore-file-confirm)
+            (y-or-n-p
+             (format "Restore %s from its parent revision? " file)))
+    (jj-run "restore" file)
+    (message "Restored %s" file)
+    (jj--autorevert-repo-buffers)))
+
+;;;###autoload
+(defun jj-restore-all ()
+  "Restore all files from the parent revision, discarding all working copy changes.
+
+Runs `jj restore' without any path arguments, which restores the
+entire working copy to match the parent revision.  Unless
+`jj-restore-file-confirm' is nil, asks for confirmation before
+running `jj restore'."
+  (interactive)
+  (when (or (not jj-restore-file-confirm)
+            (y-or-n-p "Restore all files from the parent revision? "))
+    (jj-run "restore")
+    (message "Restored all files")
     (jj--autorevert-repo-buffers)))
 
 (provide 'jj)
