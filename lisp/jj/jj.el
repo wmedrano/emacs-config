@@ -326,7 +326,8 @@ Returns \"@\" if the user enters an empty string."
          (revision-window (display-buffer-in-side-window
                            jj-log-buffer
                            `((side . bottom)
-                             (window-height . ,jj-log-side-window-height))))
+                             (window-height . ,jj-log-side-window-height)
+                             (window-parameters . ((mode-line-format . none))))))
          (revisions (mapcar (lambda (x) (cons
                                          (format "%s %s %s"
                                                  (or (plist-get x :change-id) "")
@@ -334,7 +335,6 @@ Returns \"@\" if the user enters an empty string."
                                                  (or (plist-get x :bookmarks) ""))
                                          (plist-get x :change-id)))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
-    (set-window-parameter revision-window 'mode-line-format 'none)
     (unwind-protect
         (let* ((revision (completing-read (format "%sRevision (default %s): "
                                                   (or prompt-prefix "")
