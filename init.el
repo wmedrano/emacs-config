@@ -223,6 +223,7 @@
 (global-diff-hl-mode)
 (add-hook 'diff-hl-mode #'diff-hl-flydiff-mode)
 
+(setq-default jj-diff-from-default "main")
 (add-hook 'jj-describe-mode-hook #'jj-describe-diff)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

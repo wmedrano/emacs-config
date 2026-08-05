@@ -13,9 +13,8 @@
 ;;   - `jj-edit'        Set a revision as the working-copy revision.
 ;;   - `jj-new'         Create a new empty change on top of a revision.
 ;;
-;; The non-interactive helpers `jj-root', `jj-run', `jj-run-to-string',
-;; `jj-run-into-buffer', and `jj-run-region' can be used to build
-;; additional jj-based commands.  They signal `jj-error' when jj fails.
+;; The non-interactive helpers `jj-run' and `jj-run-into-buffer' can be used to
+;; build additional jj-based commands.  They signal `jj-error' when jj fails.
 ;;
 ;; The library is currently under development and new commands may be
 ;; added.
@@ -68,11 +67,8 @@ Can be set to a bookmark like \"main\" for quicker diffing."
     "--no-pager"
     ,@args))
 
-(defun jj--run (infile destination args)
+(defun jj--run (destination args)
   "Run the jj executable synchronously with ARGS.
-
-INFILE is nil, a file name, or a cons (START . END) of positions in the
-current buffer whose text is sent as standard input.
 
 DESTINATION is nil (discard standard output) or a buffer to insert it into.
 
@@ -91,14 +87,9 @@ standard error output when jj exits non-zero or is interrupted."
          ;; `make-process' allows this.
          (err-file      (make-temp-file "jj-stderr")))
     (unwind-protect
-        (let ((status (if (consp infile)
-                          (apply #'call-process-region
-                                 (car infile) (cdr infile) jj-executable
-                                 nil `(,destination ,err-file) nil
-                                 full-args)
-                        (apply #'call-process jj-executable infile
-                               `(,destination ,err-file) nil
-                               full-args))))
+        (let ((status (apply #'call-process jj-executable nil
+                             `(,destination ,err-file) nil
+                             full-args)))
           (unless (eq 0 status)
             (let ((details (with-temp-buffer
                              (insert-file-contents err-file)
@@ -114,32 +105,21 @@ standard error output when jj exits non-zero or is interrupted."
 
 ARGS is the jj subcommand followed by its arguments,
 e.g. (jj-run \"edit\" \"@\").  Signals `jj-error' on failure."
-  (jj--run nil nil args))
-
-(defun jj-run-to-string (&rest args)
-  "Run jj with ARGS and return standard output as a trimmed string.
-Signals `jj-error' on failure."
-  (with-temp-buffer
-    (jj--run nil (current-buffer) args)
-    (string-trim (buffer-string))))
+  (jj--run nil args))
 
 (defun jj-run-into-buffer (buffer &rest args)
   "Run jj with ARGS, inserting standard output into BUFFER before point.
 Signals `jj-error' on failure."
-  (jj--run nil buffer args))
-
-(defun jj-run-region (start end &rest args)
-  "Send text from START to END in the current buffer to jj with ARGS.
-The text is sent as standard input; standard output is discarded.
-Signals `jj-error' on failure."
-  (jj--run (cons start end) nil args))
+  (jj--run buffer args))
 
 (defun jj-root ()
   "Get the root of the jj repository.
 
-Signals an error if not inside a jj repository."
-  (let ((args (jj--args "root")))
-    (car (apply #'process-lines jj-executable args))))
+Signals `jj-error' with jj's error output if not inside a jj
+repository."
+  (with-temp-buffer
+    (jj-run-into-buffer (current-buffer) "root")
+    (string-trim (buffer-string))))
 
 (defun jj--get-buffer (name)
   "Get or create buffer NAME with `default-directory' set to the jj root.
@@ -160,7 +140,13 @@ repository that was current when it was created."
 
 A revision, such as (@) may point to a different change.  The change id should
 be more stable."
-  (jj-run-to-string "log" "--no-graph" "-r" revision "-T" "change_id"))
+  (with-temp-buffer
+    (jj-run-into-buffer (current-buffer)
+                        "log"
+                        "--no-graph"
+                        "-r" revision
+                        "-T" "change_id")
+    (string-trim (buffer-string))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; log
@@ -357,15 +343,15 @@ Returns \"@\" if the user enters an empty string."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun jj-diff--run (revision &optional from-rev)
+(defun jj-diff--run (revision &optional from-rev-p)
   "Execute jj diff for REVISION and return the diff buffer.
 
-If FROM-REV is non-nil, diff the working copy from REVISION.
+If FROM-REV-P is non-nil, diff the working copy from REVISION.
 The output is displayed in `*jj-diff*' using `diff-mode'."
   (let ((buffer (jj--get-buffer "*jj-diff*")))
     (with-current-buffer buffer
       (let ((inhibit-read-only t)
-            (args              (if from-rev
+            (args              (if from-rev-p
                                    (jj--args "diff" "--git" "--from" revision)
                                  (jj--args "diff" "--git" "-r" revision)))
             (err-file          (make-temp-file "*jj-diff-stderr*")))
@@ -414,7 +400,8 @@ With a prefix argument, compare the current revision against the selected
 revision instead."
   (interactive)
   (let ((revision (jj--read-revision
-                   (if current-prefix-arg "jj-diff-from " "jj-diff-at "))))
+                   (if current-prefix-arg "jj-diff-from " "jj-diff-at ")
+                   (if current-prefix-arg jj-diff-from-default "@"))))
     (if current-prefix-arg
         (jj-diff-from revision)
       (jj-diff-at revision))))
@@ -430,18 +417,32 @@ revision instead."
 (defun jj-describe-submit ()
   "Update the description for the current `jj-describe-mode' buffer."
   (interactive)
-  (let ((buffer (current-buffer)))
-    (unless jj-describe--change-id
-      (user-error "Not a valid jj-describe buffer"))
-    (goto-char (point-min))
-    (flush-lines "^JJ:")
-    (delete-trailing-whitespace)
-    (jj-run-region (point-min) (point-max)
-                   "describe" "--stdin" "-r" jj-describe--change-id)
-    (if (equal jj-describe--revision jj-describe--change-id)
-        (message "Set description for %s" jj-describe--revision)
-      (message "Set description for %s(%s)" jj-describe--revision jj-describe--change-id))
-    (kill-buffer buffer)))
+  (unless jj-describe--change-id
+    (user-error "Not a valid jj-describe buffer"))
+  (goto-char (point-min))
+  (flush-lines "^JJ:")
+  (delete-trailing-whitespace)
+  (let* ((args (jj--args "describe"
+                         "-r" jj-describe--change-id
+                         "--stdin"))
+         (err-file      (make-temp-file "jj-stderr")))
+    (unwind-protect
+        (let ((status (apply #'call-process-region
+                             (point-min) (point-max) jj-executable
+                             nil (cons nil err-file) nil
+                             args)))
+          (unless (eq 0 status)
+            (let ((details (with-temp-buffer
+                             (insert-file-contents err-file)
+                             (string-trim (buffer-string)))))
+              (signal 'jj-error
+                      (list (format "jj describe failed: %s"
+                                    details))))))
+      (delete-file err-file)))
+  (if (equal jj-describe--revision jj-describe--change-id)
+      (message "Set description for %s" jj-describe--revision)
+    (message "Set description for %s(%s)" jj-describe--revision jj-describe--change-id))
+  (kill-buffer (current-buffer)))
 
 (defun jj-describe-quit ()
   "Quit editing the description for the current `jj-describe-mode' buffer."
