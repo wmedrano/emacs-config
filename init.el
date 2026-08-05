@@ -159,8 +159,8 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 (set-face-attribute 'default nil
-                    :font "Roboto Mono"
-                    :height 120)
+                    :font "Inconsolata"
+                    :height 140)
 (setq-default display-line-numbers-grow-only t
               scroll-conservatively 101
               scroll-margin 0
@@ -222,6 +222,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (global-diff-hl-mode)
 (add-hook 'diff-hl-mode #'diff-hl-flydiff-mode)
+
+(add-hook 'jj-describe-mode-hook #'jj-describe-diff)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Eglot

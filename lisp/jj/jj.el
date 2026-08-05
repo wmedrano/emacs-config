@@ -445,7 +445,7 @@ revision instead."
   (interactive)
   (unless jj-describe--change-id
     (user-error "Not a valid jj-describe buffer"))
-  (jj--display-buffer-other-window (jj-diff--run jj-describe--change-id)))
+  (pop-to-buffer (jj-diff--run jj-describe--change-id)))
 
 
 (define-derived-mode jj-describe-mode markdown-mode "jj-describe"
@@ -466,20 +466,19 @@ revision instead."
 (define-key jj-describe-mode-map (kbd "C-c C-d") #'jj-describe-diff)
 (define-key jj-describe-mode-map (kbd "C-c C-k") #'jj-describe-quit)
 
-(defun jj-describe--run (buffer revision)
-  "Populate BUFFER with the description of REVISION.
+(defun jj-describe--activate (revision change-id)
+  "Enable `jj-describe-mode' and set up its buffer-local variables.
 
-Switches to `jj-describe-mode' and stores the revision and its
-corresponding change id in buffer-local variables.  Signals an error if
-REVISION cannot be resolved."
-  (with-current-buffer buffer
-    (erase-buffer)
-    (jj-run-into-buffer buffer "log" "--no-graph" "-r" revision "-T" "description")
-    (jj-describe-mode)
-    (setq-local
-     jj-describe--revision  revision
-     jj-describe--change-id (jj-revision-to-change-id revision))
-    (goto-char (point-min))))
+Delays mode hooks so that `jj-describe-mode-hook' runs after
+`jj-describe--revision' and `jj-describe--change-id' are set (see
+`delay-mode-hooks').  Call `run-mode-hooks' afterwards to run the
+delayed hooks."
+  (delay-mode-hooks
+    (jj-describe-mode))
+  (setq-local
+   jj-describe--revision  revision
+   jj-describe--change-id change-id)
+  (run-mode-hooks))
 
 (defun jj-describe (&optional rev)
   "Edit the description of REV.
@@ -489,8 +488,13 @@ Prompts for a revision if REV is nil.
 Opens a `jj-describe-mode' buffer where the description can be edited and
 submitted with `jj-describe-submit'."
   (interactive)
-  (let ((buffer (jj--get-buffer "*jj-describe*")))
-    (jj-describe--run buffer (or rev (jj--read-revision "jj-describe ")))
+  (let ((buffer   (jj--get-buffer "*jj-describe*"))
+        (revision (or rev (jj--read-revision "jj-describe "))))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (jj-run-into-buffer buffer "log" "--no-graph" "-r" revision "-T" "description")
+      (jj-describe--activate revision (jj-revision-to-change-id revision))
+      (goto-char (point-min)))
     (pop-to-buffer buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
