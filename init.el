@@ -18,7 +18,7 @@
                 transient ttx-mode typescript-mode vertico vertico-posframe
                 vundo which-key yaml-mode zig-mode zig-ts-mode))
  '(safe-local-variable-values
-   '((vc-handled-backends nil))))
+   '((vc-handled-backends))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
