@@ -268,12 +268,20 @@ documentation."
         (push current revisions))
       (nreverse revisions))))
 
+(defface jj-log-change-id-face
+  '((t :inherit font-lock-constant-face))
+  "Face for change ids in `jj-log-mode' buffers and `jj--read-revision' candidates.")
+
+(defface jj-log-bookmark-face
+  '((t :inherit font-lock-constant-name-face))
+  "Face for bookmarks/branches in `jj-log-mode' buffers and `jj--read-revision' candidates.")
+
 (defvar jj-log-font-lock-keywords
   '(
     ;; Graph characters (handles various Unicode drawing characters used by jj)
     ("^\\([ @◆○×│~├─╮╯╰╭]+\\)" 1 'font-lock-keyword-face)
     ;; Change ID (the string of lowercase letters immediately following the graph)
-    ("^[ @◆○×│~├─╮╯╰╭]+\\s-+\\([a-z]+\\)\\b" 1 'font-lock-constant-face)
+    ("^[ @◆○×│~├─╮╯╰╭]+\\s-+\\([a-z]+\\)\\b" 1 'jj-log-change-id-face)
     ;; Author Email
     ("\\b\\([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]\\{2,\\}\\)\\b" 1 'font-lock-string-face)
     ;; Date and Time (YYYY-MM-DD HH:MM:SS)
@@ -282,7 +290,7 @@ documentation."
     ("\\b\\([0-9a-f]\\{8,\\}\\)$" 1 'font-lock-comment-face)
     ;; Branches/Bookmarks (Matches text sitting between the timestamp and commit hash)
     ;; E.g., `... 19:22:47 main 39049392` -> matches and highlights `main`
-    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'font-lock-constant-face)
+    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'jj-log-bookmark-face)
     ;; Empty description placeholder
     ("\\((no description set)\\)" 1 'font-lock-doc-face))
   "Highlighting expressions for `jj-log-mode`.")
@@ -325,12 +333,15 @@ empty string."
                            `((side . bottom)
                              (window-height . ,jj-log-side-window-height)
                              (window-parameters . ((mode-line-format . none))))))
-         (revisions (mapcar (lambda (x) (cons
-                                         (format "%s %s %s"
-                                                 (or (jj-revision-change-id x) "")
-                                                 (or (jj-revision-description x) "")
-                                                 (or (jj-revision-bookmarks x) ""))
-                                         (jj-revision-change-id x)))
+         (revisions (mapcar (lambda (x)
+                               (let ((change-id (or (jj-revision-change-id x) ""))
+                                     (desc      (or (jj-revision-description x) ""))
+                                     (bms       (or (jj-revision-bookmarks x) "")))
+                                 (cons (format "%s %s %s"
+                                               (propertize change-id 'face 'jj-log-change-id-face)
+                                               desc
+                                               (propertize (format "%s" bms) 'face 'jj-log-bookmark-face))
+                                       (jj-revision-change-id x))))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
     (unwind-protect
         (let* ((revision (completing-read (format "%sRevision (default %s): "
