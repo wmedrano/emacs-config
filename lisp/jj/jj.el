@@ -273,7 +273,7 @@ documentation."
         (overlay-put (make-overlay start (point))
                      'revision current))))
   (setq-local jj-log-revisions
-              (delq nil (mapcar (lambda (overlay) (overlay-get overlay 'revision))
+              (delq nil (mapcar (lambda (ov) (overlay-get ov 'revision))
                                (overlays-in (point-min) (point-max))))))
 
 (defface jj-log-change-id-face
@@ -283,6 +283,11 @@ documentation."
 (defface jj-log-bookmark-face
   '((t :inherit font-lock-constant-name-face))
   "Face for bookmarks/branches in `jj-log-mode' buffers and `jj--read-revision' candidates.")
+
+(defface jj-log-selected-revision
+  '((t :inherit region :extend t))
+  "Face for the revision currently selected during `jj--read-revision'.
+Applied to the matching revision overlay in the `*jj-log*' side window.")
 
 (defvar jj-log-font-lock-keywords
   '(
@@ -309,6 +314,28 @@ documentation."
    font-lock-defaults '(jj-log-font-lock-keywords))
   (read-only-mode t))
 
+(defun jj-log--find-overlay (predicate &optional buffer)
+  "Return the first revision overlay in BUFFER satisfying PREDICATE.
+PREDICATE is called with the `jj-revision' struct stored on each
+overlay's `revision' property.  BUFFER defaults to the current buffer.
+Returns nil when no revision overlay matches."
+  (with-current-buffer (or buffer (current-buffer))
+    (cl-some
+     (lambda (ov)
+       (let ((rev (overlay-get ov 'revision)))
+         (and rev (funcall predicate rev) ov)))
+     (overlays-in (point-min) (point-max)))))
+
+(defun jj-log--clear-selection (&optional buffer)
+  "Remove the `jj-log-selected-revision' face from revision overlays in BUFFER.
+Revision overlays never carry any other face, so clearing is safe.
+BUFFER defaults to the current buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (dolist (ov (overlays-in (point-min) (point-max)))
+      (when (and (overlay-get ov 'revision)
+                 (eq (overlay-get ov 'face) 'jj-log-selected-revision))
+        (overlay-put ov 'face nil)))))
+
 (defun jj-log (&optional interactive-p)
   "Display the output of `jj log' in a dedicated buffer.
 When called interactively (INTERACTIVE-P non-nil), the buffer is displayed
@@ -329,12 +356,68 @@ to the user.  Returns the log buffer."
         (display-buffer buffer))
       buffer)))
 
+(defvar vertico--candidates) ; declared for `jj--read-revision--target-overlay'
+
+(defun jj--read-revision--default-overlay (jj-log-buffer default-revision)
+  "Return the revision overlay in JJ-LOG-BUFFER for DEFAULT-REVISION (or \"@\").
+Handles the working copy \"@\" and bookmark names such as \"main\".
+Revision specs that don't map to a single displayed revision (e.g. \"@-\")
+return nil, so nothing is highlighted for them."
+  (let ((effective (or default-revision "@")))
+    (if (string-equal effective "@")
+        (jj-log--find-overlay #'jj-revision-working-copy-p jj-log-buffer)
+      (jj-log--find-overlay
+       (lambda (rev)
+         (or (member effective (jj-revision-bookmarks rev))
+             (equal effective (jj-revision-change-id rev))))
+       jj-log-buffer))))
+
+(defun jj--read-revision--target-overlay (jj-log-buffer revisions default-revision)
+  "Return the overlay in JJ-LOG-BUFFER to highlight for the current selection.
+Called from within the minibuffer.  An empty minibuffer highlights the
+DEFAULT-REVISION's overlay (or the working copy \"@\").  A non-empty
+minibuffer resolves `vertico--candidate' via REVISIONS; if vertico is
+unavailable, return nil and nothing is highlighted."
+  (if (and (minibufferp)
+           (string-empty-p (minibuffer-contents-no-properties)))
+      (jj--read-revision--default-overlay jj-log-buffer default-revision)
+    (when (and (fboundp 'vertico--candidate)
+               (boundp 'vertico--candidates)
+               vertico--candidates)
+      (let* ((cand (vertico--candidate))
+             (change-id (and (stringp cand)
+                             (alist-get cand revisions nil nil #'string-equal))))
+        (if change-id
+            (jj-log--find-overlay
+             (lambda (rev) (equal (jj-revision-change-id rev) change-id))
+             jj-log-buffer)
+          (jj--read-revision--default-overlay jj-log-buffer default-revision))))))
+
+(defun jj--read-revision--update-highlight (jj-log-buffer target-ov)
+  "Highlight TARGET-OV in JJ-LOG-BUFFER, clearing any previous selection.
+If TARGET-OV is nil, only clear.  Scrolls the side window to keep the
+selection visible."
+  (when (buffer-live-p jj-log-buffer)
+    (with-current-buffer jj-log-buffer
+      (jj-log--clear-selection)
+      (when target-ov
+        (overlay-put target-ov 'face 'jj-log-selected-revision)
+        (let ((win (get-buffer-window jj-log-buffer t))
+              (pos (overlay-start target-ov)))
+          (when (and win pos (not (pos-visible-in-window-p pos win)))
+            (ignore-errors
+              (with-selected-window win
+                (goto-char pos)
+                (recenter)))))))))
+
 (defun jj--read-revision (jj-log-buffer prompt-prefix &optional default-revision)
   "Prompt for a revision using the jj log buffer as a reference.
 
 JJ-LOG-BUFFER is a `jj-log' buffer to supply the completion candidates; it is
 displayed in a side window below the current frame while prompting.  Returns
-\"@\" if the user enters an empty string."
+DEFAULT-REVISION if the user enters an empty string, or \"@\" when
+DEFAULT-REVISION is nil.  The currently selected revision is highlighted
+live in JJ-LOG-BUFFER via `jj-log-selected-revision'."
   (let* ((revision-window (display-buffer-in-side-window
                            jj-log-buffer
                            `((side . bottom)
@@ -351,18 +434,31 @@ displayed in a side window below the current frame while prompting.  Returns
                                       (jj-revision-change-id x))))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
     (unwind-protect
-        (let* ((revision (completing-read (format "%sRevision (default %s): "
-                                                  (or prompt-prefix "")
-                                                  (or default-revision "@"))
-                                          revisions
-                                          nil
-                                          nil
-                                          ""
-                                          nil
-                                          "")))
-          (if (string-equal revision "")
-              (or default-revision "@")
-            (alist-get revision revisions revision nil #'string-equal)))
+        (minibuffer-with-setup-hook
+            (:append
+             (lambda ()
+               (let ((update
+                      (lambda ()
+                        (jj--read-revision--update-highlight
+                         jj-log-buffer
+                         (jj--read-revision--target-overlay
+                          jj-log-buffer revisions default-revision)))))
+                 (add-hook 'post-command-hook update t 'local)
+                 (funcall update))))
+          (let* ((revision (completing-read (format "%sRevision (default %s): "
+                                                    (or prompt-prefix "")
+                                                    (or default-revision "@"))
+                                            revisions
+                                            nil
+                                            nil
+                                            ""
+                                            nil
+                                            "")))
+            (if (string-equal revision "")
+                (or default-revision "@")
+              (alist-get revision revisions revision nil #'string-equal))))
+      (when (buffer-live-p jj-log-buffer)
+        (jj-log--clear-selection jj-log-buffer))
       (when (window-live-p revision-window)
         (delete-window revision-window)))))
 
