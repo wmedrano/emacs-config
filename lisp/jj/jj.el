@@ -208,8 +208,12 @@ empty for graph-only lines such as \"├─╯\" or \"~\".")
   (description    nil :documentation "Displayed description line, or nil.")
   (working-copy-p nil :documentation "Non-nil for the working copy (@) revision.")
   (conflicted-p   nil :documentation "Non-nil if the revision has conflicts.")
-  (immutable-p    nil :documentation "Non-nil if the revision is immutable.")
-  (position       nil :documentation "Buffer position of the revision's header line."))
+  (immutable-p    nil :documentation "Non-nil if the revision is immutable."))
+
+
+(defvar-local jj-log-revisions nil
+  "List of `jj-revision' structs parsed from the `*jj-log*' buffer.
+Populated by `jj-log'.  See `jj-revision' for the slot documentation.")
 
 (defun jj-log--parse-revisions ()
   "Parse the jj log output from the current buffer into a list of revisions.
@@ -222,15 +226,16 @@ in buffer order (newest first).  See `jj-revision' for the slot
 documentation."
   (save-excursion
     (goto-char (point-min))
-    (let ((revisions nil)
-          (current nil)
-          (in-description nil))
+    (let ((current nil)
+          (in-description nil)
+          (start (point-min)))
       (while (not (eobp))
         (cond
          ;; Header line: start a new revision.
          ((looking-at jj-log--revision-header-regexp)
           (when current
-            (push current revisions))
+            (overlay-put (make-overlay start (point))
+                         'revision current))
           (let ((node (match-string-no-properties 1))
                 (bookmarks (match-string-no-properties 5)))
             (setq current
@@ -248,9 +253,9 @@ documentation."
                    :working-copy-p (string-equal node "@")
                    :conflicted-p (or (string-equal node "×")
                                      (match-string-no-properties 7))
-                   :immutable-p (string-equal node "◆")
-                   :position (match-beginning 0))
-                  in-description t)))
+                   :immutable-p (string-equal node "◆"))
+                  in-description t)
+            (setq start (match-beginning 0))))
          ;; Description continuation line: append to the current
          ;; revision.  Graph-only lines (empty group 1) end it.
          ((and in-description
@@ -265,8 +270,11 @@ documentation."
          (t (setq in-description nil)))
         (forward-line 1))
       (when current
-        (push current revisions))
-      (nreverse revisions))))
+        (overlay-put (make-overlay start (point))
+                     'revision current))))
+  (setq-local jj-log-revisions
+              (delq nil (mapcar (lambda (overlay) (overlay-get overlay 'revision))
+                               (overlays-in (point-min) (point-max))))))
 
 (defface jj-log-change-id-face
   '((t :inherit font-lock-constant-face))
@@ -301,10 +309,6 @@ documentation."
    font-lock-defaults '(jj-log-font-lock-keywords))
   (read-only-mode t))
 
-(defvar jj-log-revisions nil
-  "List of `jj-revision' structs parsed from the `*jj-log*' buffer.
-Populated by `jj-log'.  See `jj-revision' for the slot documentation.")
-
 (defun jj-log (&optional interactive-p)
   "Display the output of `jj log' in a dedicated buffer.
 When called interactively (INTERACTIVE-P non-nil), the buffer is displayed
@@ -314,34 +318,37 @@ to the user.  Returns the log buffer."
     (let ((buffer (current-buffer))
           (inhibit-read-only t))
       (erase-buffer)
+      ;; `erase-buffer' does not delete overlays, so remove any stale
+      ;; `revision' overlays left by previous `jj-log' calls before reparsing.
+      (delete-all-overlays)
       (jj-run-into-buffer buffer "log")
       (goto-char (point-min))
       (jj-log-mode)
-      (setq-local jj-log-revisions (jj-log--parse-revisions))
+      (jj-log--parse-revisions)
       (when interactive-p
         (display-buffer buffer))
       buffer)))
 
 (defun jj--read-revision (jj-log-buffer prompt-prefix &optional default-revision)
   "Prompt for a revision using the jj log buffer as a reference.
-JJ-LOG-BUFFER is a `jj-log' buffer whose `jj-log-revisions' supply the
-completion candidates; it is displayed in a side window below the
-current frame while prompting.  Returns \"@\" if the user enters an
-empty string."
+
+JJ-LOG-BUFFER is a `jj-log' buffer to supply the completion candidates; it is
+displayed in a side window below the current frame while prompting.  Returns
+\"@\" if the user enters an empty string."
   (let* ((revision-window (display-buffer-in-side-window
                            jj-log-buffer
                            `((side . bottom)
                              (window-height . ,jj-log-side-window-height)
                              (window-parameters . ((mode-line-format . none))))))
          (revisions (mapcar (lambda (x)
-                               (let ((change-id (or (jj-revision-change-id x) ""))
-                                     (desc      (or (jj-revision-description x) ""))
-                                     (bms       (or (jj-revision-bookmarks x) "")))
-                                 (cons (format "%s %s %s"
-                                               (propertize change-id 'face 'jj-log-change-id-face)
-                                               desc
-                                               (propertize (format "%s" bms) 'face 'jj-log-bookmark-face))
-                                       (jj-revision-change-id x))))
+                              (let ((change-id (or (jj-revision-change-id x) ""))
+                                    (desc      (or (jj-revision-description x) ""))
+                                    (bms       (or (jj-revision-bookmarks x) "")))
+                                (cons (format "%s %s %s"
+                                              (propertize change-id 'face 'jj-log-change-id-face)
+                                              desc
+                                              (propertize (format "%s" bms) 'face 'jj-log-bookmark-face))
+                                      (jj-revision-change-id x))))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
     (unwind-protect
         (let* ((revision (completing-read (format "%sRevision (default %s): "
@@ -615,11 +622,11 @@ running `jj restore'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun jj--read-bookmark (jj-log-buffer &optional prompt-prefix local-only)
   "Prompt for a bookmark name, previewing the jj log in a side window.
-JJ-LOG-BUFFER is a `jj-log' buffer whose `jj-log-revisions' supply the
-completion candidates (existing bookmark names).  PROMPT-PREFIX is
-prepended to the prompt.  When LOCAL-ONLY is non-nil, remote-tracking
-bookmarks such as \"main@origin\" (any name containing \"@\") are
-excluded from the candidates.  Completion is not required, so a new
+
+JJ-LOG-BUFFER is a `jj-log' buffer to supply the completion candidates (existing
+bookmark names).  PROMPT-PREFIX is prepended to the prompt.  When LOCAL-ONLY is
+non-nil, remote-tracking bookmarks such as \"main@origin\" (any name containing
+\"@\") are excluded from the candidates.  Completion is not required, so a new
 bookmark name may also be entered."
   (let ((bookmark-window (display-buffer-in-side-window
                           jj-log-buffer
