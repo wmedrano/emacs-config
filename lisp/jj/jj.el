@@ -465,25 +465,55 @@ live in JJ-LOG-BUFFER via `jj-log-selected-revision'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; diff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar-local jj-diff--args nil
+  "The jj diff arguments that populated the current `*jj-diff*' buffer.
+Set by `jj-diff--run' and used by `jj-diff--revert-buffer' to re-run
+the same diff.")
+
+(defun jj-diff--populate (args)
+  "Run jj diff with ARGS, filling the current buffer with the output.
+
+Erases the buffer first.  On failure, leaves jj's standard error
+output in the buffer and signals an error."
+  (let ((inhibit-read-only t)
+        (err-file (make-temp-file "*jj-diff-stderr*")))
+    (unwind-protect
+        (progn
+          (erase-buffer)
+          (let ((status (apply #'call-process jj-executable nil
+                               (cons t err-file) nil args)))
+            (unless (= status 0)
+              (insert-file-contents err-file)
+              (error "jj diff failed with status: %d, see %s"
+                     status (buffer-name (current-buffer))))))
+      (delete-file err-file))
+    (goto-char (point-min))))
+
+(defun jj-diff--revert-buffer (&optional _ignore-auto _noconfirm)
+  "Regenerate the current `*jj-diff*' buffer by re-running its jj diff.
+
+Re-runs the same jj diff command that populated the buffer, using the
+buffer-local `jj-diff--args'.  Does nothing if that was never set."
+  (when jj-diff--args
+    (jj-diff--populate jj-diff--args)))
+
 (defun jj-diff--run (revision &optional from-rev-p)
   "Execute jj diff for REVISION and return the diff buffer.
 
 If FROM-REV-P is non-nil, diff the working copy from REVISION.
-The output is displayed in `*jj-diff*' using `diff-mode'."
+The output is displayed in `*jj-diff*' using `diff-mode'.
+
+The buffer can be refreshed with `revert-buffer' (bound to `g' in
+`diff-mode'), which re-runs the same diff."
   (let ((buffer (jj--get-buffer "*jj-diff*")))
     (with-current-buffer buffer
-      (let ((inhibit-read-only t)
-            (args              (if from-rev-p
-                                   (jj--args "diff" "--git" "--from" revision)
-                                 (jj--args "diff" "--git" "-r" revision)))
-            (err-file          (make-temp-file "*jj-diff-stderr*")))
-        (erase-buffer)
-        (let ((status (apply #'call-process jj-executable nil (cons t err-file) nil args)))
-          (unless (= status 0)
-            (insert-file-contents err-file)
-            (error "jj diff failed with status: %d, see %s" status (buffer-name buffer))))
-        (goto-char (point-min))
+      (let ((args (if from-rev-p
+                      (jj--args "diff" "--git" "--from" revision)
+                    (jj--args "diff" "--git" "-r" revision))))
+        (jj-diff--populate args)
         (diff-mode)
+        (setq-local jj-diff--args args)
+        (setq-local revert-buffer-function #'jj-diff--revert-buffer)
         (read-only-mode t)))
     buffer))
 
