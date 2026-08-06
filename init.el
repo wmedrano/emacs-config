@@ -621,6 +621,7 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "of" #'project-find-file)
 (define-key leader-map "or" #'consult-recent-file)
 (define-key leader-map "p" project-prefix-map)
+(define-key leader-map "rb" #'jj-bookmark-set)
 (define-key leader-map "rd" #'jj-diff)
 (define-key leader-map "rl" #'jj-log)
 (define-key leader-map "re" #'jj-edit)

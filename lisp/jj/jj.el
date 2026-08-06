@@ -14,6 +14,7 @@
 ;;   - `jj-new'         Create a new empty change on top of a revision.
 ;;   - `jj-restore-file' Restore a file from its parent revision (with confirmation).
 ;;   - `jj-restore-all'  Restore all files from the parent revision (with confirmation).
+;;   - `jj-bookmark-set' Set a bookmark to point at a given revision.
 ;;
 ;; The non-interactive helpers `jj-run' and `jj-run-into-buffer' can be used to
 ;; build additional jj-based commands.  They signal `jj-error' when jj fails.
@@ -239,7 +240,11 @@ documentation."
                    :author (match-string-no-properties 3)
                    :timestamp (match-string-no-properties 4)
                    :bookmarks (when bookmarks
-                                (split-string bookmarks nil t))
+                                (mapcar (lambda (bm)
+                                          (if (string-suffix-p "*" bm)
+                                              (substring bm 0 -1)
+                                            bm))
+                                        (split-string bookmarks nil t)))
                    :working-copy-p (string-equal node "@")
                    :conflicted-p (or (string-equal node "×")
                                      (match-string-no-properties 7))
@@ -277,7 +282,7 @@ documentation."
     ("\\b\\([0-9a-f]\\{8,\\}\\)$" 1 'font-lock-comment-face)
     ;; Branches/Bookmarks (Matches text sitting between the timestamp and commit hash)
     ;; E.g., `... 19:22:47 main 39049392` -> matches and highlights `main`
-    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'font-lock-builtin-face)
+    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'font-lock-constant-face)
     ;; Empty description placeholder
     ("\\((no description set)\\)" 1 'font-lock-doc-face))
   "Highlighting expressions for `jj-log-mode`.")
@@ -309,12 +314,13 @@ to the user.  Returns the log buffer."
         (display-buffer buffer))
       buffer)))
 
-(defun jj--read-revision (prompt-prefix &optional default-revision)
+(defun jj--read-revision (jj-log-buffer prompt-prefix &optional default-revision)
   "Prompt for a revision using the jj log buffer as a reference.
-Displays the jj log buffer in a side window below the current frame.
-Returns \"@\" if the user enters an empty string."
-  (let* ((jj-log-buffer (jj-log))
-         (revision-window (display-buffer-in-side-window
+JJ-LOG-BUFFER is a `jj-log' buffer whose `jj-log-revisions' supply the
+completion candidates; it is displayed in a side window below the
+current frame while prompting.  Returns \"@\" if the user enters an
+empty string."
+  (let* ((revision-window (display-buffer-in-side-window
                            jj-log-buffer
                            `((side . bottom)
                              (window-height . ,jj-log-side-window-height)
@@ -383,7 +389,7 @@ never takes over the selected window."
 Prompts for the revision if REV is nil."
   (interactive)
   (jj--display-buffer-other-window
-   (jj-diff--run (or rev (jj--read-revision "jj-diff-at ")))))
+   (jj-diff--run (or rev (jj--read-revision (jj-log) "jj-diff-at ")))))
 
 ;;;###autoload
 (defun jj-diff-from (&optional from-rev)
@@ -392,7 +398,7 @@ Prompts for the revision if REV is nil."
 Prompts for revision if FROM-REV is nil."
   (interactive)
   (jj--display-buffer-other-window
-   (jj-diff--run (or from-rev (jj--read-revision "jj-diff-from " jj-diff-from-default))
+   (jj-diff--run (or from-rev (jj--read-revision (jj-log) "jj-diff-from " jj-diff-from-default))
                  t)))
 
 (defun jj-diff ()
@@ -402,6 +408,7 @@ With a prefix argument, compare the current revision against the selected
 revision instead."
   (interactive)
   (let ((revision (jj--read-revision
+                   (jj-log)
                    (if current-prefix-arg "jj-diff-from " "jj-diff-at ")
                    (if current-prefix-arg jj-diff-from-default "@"))))
     (if current-prefix-arg
@@ -501,7 +508,7 @@ Opens a `jj-describe-mode' buffer where the description can be edited and
 submitted with `jj-describe-submit'."
   (interactive)
   (let ((buffer   (jj--get-buffer "*jj-describe*"))
-        (revision (or rev (jj--read-revision "jj-describe "))))
+        (revision (or rev (jj--read-revision (jj-log) "jj-describe "))))
     (with-current-buffer buffer
       (erase-buffer)
       (jj-run-into-buffer buffer "log" "--no-graph" "-r" revision "-T" "description")
@@ -533,7 +540,7 @@ Prompts for a revision (showing the jj log in a side window) when REV is nil.
 When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
 file-visiting buffers under the jj root."
   (interactive)
-  (let ((rev (or rev (jj--read-revision "jj-edit "))))
+  (let ((rev (or rev (jj--read-revision (jj-log) "jj-edit "))))
     (jj-run "edit" rev)
     (message "Now editing %s" rev)
     (jj--autorevert-repo-buffers)))
@@ -548,7 +555,7 @@ Creates a new empty change on top of REV and makes it the working-copy revision.
 When `jj-autorevert-repo-buffers' is non-nil, also reverts unmodified
 file-visiting buffers under the jj root."
   (interactive)
-  (let ((rev (or rev (jj--read-revision "jj-new "))))
+  (let ((rev (or rev (jj--read-revision (jj-log) "jj-new "))))
     (jj-run "new" rev)
     (message "Created new change on top of %s" rev)
     (jj--autorevert-repo-buffers)))
@@ -591,6 +598,58 @@ running `jj restore'."
     (jj-run "restore")
     (message "Restored all files")
     (jj--autorevert-repo-buffers)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bookmark
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun jj--read-bookmark (jj-log-buffer &optional prompt-prefix local-only)
+  "Prompt for a bookmark name, previewing the jj log in a side window.
+JJ-LOG-BUFFER is a `jj-log' buffer whose `jj-log-revisions' supply the
+completion candidates (existing bookmark names).  PROMPT-PREFIX is
+prepended to the prompt.  When LOCAL-ONLY is non-nil, remote-tracking
+bookmarks such as \"main@origin\" (any name containing \"@\") are
+excluded from the candidates.  Completion is not required, so a new
+bookmark name may also be entered."
+  (let ((bookmark-window (display-buffer-in-side-window
+                          jj-log-buffer
+                          `((side . bottom)
+                            (window-height . ,jj-log-side-window-height)
+                            (window-parameters . ((mode-line-format . none)))))))
+    (unwind-protect
+        (let* ((revisions  (buffer-local-value 'jj-log-revisions jj-log-buffer))
+               (bookmarks  (delete-dups
+                            (delq nil
+                                  (mapcan #'copy-sequence
+                                          (mapcar #'jj-revision-bookmarks revisions)))))
+               (candidates (if local-only
+                               (cl-remove-if (lambda (bm) (string-match-p "@" bm))
+                                             bookmarks)
+                             bookmarks)))
+          (completing-read (format "%sBookmark name: " (or prompt-prefix ""))
+                           candidates nil nil nil nil))
+      (when (window-live-p bookmark-window)
+        (delete-window bookmark-window)))))
+
+;;;###autoload
+(defun jj-bookmark-set (bookmark-name revision)
+  "Set BOOKMARK-NAME to point at REVISION via `jj bookmark set'.
+
+Interactively, prompts for BOOKMARK-NAME with completion against
+existing bookmarks parsed from the `*jj-log*' buffer (previewed in a
+side window via `jj--read-bookmark'); a new name may also be entered.
+Then prompts for REVISION using `jj--read-revision', which reuses the
+same log buffer.
+
+Runs `jj bookmark set BOOKMARK-NAME -r REVISION'.  Signals `jj-error'
+on failure."
+  (interactive
+   (let* ((jj-log-buffer (jj-log))
+          (bookmark-name (jj--read-bookmark jj-log-buffer nil t))
+          (revision      (jj--read-revision jj-log-buffer
+                                            (format "jj bookmark set %s " bookmark-name))))
+     (list bookmark-name revision)))
+  (jj-run "bookmark" "set" bookmark-name "-r" revision)
+  (message "Set bookmark %s to revision %s" bookmark-name revision))
 
 (provide 'jj)
 ;;; jj.el ends here
