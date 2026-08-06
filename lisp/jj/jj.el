@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'markdown-mode)
 
 (defgroup jj nil
@@ -195,26 +196,29 @@ there are none), 6 the commit id, and 7 the \"(conflict)\" marker
 Group 1 is the description text with the graph prefix stripped; it is
 empty for graph-only lines such as \"├─╯\" or \"~\".")
 
-;; TODO(unslop): Vibecoded with kimi-k3
+(cl-defstruct (jj-revision
+               (:constructor jj-revision--make))
+  "A parsed jj log revision."
+  (change-id      nil :documentation "Displayed change id (an abbreviated prefix).")
+  (commit-id      nil :documentation "Displayed commit id (an abbreviated prefix).")
+  (author         nil :documentation "Author, typically an email address.")
+  (timestamp      nil :documentation "Author timestamp, or nil (e.g. for the root commit).")
+  (bookmarks      nil :documentation "List of bookmark names, or nil.")
+  (description    nil :documentation "Displayed description line, or nil.")
+  (working-copy-p nil :documentation "Non-nil for the working copy (@) revision.")
+  (conflicted-p   nil :documentation "Non-nil if the revision has conflicts.")
+  (immutable-p    nil :documentation "Non-nil if the revision is immutable.")
+  (position       nil :documentation "Buffer position of the revision's header line."))
+
 (defun jj-log--parse-revisions ()
   "Parse the jj log output from the current buffer into a list of revisions.
 
 The current buffer and is expected to contain jj log output in the default
 template format, e.g. a `jj-log-mode' buffer created by `jj-log'.
 
-The return value is a list with one plist per revision, in buffer
-order (newest first), with the following keys:
-
-  :change-id      displayed change id (an abbreviated prefix)
-  :commit-id      displayed commit id (an abbreviated prefix)
-  :author         author, typically an email address
-  :timestamp      author timestamp, or nil (e.g. for the root commit)
-  :bookmarks      list of bookmark names, or nil
-  :description    displayed description line, or nil
-  :working-copy-p non-nil for the working copy (@) revision
-  :conflicted-p   non-nil if the revision has conflicts
-  :immutable-p    non-nil if the revision is immutable
-  :position       buffer position of the revision's header line"
+The return value is a list with one `jj-revision' struct per revision,
+in buffer order (newest first).  See `jj-revision' for the slot
+documentation."
   (save-excursion
     (goto-char (point-min))
     (let ((revisions nil)
@@ -229,20 +233,18 @@ order (newest first), with the following keys:
           (let ((node (match-string-no-properties 1))
                 (bookmarks (match-string-no-properties 5)))
             (setq current
-                  (list :change-id (match-string-no-properties 2)
-                        :commit-id (match-string-no-properties 6)
-                        :author (match-string-no-properties 3)
-                        :timestamp (match-string-no-properties 4)
-                        :bookmarks (when bookmarks
-                                     (split-string bookmarks nil t))
-                        :description nil
-                        :working-copy-p (string-equal node "@")
-                        :conflicted-p (if (or (string-equal node "×")
-                                              (match-string-no-properties 7))
-                                          t
-                                        nil)
-                        :immutable-p (string-equal node "◆")
-                        :position (match-beginning 0))
+                  (jj-revision--make
+                   :change-id (match-string-no-properties 2)
+                   :commit-id (match-string-no-properties 6)
+                   :author (match-string-no-properties 3)
+                   :timestamp (match-string-no-properties 4)
+                   :bookmarks (when bookmarks
+                                (split-string bookmarks nil t))
+                   :working-copy-p (string-equal node "@")
+                   :conflicted-p (or (string-equal node "×")
+                                     (match-string-no-properties 7))
+                   :immutable-p (string-equal node "◆")
+                   :position (match-beginning 0))
                   in-description t)))
          ;; Description continuation line: append to the current
          ;; revision.  Graph-only lines (empty group 1) end it.
@@ -250,10 +252,9 @@ order (newest first), with the following keys:
                (looking-at jj-log--description-line-regexp)
                (not (string-empty-p (match-string-no-properties 1))))
           (let ((text (string-trim-right (match-string-no-properties 1)))
-                (old (plist-get current :description)))
-            (setq current
-                  (plist-put current :description
-                             (if old (concat old "\n" text) text)))))
+                (old (jj-revision-description current)))
+            (setf (jj-revision-description current)
+                  (if old (concat old "\n" text) text))))
          ;; Graph-only or unrecognized line: no more description
          ;; lines belong to the current revision.
          (t (setq in-description nil)))
@@ -287,19 +288,9 @@ order (newest first), with the following keys:
    font-lock-defaults '(jj-log-font-lock-keywords))
   (read-only-mode t))
 
-(defvar jj-log-revisions nil "List of jj log revisions.
-
-A revision is a plist with the following elements:
-  :change-id      displayed change id (an abbreviated prefix)
-  :commit-id      displayed commit id (an abbreviated prefix)
-  :author         author, typically an email address
-  :timestamp      author timestamp, or nil (e.g. for the root commit)
-  :bookmarks      list of bookmark names, or nil
-  :description    displayed description line, or nil
-  :working-copy-p non-nil for the working copy (@) revision
-  :conflicted-p   non-nil if the revision has conflicts
-  :immutable-p    non-nil if the revision is immutable
-  :position       buffer position of the revision's header line")
+(defvar jj-log-revisions nil
+  "List of `jj-revision' structs parsed from the `*jj-log*' buffer.
+Populated by `jj-log'.  See `jj-revision' for the slot documentation.")
 
 (defun jj-log (&optional interactive-p)
   "Display the output of `jj log' in a dedicated buffer.
@@ -330,10 +321,10 @@ Returns \"@\" if the user enters an empty string."
                              (window-parameters . ((mode-line-format . none))))))
          (revisions (mapcar (lambda (x) (cons
                                          (format "%s %s %s"
-                                                 (or (plist-get x :change-id) "")
-                                                 (or (plist-get x :description) "")
-                                                 (or (plist-get x :bookmarks) ""))
-                                         (plist-get x :change-id)))
+                                                 (or (jj-revision-change-id x) "")
+                                                 (or (jj-revision-description x) "")
+                                                 (or (jj-revision-bookmarks x) ""))
+                                         (jj-revision-change-id x)))
                             (buffer-local-value 'jj-log-revisions jj-log-buffer))))
     (unwind-protect
         (let* ((revision (completing-read (format "%sRevision (default %s): "
