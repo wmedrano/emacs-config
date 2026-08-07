@@ -210,20 +210,48 @@ empty for graph-only lines such as \"├─╯\" or \"~\".")
   (conflicted-p   nil :documentation "Non-nil if the revision has conflicts.")
   (immutable-p    nil :documentation "Non-nil if the revision is immutable."))
 
-
 (defvar-local jj-log-revisions nil
   "List of `jj-revision' structs parsed from the `*jj-log*' buffer.
 Populated by `jj-log'.  See `jj-revision' for the slot documentation.")
 
-(defun jj-log--parse-revisions ()
-  "Parse the jj log output from the current buffer into a list of revisions.
+(defface jj-log-change-id-face
+  '((t :inherit font-lock-constant-face))
+  "Face for change ids in `jj-log-mode' buffers and `jj--read-revision' candidates.")
 
-The current buffer and is expected to contain jj log output in the default
-template format, e.g. a `jj-log-mode' buffer created by `jj-log'.
+(defface jj-log-bookmark-face
+  '((t :inherit font-lock-constant-name-face))
+  "Face for bookmarks/branches in `jj-log-mode' buffers and `jj--read-revision' candidates.")
 
-The return value is a list with one `jj-revision' struct per revision,
-in buffer order (newest first).  See `jj-revision' for the slot
-documentation."
+(defface jj-log-selected-revision
+  '((t :inherit region :extend t))
+  "Face for the revision currently selected during `jj--read-revision'.
+Applied to the matching revision overlay in the `*jj-log*' side window.")
+
+(defvar jj-log-font-lock-keywords
+  '(
+    ;; Graph characters (handles various Unicode drawing characters used by jj)
+    ("^\\([ @◆○×│~├─╮╯╰╭]+\\)" 1 'font-lock-keyword-face)
+    ;; Change ID (the string of lowercase letters immediately following the graph)
+    ("^[ @◆○×│~├─╮╯╰╭]+\\s-+\\([a-z]+\\)\\b" 1 'jj-log-change-id-face)
+    ;; Author Email
+    ("\\b\\([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]\\{2,\\}\\)\\b" 1 'font-lock-string-face)
+    ;; Date and Time (YYYY-MM-DD HH:MM:SS)
+    ("\\b\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\)\\b" 1 'font-lock-type-face)
+    ;; Commit Hash (the hex string at the end of a log entry line)
+    ("\\b\\([0-9a-f]\\{8,\\}\\)$" 1 'font-lock-comment-face)
+    ;; Branches/Bookmarks (Matches text sitting between the timestamp and commit hash)
+    ;; E.g., `... 19:22:47 main 39049392` -> matches and highlights `main`
+    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'jj-log-bookmark-face)
+    ;; Empty description placeholder
+    ("\\((no description set)\\)" 1 'font-lock-doc-face))
+  "Highlighting expressions for `jj-log-mode`.")
+
+(define-derived-mode jj-log-mode special-mode "jj-log"
+  "Major mode for jj log buffers."
+  (setq-local
+   font-lock-defaults '(jj-log-font-lock-keywords))
+  (read-only-mode t)
+  (delete-all-overlays)
   (save-excursion
     (goto-char (point-min))
     (let ((current nil)
@@ -274,45 +302,7 @@ documentation."
                      'revision current))))
   (setq-local jj-log-revisions
               (delq nil (mapcar (lambda (ov) (overlay-get ov 'revision))
-                               (overlays-in (point-min) (point-max))))))
-
-(defface jj-log-change-id-face
-  '((t :inherit font-lock-constant-face))
-  "Face for change ids in `jj-log-mode' buffers and `jj--read-revision' candidates.")
-
-(defface jj-log-bookmark-face
-  '((t :inherit font-lock-constant-name-face))
-  "Face for bookmarks/branches in `jj-log-mode' buffers and `jj--read-revision' candidates.")
-
-(defface jj-log-selected-revision
-  '((t :inherit region :extend t))
-  "Face for the revision currently selected during `jj--read-revision'.
-Applied to the matching revision overlay in the `*jj-log*' side window.")
-
-(defvar jj-log-font-lock-keywords
-  '(
-    ;; Graph characters (handles various Unicode drawing characters used by jj)
-    ("^\\([ @◆○×│~├─╮╯╰╭]+\\)" 1 'font-lock-keyword-face)
-    ;; Change ID (the string of lowercase letters immediately following the graph)
-    ("^[ @◆○×│~├─╮╯╰╭]+\\s-+\\([a-z]+\\)\\b" 1 'jj-log-change-id-face)
-    ;; Author Email
-    ("\\b\\([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]\\{2,\\}\\)\\b" 1 'font-lock-string-face)
-    ;; Date and Time (YYYY-MM-DD HH:MM:SS)
-    ("\\b\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\)\\b" 1 'font-lock-type-face)
-    ;; Commit Hash (the hex string at the end of a log entry line)
-    ("\\b\\([0-9a-f]\\{8,\\}\\)$" 1 'font-lock-comment-face)
-    ;; Branches/Bookmarks (Matches text sitting between the timestamp and commit hash)
-    ;; E.g., `... 19:22:47 main 39049392` -> matches and highlights `main`
-    ("\\b[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}\\s-+\\(.+?\\)\\s-+[0-9a-f]\\{8,\\}$" 1 'jj-log-bookmark-face)
-    ;; Empty description placeholder
-    ("\\((no description set)\\)" 1 'font-lock-doc-face))
-  "Highlighting expressions for `jj-log-mode`.")
-
-(define-derived-mode jj-log-mode special-mode "jj-log"
-  "Major mode for jj log buffers."
-  (setq-local
-   font-lock-defaults '(jj-log-font-lock-keywords))
-  (read-only-mode t))
+                                (overlays-in (point-min) (point-max))))))
 
 (defun jj-log--find-overlay (predicate &optional buffer)
   "Return the first revision overlay in BUFFER satisfying PREDICATE.
@@ -341,17 +331,13 @@ BUFFER defaults to the current buffer."
 When called interactively (INTERACTIVE-P non-nil), the buffer is displayed
 to the user.  Returns the log buffer."
   (interactive "p")
-  (with-current-buffer (jj--get-buffer "*jj-log*")
-    (let ((buffer (current-buffer))
-          (inhibit-read-only t))
+  (let ((buffer            (jj--get-buffer "*jj-log*"))
+        (inhibit-read-only t))
+    (with-current-buffer buffer
       (erase-buffer)
-      ;; `erase-buffer' does not delete overlays, so remove any stale
-      ;; `revision' overlays left by previous `jj-log' calls before reparsing.
-      (delete-all-overlays)
       (jj-run-into-buffer buffer "log")
       (goto-char (point-min))
       (jj-log-mode)
-      (jj-log--parse-revisions)
       (when interactive-p
         (display-buffer buffer))
       buffer)))
