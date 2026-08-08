@@ -10,15 +10,16 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    '(ace-window anzu auto-highlight-symbol catppuccin-theme clang-format company
-                consult consult-eglot diff-hl doom-modeline doom-themes
-                dracula-theme eglot eldoc embark embark-consult erc evil
-                evil-terminal-cursor-changer flymake gn-mode gnuplot gptel
+                consult consult-eglot consult-jj diff-hl doom-modeline
+                doom-themes dracula-theme eglot eldoc embark embark-consult erc
+                evil evil-terminal-cursor-changer flymake gn-mode gnuplot gptel
                 htmlize lua-mode marginalia markdown-mode orderless org
                 package-lint peg posframe python rg rust-mode smartparens tramp
                 transient ttx-mode typescript-mode vertico vertico-posframe
                 vundo which-key yaml-mode zig-mode zig-ts-mode))
- '(safe-local-variable-values
-   '((vc-handled-backends))))
+ '(package-vc-selected-packages
+   '((consult-jj :vc-backend Git :url "https://github.com/wmedrano/consult-jj.git")))
+ '(safe-local-variable-values '((vc-handled-backends))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -74,7 +75,6 @@
 (require 'auto-highlight-symbol)
 
 (require 'monorepo)
-(require 'jj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
@@ -186,7 +186,6 @@
  vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
 
 (marginalia-mode t) ;; Decorate consult-buffer and consult-find-file and the like
-
 (recentf-mode t) ;; Make recentf available
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -621,13 +620,9 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "of" #'project-find-file)
 (define-key leader-map "or" #'consult-recent-file)
 (define-key leader-map "p" project-prefix-map)
-(define-key leader-map "rb" #'jj-bookmark-set)
-(define-key leader-map "rd" #'jj-diff)
-(define-key leader-map "rl" #'jj-log)
-(define-key leader-map "re" #'jj-edit)
-(define-key leader-map "rn" #'jj-new)
-(define-key leader-map "rm" #'jj-describe)
-(define-key leader-map "rr" #'jj-log)
+(define-key leader-map "rd" #'consult-jj-diff)
+(define-key leader-map "re" #'consult-jj-edit)
+(define-key leader-map "rn" #'consult-jj-new)
 (define-key leader-map "sA" #'consult-line-multi)
 (define-key leader-map "sI" #'consult-imenu-multi)
 (define-key leader-map "sa" #'consult-line)
