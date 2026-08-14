@@ -57,7 +57,8 @@
 ;; returned.
 (cl-defmethod project-files ((project monorepo) &optional _dirs)
   (let* ((default-directory (monorepo-root project))
-         (dirs              (monorepo-directories project))
+         (dirs              (cl-remove-if-not #'file-directory-p
+                                              (monorepo-directories project)))
          (find-args         (append dirs '("-type" "f")))
          (files             (apply #'process-lines "find" find-args)))
     (mapcar (lambda (f) (expand-file-name f default-directory))
