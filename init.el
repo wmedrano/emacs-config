@@ -19,7 +19,9 @@
                 vundo which-key yaml-mode zig-mode zig-ts-mode))
  '(package-vc-selected-packages
    '((consult-jj :vc-backend Git :url "https://github.com/wmedrano/consult-jj.git")))
- '(safe-local-variable-values '((vc-handled-backends))))
+ '(safe-local-variable-values
+   '((compilation-scroll-output . first-error)
+     (vc-handled-backends))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
