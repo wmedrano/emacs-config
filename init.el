@@ -222,9 +222,6 @@
 (global-diff-hl-mode)
 (add-hook 'diff-hl-mode #'diff-hl-flydiff-mode)
 
-(setq-default jj-diff-from-default "main")
-(add-hook 'jj-describe-mode-hook #'jj-describe-diff)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Eglot
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -620,9 +617,12 @@ def add_numbers(a: int, b: int) -> int:
 (define-key leader-map "of" #'project-find-file)
 (define-key leader-map "or" #'consult-recent-file)
 (define-key leader-map "p" project-prefix-map)
-(define-key leader-map "rd" #'consult-jj-diff)
+(define-key leader-map "rD" #'consult-jj-diff-from)
+(define-key leader-map "rd" #'consult-jj-diff-at)
 (define-key leader-map "re" #'consult-jj-edit)
+(define-key leader-map "rm" #'consult-jj-describe)
 (define-key leader-map "rn" #'consult-jj-new)
+(define-key leader-map "rp" #'consult-jj-git-push)
 (define-key leader-map "sA" #'consult-line-multi)
 (define-key leader-map "sI" #'consult-imenu-multi)
 (define-key leader-map "sa" #'consult-line)
