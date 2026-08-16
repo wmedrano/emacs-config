@@ -20,14 +20,23 @@
  '(package-vc-selected-packages
    '((consult-jj :vc-backend Git :url "https://github.com/wmedrano/consult-jj.git")))
  '(safe-local-variable-values
-   '((compilation-scroll-output . first-error)
-     (vc-handled-backends))))
+   '((compilation-scroll-output . first-error) (vc-handled-backends))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Performance
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq-default gc-cons-threshold (* 100 1024 1024))  ; 100MB
+(defvar gc-timer nil
+  "Timer for idle garbage collection.")
+(when gc-timer
+  (cancel-timer gc-timer))
+(setq gc-timer (run-with-idle-timer 4 t #'garbage-collect))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Package Management
@@ -46,47 +55,7 @@
 (cl-loop for path in '("~/.local/bin" "~/.cargo/bin")
          do (add-to-list 'exec-path path))
 
-
-(require 'ace-window)
-(when (display-graphic-p)
-  (require 'ace-window-posframe))
-(require 'ansi-color)
-(require 'ansi-osc)
-(require 'anzu)
-(require 'company)
-(require 'consult)
-(require 'consult-flymake)
-(require 'consult-imenu)
-(require 'diff-hl)
-(require 'diff-hl-flydiff)
-(require 'doom-modeline)
-(require 'doom-modeline-core)
-(require 'doom-modeline-segments)
-(require 'eglot)
-(require 'embark)
-(require 'evil)
-(require 'flymake)
-(require 'gptel)
-(require 'marginalia)
-(require 'posframe)
-(require 'smartparens)
-(require 'ttx-mode)
-(require 'vertico)
-(require 'vertico-posframe)
-(require 'which-key)
-(require 'auto-highlight-symbol)
-
 (require 'monorepo)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Performance
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default gc-cons-threshold (* 100 1024 1024))  ; 100MB
-(defvar gc-timer nil
-  "Timer for idle garbage collection.")
-(when gc-timer
-  (cancel-timer gc-timer))
-(setq gc-timer (run-with-idle-timer 4 t #'garbage-collect))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General Settings
@@ -117,8 +86,8 @@
               indent-tabs-mode nil
               tab-width        4)
 
-(require 'smartparens)
-(require 'smartparens-config)
+(with-eval-after-load 'smartparens
+  (require 'smartparens-config))
 (add-hook 'prog-mode-hook #'smartparens-mode)
 (add-hook 'prog-mode-hook #'auto-highlight-symbol-mode)
 
@@ -132,24 +101,34 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun use-light-theme ()
-  (let ((color-scheme (string-trim (shell-command-to-string
-                                    "gsettings get org.gnome.desktop.interface color-scheme"))))
-    (string-equal color-scheme "'prefer-light'")))
+(defun use-light-theme-p ()
+  "Return non-nil when the system prefers a light color scheme."
+  (string-equal (string-trim (shell-command-to-string
+                              "gsettings get org.gnome.desktop.interface color-scheme"))
+                "'prefer-light'"))
 
-(setq-default dracula-bolder-keywords nil
-              catppuccin-dark-line-numbers-background t
-              catppuccin-italic-comments t
-              catppuccin-flavor (if (use-light-theme)
-                                    'latte
-                                  'mocha))
+(defun wm-load-theme ()
+  "Apply the user's theme.
 
-(require 'dracula-theme)
-(cl-loop for theme in custom-enabled-themes
-         do (disable-theme theme))
-(load-theme 'dracula t)
-(setq-default doom-modeline-buffer-encoding nil)
-(doom-modeline-mode t)
+Defers `use-light-theme' (and thus the gsettings subprocess) until
+after startup.  The light/dark decision is cached so it is only
+computed once."
+  (interactive)
+  (setq-default
+   doom-modeline-buffer-encoding           nil
+   dracula-bolder-keywords                 nil
+   catppuccin-dark-line-numbers-background t
+   catppuccin-italic-comments              t
+   catppuccin-flavor                       (if (use-light-theme-p)
+                                               'latte
+                                             'mocha))
+  (cl-loop for theme in custom-enabled-themes
+           do (disable-theme theme))
+  (require 'dracula-theme)
+  (load-theme 'dracula t)
+  (doom-modeline-mode t))
+
+(add-hook 'after-init-hook #'wm-load-theme)
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 (unless (display-graphic-p)
@@ -181,14 +160,17 @@
               completion-category-overrides '((file (styles partial-completion)))
               completion-category-defaults nil)
 (setq-default enable-recursive-minibuffers t)
-(vertico-mode t)
 
 (setq-default
  ;; For the rare occasion I feel like `vertico-posframe-mode'.
  vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
 
-(marginalia-mode t) ;; Decorate consult-buffer and consult-find-file and the like
-(recentf-mode t) ;; Make recentf available
+(defun init-vertico ()
+  (vertico-mode t)
+  (marginalia-mode t) ;; Decorate consult-buffer and consult-find-file and the like
+  (recentf-mode t))
+
+(add-hook 'after-init-hook #'init-vertico)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Completion
@@ -221,8 +203,12 @@
 
 ;; VC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(global-diff-hl-mode)
-(add-hook 'diff-hl-mode #'diff-hl-flydiff-mode)
+(defun init-diff-hl ()
+  (global-diff-hl-mode)
+  (add-hook 'diff-hl-mode #'diff-hl-flydiff-mode))
+
+(add-hook 'after-init-hook #'init-diff-hl)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Eglot
@@ -447,119 +433,12 @@ the project root."
  org-use-sub-superscripts nil
  org-export-with-sub-superscripts nil
  org-fontify-special-blocks t)
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((dot . t)
-   (emacs-lisp . t)
-   (gnuplot . t)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; gptel (Ollama / OpenRouter)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar openrouter-backend
-  (let ((key (getenv "OPENROUTER_API_KEY")))
-    (when (and key (not (string= key "")))
-      (gptel-make-openai "OpenRouter"
-        :host "openrouter.ai"
-        :endpoint "/api/v1/chat/completions"
-        :stream t
-        :key key
-        :models '(qwen/qwen3.6-35b-a3b
-                  nvidia/nemotron-3-super-120b-a12b:free
-                  deepseek/deepseek-v4-flash
-                  deepseek/deepseek-v4-pro
-                  google/gemini-3-flash-preview
-                  z-ai/glm-5.1)))
-    "OpenRouter gptel backend, nil when OPENROUTER_API_KEY is unset."))
-
-(defvar ollama-backend
-  (gptel-make-ollama "Ollama"
-    :host "localhost:11434"
-    :stream t
-    :request-params '(think "low")
-    :models '(qwen3.6:35b gemma4:26b gemma4:e4b glm-5.1:cloud deepseek-v4-flash:cloud))
-  "Local Ollama gptel backend.")
-
-(defvar cerebras-backend
-  (let ((key (getenv "CEREBRAS_API_KEY")))
-    (when (and key (not (string= key "")))
-      (gptel-make-openai "Cerebras"
-        :host "api.cerebras.ai"
-        :endpoint "/v1/chat/completions"
-        :stream nil
-        :key (getenv "CEREBRAS_API_KEY")
-        :models '(gemma-4-31b)))))
-
-(setq-default
- gptel-directives '((default . "")
-                    (brief . "- You provide succint answer to programming questions.
-- Assume that the person asking the question is already an experienced programmer.
-- Provide brief answer with an example snippet.
-
-* Example:
-
-** Question
-
-How do you define type hints in Python?
-
-** Answer
-
-Type hints use `:` for types and `->` for return values.
-
-*** Example
-```python
-def add_numbers(a: int, b: int) -> int:
-    return a + b
-```
-
--   *`a: int`*: Parameter ~a~ should be an integer.
--   *`-> int`*: The function returns an integer."))
- gptel-default-mode 'org-mode)
-
-(defvar gptel-ollama-backend
-  (gptel-make-ollama "Ollama"
-    :host "localhost:11434"
-    :stream t
-    :request-params '(think "low")
-    :models '(qwen3.6:35b gemma4:26b gemma4:e4b glm-5.1:cloud deepseek-v4-flash:cloud)))
-
-(defun gptel-set-backend ()
-  "Interactively query for a backend and optionally an API key."
-  (interactive)
-  (let* ((choice (completing-read "Choose backend: " '("openrouter" "cerebras" "ollama")))
-         (backend
-          (pcase choice
-            ("openrouter"
-             (let ((key (or (getenv "OPENROUTER_API_KEY")
-                            (read-string "OpenRouter API Key (press RET to skip): "))))
-               (unless (string= key "") (setenv "OPENROUTER_API_KEY" key))
-               (setq-default
-                gptel-backend (gptel-make-openai "OpenRouter"
-                                :host "openrouter.ai"
-                                :endpoint "/api/v1/chat/completions"
-                                :stream t
-                                :key key
-                                :models '(qwen/qwen3.6-35b-a3b
-                                          nvidia/nemotron-3-super-120b-a12b:free
-                                          deepseek/deepseek-v4-flash
-                                          deepseek/deepseek-v4-pro
-                                          google/gemini-3-flash-preview
-                                          z-ai/glm-5.1))
-                gptel-model 'deepseek/deepseek-v4-flash))
-             ("cerebras"
-              (let ((key (or (getenv "CEREBRAS_API_KEY")
-                             (read-string "Cerebras API Key (press RET to skip): "))))
-                (unless (string= key "") (setenv "CEREBRAS_API_KEY" key))
-                (setq-default
-                 gptel-backend (gptel-make-openai "Cerebras"
-                                 :host "api.cerebras.ai"
-                                 :endpoint "/v1/chat/completions"
-                                 :stream nil
-                                 :key key
-                                 :models '(gpt-oss-120b gemma-4-31b))
-                 gptel-model 'gpt-oss-120b)))
-             ("ollama" (setq-default gptel-backend gptel-ollama-backend
-                                     gptel-model 'gemma4:26b))))))))
+(with-eval-after-load 'ob
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((dot . t)
+     (emacs-lisp . t)
+     (gnuplot . t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil Mode
@@ -575,7 +454,7 @@ def add_numbers(a: int, b: int) -> int:
                 evil-motion-state-cursor  '(box  . "#51afef")   ; blue
                 evil-replace-state-cursor '(hbar . "#ff8c00"))) ; orange
 (evil-mode 1)
-(global-anzu-mode t)
+(add-hook 'after-init-hook #'global-anzu-mode)
 
 ;; Keybinds
 (cl-loop for map in (list evil-motion-state-map evil-normal-state-map evil-visual-state-map)
@@ -637,15 +516,20 @@ def add_numbers(a: int, b: int) -> int:
 
 ;; Ace Window
 (setq-default aw-dispatch-always t)
-(when (posframe-workable-p)
-  (ace-window-posframe-mode t)
-  ;; Delete all active posframe windows. Fixes buggy posframe when refreshing
-  ;; the config file.
-  (run-with-timer 0.2 nil #'posframe-delete-all))
-(set-face-attribute 'aw-leading-char-face nil
-                    :foreground "#FF5555"
-                    :height 1536
-                    :font "Lobster")
+
+(defun maybe-use-ace-window-posframe ()
+  (when (posframe-workable-p)
+    (ace-window-posframe-mode t)
+    ;; Delete all active posframe windows. Fixes buggy posframe when refreshing
+    ;; the config file.
+    (run-with-timer 0.2 nil #'posframe-delete-all)))
+(add-hook 'after-init-hook #'maybe-use-ace-window-posframe)
+
+(with-eval-after-load 'ace-window
+  (set-face-attribute 'aw-leading-char-face nil
+                      :foreground "#FF5555"
+                      :height 1536
+                      :font "Lobster"))
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
 
