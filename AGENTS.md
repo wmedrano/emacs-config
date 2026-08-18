@@ -13,4 +13,4 @@ Installed packages live in `elpa/`.
 
 
 ## Custom Lisp
-Local packages live under `lisp/` and are loaded via `load-path`.
+Local packages live under `user-lisp/` and are loaded via `load-path`.

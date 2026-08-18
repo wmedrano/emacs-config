@@ -46,32 +46,34 @@
 (require 'subr-x)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(let ((lisp-dir (expand-file-name "lisp/" user-emacs-directory)))
-  ;; "^[^.]" excludes . and .. and other dotfiles (e.g. .git) from the directory listing
-  (cl-loop for dir in (directory-files lisp-dir t "^[^.]")
-           when (file-directory-p dir)
-           do (add-to-list 'load-path dir)))
+(when (< emacs-major-version 31)
+  (add-to-list 'load-path
+               (expand-file-name "user-lisp" user-emacs-directory)))
 (cl-loop for path in '("~/.local/bin" "~/.cargo/bin")
          do (add-to-list 'exec-path path))
 
-(require 'monorepo)
+(defun init-monorepo ()
+  (require 'monorepo))
+(add-hook 'after-init-hook #'init-monorepo)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default inhibit-startup-screen t
-              use-short-answers t
-              make-backup-files nil
-              backup-inhibited  t
-              auto-save-default nil
-              auto-save-timeout nil
-              auto-revert-interval 3
-              lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t)))
-(setq-default history-length 1000)
-(savehist-mode 1)
-(global-auto-revert-mode t)
-(which-key-mode t)
+(setq-default
+ inhibit-startup-screen t
+ use-short-answers t
+ make-backup-files nil
+ backup-inhibited  t
+ auto-save-default nil
+ auto-save-timeout nil
+ auto-revert-interval 3
+ lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t))
+ history-length 1000)
+(defun init-some-stuff ()
+  (savehist-mode 1)
+  (global-auto-revert-mode t)
+  (which-key-mode t))
+(add-hook 'after-init-hook #'init-some-stuff)
 
 ;; Auto Highlight Symbol
 (setq-default ahs-idle-interval 0.25)
@@ -82,9 +84,10 @@
   (unhighlight-regexp t))
 
 ;; Formatting
-(setq-default fill-column      80
-              indent-tabs-mode nil
-              tab-width        4)
+(setq-default
+ fill-column      80
+ indent-tabs-mode nil
+ tab-width        4)
 
 (with-eval-after-load 'smartparens
   (require 'smartparens-config))
@@ -126,42 +129,51 @@ computed once."
            do (disable-theme theme))
   (require 'dracula-theme)
   (load-theme 'dracula t)
+  ;; Make it a bit darker
+  (set-face-attribute 'default nil :background "#191a21")
+  (set-face-attribute 'fringe nil :background "#191a21")
+  (set-face-attribute 'hl-line nil :background "#4d5168")
+  (set-face-attribute 'region nil :background "#4d5168")
   (doom-modeline-mode t))
 
 (add-hook 'after-init-hook #'wm-load-theme)
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
-(unless (display-graphic-p)
-  (require 'evil-terminal-cursor-changer)
-  (evil-terminal-cursor-changer-activate))
+(defun init-evil-cursor ()
+  (unless (display-graphic-p)
+    (require 'evil-terminal-cursor-changer)
+    (evil-terminal-cursor-changer-activate)))
+(add-hook 'after-init-hook #'init-evil-cursor)
 
-(column-number-mode t)
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(set-face-attribute 'default nil
-                    :font "Inconsolata"
-                    :height 140)
-(setq-default display-line-numbers-grow-only t
-              scroll-conservatively 101
-              scroll-margin 0
-              scroll-preserve-screen-position t
-              auto-window-vscroll nil
-              fast-but-imprecise-scrolling t)
-(global-display-line-numbers-mode t)
-(global-hl-line-mode t)
-(blink-cursor-mode -1)
-(setq-default ring-bell-function 'ignore)
+(defun init-look-lines ()
+  (column-number-mode t)
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  (scroll-bar-mode -1)
+  (global-display-line-numbers-mode t)
+  (global-hl-line-mode t)
+  (blink-cursor-mode -1)
+  (set-face-attribute 'default nil
+                      :font "Inconsolata"
+                      :height 140))
+(add-hook 'after-init-hook #'init-look-lines)
+(setq-default
+ display-line-numbers-grow-only t
+ scroll-conservatively 101
+ scroll-margin 0
+ scroll-preserve-screen-position t
+ auto-window-vscroll nil
+ fast-but-imprecise-scrolling t
+ ring-bell-function 'ignore)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Completion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default completion-styles '(orderless basic)
-              completion-category-overrides '((file (styles partial-completion)))
-              completion-category-defaults nil)
-(setq-default enable-recursive-minibuffers t)
-
 (setq-default
+ completion-styles '(orderless basic)
+ completion-category-overrides '((file (styles partial-completion)))
+ completion-category-defaults nil
+ enable-recursive-minibuffers t
  ;; For the rare occasion I feel like `vertico-posframe-mode'.
  vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
 
@@ -177,9 +189,11 @@ computed once."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq-default completion-in-region-function #'consult-completion-in-region
               company-tooltip-minimum-width 64)
-(global-company-mode t)
-(define-key company-active-map (kbd "C-s") #'completion-at-point)
-(define-key company-active-map (kbd "C-h") nil)
+(defun init-company ()
+  (global-company-mode t)
+  (define-key company-active-map (kbd "C-s") #'completion-at-point)
+  (define-key company-active-map (kbd "C-h") nil))
+(add-hook 'after-init-hook #'init-company)
 
 ;; References
 (setq-default
@@ -264,8 +278,9 @@ Note: A bit buggy at the moment."
 (add-hook 'python-mode-hook #'eglot-ensure)
 
 ;; Typescript
-(setq-default js-indent-level 2
-              typescript-indent-level 2)
+(setq-default
+ js-indent-level 2
+ typescript-indent-level 2)
 (defun typescript-mode-setup ()
   "Setup C/C++ mode configuration."
   (setq-local tab-width 2))
@@ -283,60 +298,14 @@ Note: A bit buggy at the moment."
 (add-hook 'rust-mode-hook #'eglot-ensure)
 (add-hook 'rust-mode-hook #'rust-mode-setup)
 
-(defun cargo-workspace-root (&optional dir)
-  "The root of the current workspace"
-  (let ((default-directory (or dir default-directory)))
-    (s-trim
-     (shell-command-to-string
-      "cargo metadata --format-version 1 | jq -r \".workspace_root\""))))
-
-(defmacro cargo-cmd (command)
-  "Run COMMAND with cargo at the project root."
-  `(let ((default-directory (cargo-workspace-root)))
-     (compile (concat "cargo " ,command))))
-
-(defun cargo-check ()
-  "Run cargo check at the project root."
-  (interactive)
-  (cargo-cmd "check"))
-
-(defun cargo-build ()
-  "Run cargo build at the project root."
-  (interactive)
-  (cargo-cmd "build"))
-
-(defun cargo-criterion ()
-  "Run cargo criterion at the project root."
-  (interactive)
-  (cargo-cmd "criterion"))
-
-(setenv "NEXTEST_SHOW_PROGRESS" "none")
-(setenv "CARGO_TERM_COLOR" "always")
-(defun cargo-test ()
-  "Run cargo nextest at the project root."
-  (interactive)
-  (cargo-cmd "nextest run"))
-
-(defun cargo-doc ()
-  "Run cargo doc at the project root."
-  (interactive)
-  (cargo-cmd "doc"))
-
-(defun cargo-clippy ()
-  "Run cargo clippy at the project root."
-  (interactive)
-  (cargo-cmd "clippy"))
-
-(defun cargo-fix ()
-  "Run cargo fix --allow-dirty at the project root."
-  (interactive)
-  (cargo-cmd "fix --allow-dirty"))
+(require 'cargo)
 
 ;; C / C++
-(setq-default c-default-style '((java-mode . "java")
-                                (awk-mode . "awk")
-                                (other . "k&r"))
-              c-basic-offset 2)
+(setq-default
+ c-default-style '((java-mode . "java")
+                   (awk-mode . "awk")
+                   (other . "k&r"))
+ c-basic-offset 2)
 
 (defun c-mode-setup ()
   "Setup C/C++ mode configuration."
@@ -534,25 +503,23 @@ the project root."
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
 
 ;; Motion modes
-(cl-loop for mode in '(diff-mode
-                       dired-mode
-                       xref--xref-buffer-mode
-                       ttx-mode)
-         do (add-to-list 'evil-motion-state-modes mode))
+(cl-loop
+ for mode in '(diff-mode dired-mode xref--xref-buffer-mode ttx-mode)
+ do (add-to-list 'evil-motion-state-modes mode))
 (add-to-list 'evil-insert-state-modes 'jj-describe-mode)
 
 ;; Global Keybindings
-(global-set-key (kbd "C-x b") #'consult-buffer)
+(global-set-key (kbd "C-x b")   #'consult-buffer)
 (global-set-key (kbd "C-x p b") #'consult-project-buffer)
-(global-set-key (kbd "M-y")   #'consult-yank-pop)
-(global-set-key (kbd "C-.")   #'embark-act)
-(global-set-key (kbd "M-i")   #'consult-imenu)
-(global-set-key (kbd "M-I")   #'consult-imenu-multi)
-(global-set-key (kbd "C-z")   #'undo)
-(global-set-key (kbd "C-w")   #'ace-window)
-(global-set-key (kbd "<f1>")  #'eldoc)
-(global-set-key (kbd "<f2>")  #'eglot-rename)
-(global-set-key (kbd "<f5>")  #'compile-dwim)
+(global-set-key (kbd "M-y")     #'consult-yank-pop)
+(global-set-key (kbd "C-.")     #'embark-act)
+(global-set-key (kbd "M-i")     #'consult-imenu)
+(global-set-key (kbd "M-I")     #'consult-imenu-multi)
+(global-set-key (kbd "C-z")     #'undo)
+(global-set-key (kbd "C-w")     #'ace-window)
+(global-set-key (kbd "<f1>")    #'eldoc)
+(global-set-key (kbd "<f2>")    #'eglot-rename)
+(global-set-key (kbd "<f5>")    #'compile-dwim)
 
 (put 'narrow-to-region 'disabled nil)
 
