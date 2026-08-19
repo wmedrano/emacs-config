@@ -132,8 +132,8 @@ computed once."
   ;; Make it a bit darker
   (set-face-attribute 'default nil :background "#191a21")
   (set-face-attribute 'fringe nil :background "#191a21")
-  (set-face-attribute 'hl-line nil :background "#4d5168")
-  (set-face-attribute 'region nil :background "#4d5168")
+  (set-face-attribute 'hl-line nil :background "#3d4158")
+  (set-face-attribute 'region nil :background "#3d4158")
   (doom-modeline-mode t))
 
 (add-hook 'after-init-hook #'wm-load-theme)
