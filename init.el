@@ -8,6 +8,84 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(gc-cons-threshold 104857600)
+ ;; Package Management
+ '(package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                      ("melpa" . "https://melpa.org/packages/")))
+ ;; General Settings
+ '(inhibit-startup-screen t)
+ '(use-short-answers t)
+ '(make-backup-files nil)
+ '(backup-inhibited t)
+ '(auto-save-default nil)
+ '(auto-save-timeout nil)
+ '(auto-revert-interval 3)
+ '(lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t)))
+ '(history-length 1000)
+ ;; Auto Highlight Symbol
+ '(ahs-idle-interval 0.25)
+ ;; Formatting
+ '(fill-column 80)
+ '(indent-tabs-mode nil)
+ '(tab-width 4)
+ '(save-interprogram-paste-before-kill t)
+ '(kill-transform-function #'string-filter-whitespace)
+ ;; UI
+ '(display-line-numbers-grow-only t)
+ '(scroll-conservatively 101)
+ '(scroll-margin 0)
+ '(scroll-preserve-screen-position t)
+ '(auto-window-vscroll nil)
+ '(fast-but-imprecise-scrolling t)
+ '(ring-bell-function 'ignore)
+ ;; Theme
+ '(default-frame-alist '((fullscreen . maximized)))
+ '(catppuccin-dark-line-numbers-background t)
+ '(catppuccin-italic-comments t)
+ '(doom-modeline-buffer-encoding nil)
+ '(dracula-bolder-keywords nil)
+ ;; Completion
+ '(completion-styles '(orderless basic))
+ '(completion-category-overrides '((file (styles partial-completion))))
+ '(completion-category-defaults nil)
+ '(enable-recursive-minibuffers t)
+ ;; For the rare occasion I feel like `vertico-posframe-mode'.
+ '(vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
+ ;; Code Completion
+ '(completion-in-region-function #'consult-completion-in-region)
+ '(company-tooltip-minimum-width 64)
+ ;; References
+ '(xref-show-xrefs-function #'consult-xref)
+ '(xref-show-definitions-function #'consult-xref)
+ ;; Embark
+ '(embark-verbose-indicator-display-action '(display-buffer-in-side-window display-buffer-reuse-window))
+ ;; Compilation
+ '(compilation-scroll-output t)
+ '(compile-command "")
+ '(compilation-environment '("TERM=dumb"))
+ ;; Eglot
+ '(eglot-events-buffer-config '(:size 0))
+ ;; Languages
+ '(js-indent-level 2)
+ '(typescript-indent-level 2)
+ '(c-default-style '((java-mode . "java")
+                     (awk-mode . "awk")
+                     (other . "k&r")))
+ '(c-basic-offset 2)
+ ;; Org mode
+ '(initial-major-mode 'org-mode)
+ '(initial-scratch-message "\n#+BEGIN_SRC emacs-lisp\n#+END_SRC\n")
+ '(org-src-preserve-indentation t)
+ '(org-html-postamble nil)
+ '(org-use-sub-superscripts nil)
+ '(org-export-with-sub-superscripts nil)
+ '(org-fontify-special-blocks t)
+ ;; Evil Mode
+ '(evil-cross-lines t)
+ '(evil-move-beyond-eol t)
+ '(evil-move-cursor-back nil)
+ ;; Ace Window
+ '(aw-dispatch-always t)
  '(package-selected-packages
    '(ace-window anzu auto-highlight-symbol catppuccin-theme clang-format company
                 consult consult-eglot consult-jj diff-hl doom-modeline
@@ -26,26 +104,20 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(default ((t (:font "Inconsolata" :height 140))))
+ '(aw-leading-char-face ((t (:foreground "#FF5555" :height 1536 :font "Lobster")))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Performance
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default gc-cons-threshold (* 100 1024 1024))  ; 100MB
-(defvar gc-timer nil
-  "Timer for idle garbage collection.")
-(when gc-timer
-  (cancel-timer gc-timer))
-(setq gc-timer (run-with-idle-timer 4 t #'garbage-collect))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Package Management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'package)
-(require 'cl-lib)
-(require 'subr-x)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
+;; Activate packages via the quickstart file instead of `package-initialize'.
+;; This skips parsing the (large) archive contents at startup.  Run
+;; `M-x package-quickstart-refresh' after changing package-archives,
+;; package-vc-selected-packages, or installing/deleting packages manually
+;; (regular installs/deletes regenerate it automatically).
+(setq package-quickstart t)
+(package-activate-all)
 (when (< emacs-major-version 31)
   (add-to-list 'load-path
                (expand-file-name "user-lisp" user-emacs-directory)))
@@ -59,35 +131,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default
- inhibit-startup-screen t
- use-short-answers t
- make-backup-files nil
- backup-inhibited  t
- auto-save-default nil
- auto-save-timeout nil
- auto-revert-interval 3
- lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t))
- history-length 1000)
 (defun init-some-stuff ()
   (savehist-mode 1)
   (global-auto-revert-mode t)
   (which-key-mode t))
 (add-hook 'after-init-hook #'init-some-stuff)
 
-;; Auto Highlight Symbol
-(setq-default ahs-idle-interval 0.25)
-
 (defun unhighlight-all ()
   "Remove all highlighting from the current buffer."
   (interactive)
   (unhighlight-regexp t))
-
-;; Formatting
-(setq-default
- fill-column      80
- indent-tabs-mode nil
- tab-width        4)
 
 (with-eval-after-load 'smartparens
   (require 'smartparens-config))
@@ -98,10 +151,7 @@
   (unless (string-match-p "\\`[[:space:]]*\\'" string)
        string))
 
-(setq-default save-interprogram-paste-before-kill t
-              kill-transform-function #'string-filter-whitespace)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun use-light-theme-p ()
@@ -118,13 +168,9 @@ after startup.  The light/dark decision is cached so it is only
 computed once."
   (interactive)
   (setq-default
-   doom-modeline-buffer-encoding           nil
-   dracula-bolder-keywords                 nil
-   catppuccin-dark-line-numbers-background t
-   catppuccin-italic-comments              t
-   catppuccin-flavor                       (if (use-light-theme-p)
-                                               'latte
-                                             'mocha))
+   catppuccin-flavor (if (use-light-theme-p)
+                         'latte
+                       'mocha))
   (cl-loop for theme in custom-enabled-themes
            do (disable-theme theme))
   (require 'dracula-theme)
@@ -138,7 +184,6 @@ computed once."
 
 (add-hook 'after-init-hook #'wm-load-theme)
 
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
 (defun init-evil-cursor ()
   (unless (display-graphic-p)
     (require 'evil-terminal-cursor-changer)
@@ -152,31 +197,12 @@ computed once."
   (scroll-bar-mode -1)
   (global-display-line-numbers-mode t)
   (global-hl-line-mode t)
-  (blink-cursor-mode -1)
-  (set-face-attribute 'default nil
-                      :font "Inconsolata"
-                      :height 140))
+  (blink-cursor-mode -1))
 (add-hook 'after-init-hook #'init-look-lines)
-(setq-default
- display-line-numbers-grow-only t
- scroll-conservatively 101
- scroll-margin 0
- scroll-preserve-screen-position t
- auto-window-vscroll nil
- fast-but-imprecise-scrolling t
- ring-bell-function 'ignore)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Completion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default
- completion-styles '(orderless basic)
- completion-category-overrides '((file (styles partial-completion)))
- completion-category-defaults nil
- enable-recursive-minibuffers t
- ;; For the rare occasion I feel like `vertico-posframe-mode'.
- vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
-
 (defun init-vertico ()
   (vertico-mode t)
   (marginalia-mode t) ;; Decorate consult-buffer and consult-find-file and the like
@@ -187,33 +213,17 @@ computed once."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Completion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default completion-in-region-function #'consult-completion-in-region
-              company-tooltip-minimum-width 64)
-(defun init-company ()
-  (global-company-mode t)
+(with-eval-after-load 'company
   (define-key company-active-map (kbd "C-s") #'completion-at-point)
   (define-key company-active-map (kbd "C-h") nil))
-(add-hook 'after-init-hook #'init-company)
+(add-hook 'prog-mode-hook #'company-mode)
 
-;; References
-(setq-default
- xref-show-xrefs-function       #'consult-xref
- xref-show-definitions-function #'consult-xref)
-
-;; Embark
-(setq-default
- embark-verbose-indicator-display-action
- '(display-buffer-in-side-window display-buffer-reuse-window))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Compilation
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default
- compilation-scroll-output t
- compile-command ""
- compilation-environment '("TERM=dumb"))
-(add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
-(add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(with-eval-after-load 'compile
+  (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
+  (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
 
 ;; VC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -227,8 +237,6 @@ computed once."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Eglot
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default eglot-events-buffer-config '(:size 0))
-
 (defun eglot-inlay-hints-off ()
   "Disable inlay hints mode."
   (interactive)
@@ -278,9 +286,6 @@ Note: A bit buggy at the moment."
 (add-hook 'python-mode-hook #'eglot-ensure)
 
 ;; Typescript
-(setq-default
- js-indent-level 2
- typescript-indent-level 2)
 (defun typescript-mode-setup ()
   "Setup C/C++ mode configuration."
   (setq-local tab-width 2))
@@ -301,11 +306,6 @@ Note: A bit buggy at the moment."
 (require 'cargo)
 
 ;; C / C++
-(setq-default
- c-default-style '((java-mode . "java")
-                   (awk-mode . "awk")
-                   (other . "k&r"))
- c-basic-offset 2)
 
 (defun c-mode-setup ()
   "Setup C/C++ mode configuration."
@@ -394,14 +394,6 @@ the project root."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default
- initial-major-mode 'org-mode
- initial-scratch-message "\n#+BEGIN_SRC emacs-lisp\n#+END_SRC\n"
- org-src-preserve-indentation t
- org-html-postamble nil
- org-use-sub-superscripts nil
- org-export-with-sub-superscripts nil
- org-fontify-special-blocks t)
 (with-eval-after-load 'ob
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -412,9 +404,6 @@ the project root."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Evil Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq-default evil-cross-lines t
-              evil-move-beyond-eol t
-              evil-move-cursor-back nil)
 (unless (display-graphic-p)
   (setq-default evil-normal-state-cursor  '(box  . "#51afef")   ; blue
                 evil-insert-state-cursor  '(bar  . "#ff8c00")   ; orange
@@ -484,21 +473,9 @@ the project root."
 (define-key leader-map "w" #'ace-window)
 
 ;; Ace Window
-(setq-default aw-dispatch-always t)
-
-(defun maybe-use-ace-window-posframe ()
-  (when (posframe-workable-p)
-    (ace-window-posframe-mode t)
-    ;; Delete all active posframe windows. Fixes buggy posframe when refreshing
-    ;; the config file.
-    (run-with-timer 0.2 nil #'posframe-delete-all)))
-(add-hook 'after-init-hook #'maybe-use-ace-window-posframe)
-
 (with-eval-after-load 'ace-window
-  (set-face-attribute 'aw-leading-char-face nil
-                      :foreground "#FF5555"
-                      :height 1536
-                      :font "Lobster"))
+  (when (posframe-workable-p)
+    (ace-window-posframe-mode t)))
 (define-key evil-motion-state-map (kbd "C-w") #'ace-window)
 (define-key evil-insert-state-map (kbd "C-w") #'ace-window)
 
@@ -522,6 +499,16 @@ the project root."
 (global-set-key (kbd "<f5>")    #'compile-dwim)
 
 (put 'narrow-to-region 'disabled nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Performance
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar gc-timer nil
+  "Timer for idle garbage collection.")
+(when gc-timer
+  (cancel-timer gc-timer))
+(setq gc-timer (run-with-idle-timer 4 t #'garbage-collect))
+
 
 (provide 'init)
 
