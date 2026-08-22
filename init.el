@@ -35,7 +35,7 @@
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
-(indent-tabs-mode -1)
+(setq-default indent-tabs-mode nil)
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -113,7 +113,7 @@
   (aw-leading-char-face ((t (:foreground "#FF5555" :height 1536 :font "Lobster"))))
   :config
   (when (display-graphic-p)
-    (ace-window-posframe-enable)))
+    (ace-window-posframe-mode 1)))
 
 (use-package smartparens
   :ensure t
@@ -135,6 +135,8 @@
 
 (use-package dracula-theme
   :ensure t
+  :custom
+  (doom-modeline-buffer-encoding nil)
   :config
   (load-theme 'dracula t)
   (set-face-attribute 'line-number-current-line nil
@@ -265,20 +267,24 @@
   (define-key evil-motion-state-map (kbd "SPC b") #'consult-buffer)
   (define-key evil-motion-state-map (kbd "SPC p") project-prefix-map)
   (define-key evil-motion-state-map (kbd "SPC w") #'ace-window)
-  (define-key evil-motion-state-map (kbd "SPC h") (make-sparse-keymap))
-  (define-key evil-motion-state-map (kbd "SPC h K") #'unhighlight-regexp)
-  (define-key evil-motion-state-map (kbd "SPC h e") #'eldoc)
-  (define-key evil-motion-state-map (kbd "SPC h h") #'highlight-symbol-at-point)
-  (define-key evil-motion-state-map (kbd "SPC h k") #'unhighlight-all)
-  (define-key evil-motion-state-map (kbd "SPC s") (make-sparse-keymap))
-  (define-key evil-motion-state-map (kbd "SPC s a") #'consult-line)
-  (define-key evil-motion-state-map (kbd "SPC s f") #'consult-flymake)
-  (define-key evil-motion-state-map (kbd "SPC s i") #'consult-imenu)
-  (define-key evil-motion-state-map (kbd "SPC s o") #'occur)
-  (define-key evil-motion-state-map (kbd "SPC s r") #'rg)
-  (define-key evil-motion-state-map (kbd "SPC s s") #'consult-ripgrep)
-  (define-key evil-motion-state-map (kbd "SPC e") (make-sparse-keymap))
-  (define-key evil-motion-state-map (kbd "SPC e a") #'eglot-code-actions)
-  (define-key evil-motion-state-map (kbd "SPC e s") #'eglot)
-  (define-key evil-motion-state-map (kbd "SPC n") (make-sparse-keymap))
-  (define-key evil-normal-state-map (kbd "SPC n s") #'sort-lines))
+  (let ((highlight-map (make-sparse-keymap)))
+    (define-key evil-motion-state-map (kbd "SPC h") highlight-map)
+    (define-key highlight-map (kbd "K") #'unhighlight-regexp)
+    (define-key highlight-map (kbd "e") #'eldoc)
+    (define-key highlight-map (kbd "h") #'highlight-symbol-at-point)
+    (define-key highlight-map (kbd "k") #'unhighlight-all))
+  (let ((search-map (make-sparse-keymap)))
+    (define-key evil-motion-state-map (kbd "SPC s") search-map)
+    (define-key search-map (kbd "a") #'consult-line)
+    (define-key search-map (kbd "f") #'consult-flymake)
+    (define-key search-map (kbd "i") #'consult-imenu)
+    (define-key search-map (kbd "o") #'occur)
+    (define-key search-map (kbd "r") #'rg)
+    (define-key search-map (kbd "s") #'consult-ripgrep))
+  (let ((lsp-map (make-sparse-keymap)))
+    (define-key evil-motion-state-map (kbd "SPC e") lsp-map)
+    (define-key lsp-map (kbd "a") #'eglot-code-actions)
+    (define-key lsp-map (kbd "s") #'eglot))
+  (let ((edit-map (make-sparse-keymap)))
+    (define-key evil-motion-state-map (kbd "SPC n") edit-map)
+    (define-key edit-map (kbd "s") #'sort-lines)))
