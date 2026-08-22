@@ -1,515 +1,282 @@
-;;; init.el --- Emacs configuration -*- lexical-binding: t; -*-
-;;; Commentary:
-;;; Code:
-
-;; Custom (managed by Emacs, do not edit by hand)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(gc-cons-threshold 104857600)
- ;; Package Management
- '(package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                      ("melpa" . "https://melpa.org/packages/")))
- ;; General Settings
- '(inhibit-startup-screen t)
- '(use-short-answers t)
- '(make-backup-files nil)
- '(backup-inhibited t)
  '(auto-save-default nil)
- '(auto-save-timeout nil)
- '(auto-revert-interval 3)
- '(lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "/tmp/\\1" t)))
- '(history-length 1000)
- ;; Auto Highlight Symbol
- '(ahs-idle-interval 0.25)
- ;; Formatting
- '(fill-column 80)
- '(indent-tabs-mode nil)
- '(tab-width 4)
- '(save-interprogram-paste-before-kill t)
- '(kill-transform-function #'string-filter-whitespace)
- ;; UI
- '(display-line-numbers-grow-only t)
- '(scroll-conservatively 101)
- '(scroll-margin 0)
- '(scroll-preserve-screen-position t)
- '(auto-window-vscroll nil)
- '(fast-but-imprecise-scrolling t)
- '(ring-bell-function 'ignore)
- ;; Theme
- '(default-frame-alist '((fullscreen . maximized)))
- '(catppuccin-dark-line-numbers-background t)
- '(catppuccin-italic-comments t)
- '(doom-modeline-buffer-encoding nil)
- '(dracula-bolder-keywords nil)
- ;; Completion
- '(completion-styles '(orderless basic))
- '(completion-category-overrides '((file (styles partial-completion))))
- '(completion-category-defaults nil)
- '(enable-recursive-minibuffers t)
- ;; For the rare occasion I feel like `vertico-posframe-mode'.
- '(vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
- ;; Code Completion
- '(completion-in-region-function #'consult-completion-in-region)
- '(company-tooltip-minimum-width 64)
- ;; References
- '(xref-show-xrefs-function #'consult-xref)
- '(xref-show-definitions-function #'consult-xref)
- ;; Embark
- '(embark-verbose-indicator-display-action '(display-buffer-in-side-window display-buffer-reuse-window))
- ;; Compilation
- '(compilation-scroll-output t)
- '(compile-command "")
- '(compilation-environment '("TERM=dumb"))
- ;; Eglot
- '(eglot-events-buffer-config '(:size 0))
- ;; Languages
- '(js-indent-level 2)
- '(typescript-indent-level 2)
- '(c-default-style '((java-mode . "java")
-                     (awk-mode . "awk")
-                     (other . "k&r")))
+ '(auto-save-interval 0)
+ '(blink-cursor-mode nil)
  '(c-basic-offset 2)
- ;; Org mode
- '(initial-major-mode 'org-mode)
- '(initial-scratch-message "\n#+BEGIN_SRC emacs-lisp\n#+END_SRC\n")
- '(org-src-preserve-indentation t)
- '(org-html-postamble nil)
- '(org-use-sub-superscripts nil)
- '(org-export-with-sub-superscripts nil)
- '(org-fontify-special-blocks t)
- ;; Evil Mode
- '(evil-cross-lines t)
- '(evil-move-beyond-eol t)
- '(evil-move-cursor-back nil)
- ;; Ace Window
- '(aw-dispatch-always t)
+ '(c-default-style '((java-mode . "java") (awk-mode . "awk") (other . "k&r")))
+ '(comment-fill-column 80)
+ '(corfu-auto t nil nil "Customized with use-package corfu")
+ '(corfu-auto-delay 0.3 nil nil "Customized with use-package corfu")
+ '(display-line-numbers-width 3)
+ '(enable-recursive-minibuffers t)
+ '(gc-cons-percentage 2.0)
+ '(gc-cons-threshold 1000000)
+ '(global-auto-revert-mode t)
+ '(inhibit-startup-screen t)
+ '(make-backup-files nil)
  '(package-selected-packages
-   '(ace-window anzu auto-highlight-symbol catppuccin-theme clang-format company
-                consult consult-eglot consult-jj diff-hl doom-modeline
-                doom-themes dracula-theme eglot eldoc embark embark-consult erc
-                evil evil-terminal-cursor-changer flymake gn-mode gnuplot gptel
-                htmlize lua-mode marginalia markdown-mode orderless org
-                package-lint peg posframe python rg rust-mode smartparens tramp
-                transient ttx-mode typescript-mode vertico vertico-posframe
-                vundo which-key yaml-mode zig-mode zig-ts-mode))
- '(package-vc-selected-packages
-   '((consult-jj :vc-backend Git :url "https://github.com/wmedrano/consult-jj.git")))
- '(safe-local-variable-values
-   '((compilation-scroll-output . first-error) (vc-handled-backends))))
+   '(ace-window auto-highlight-symbol clang-format consult corfu diff-hl
+                doom-modeline dracula-theme evil gn-mode orderless
+                posframe rg rust-mode smartparens vertico))
+ '(ring-bell-function 'ignore)
+ '(scroll-conservatively 4)
+ '(tab-width 4)
+ '(use-short-answers t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:font "Inconsolata" :height 140))))
- '(aw-leading-char-face ((t (:foreground "#FF5555" :height 1536 :font "Lobster")))))
+ )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Package Management
+(global-display-line-numbers-mode 1)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(indent-tabs-mode -1)
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'package)
-;; Activate packages via the quickstart file instead of `package-initialize'.
-;; This skips parsing the (large) archive contents at startup.  Run
-;; `M-x package-quickstart-refresh' after changing package-archives,
-;; package-vc-selected-packages, or installing/deleting packages manually
-;; (regular installs/deletes regenerate it automatically).
-(setq package-quickstart t)
-(package-activate-all)
-(when (< emacs-major-version 31)
+;; Packages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (< emacs-major-version 32)
   (add-to-list 'load-path
                (expand-file-name "user-lisp" user-emacs-directory)))
-(cl-loop for path in '("~/.local/bin" "~/.cargo/bin")
-         do (add-to-list 'exec-path path))
 
-(defun init-monorepo ()
-  (require 'monorepo))
-(add-hook 'after-init-hook #'init-monorepo)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+;; Defined in user-lisp/
+(use-package monorepo
+  :defer t)
+
+(use-package posframe
+  :ensure t
+  :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; General Settings
+;; Completions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun init-some-stuff ()
-  (savehist-mode 1)
-  (global-auto-revert-mode t)
-  (which-key-mode t))
-(add-hook 'after-init-hook #'init-some-stuff)
+
+(use-package vertico
+  :ensure t
+  :config (vertico-mode 1))
+
+(use-package consult
+  :ensure t
+  :defer t
+  :custom
+  (xref-show-xrefs-function       #'consult-xref)
+  (xref-show-definitions-function #'consult-xref)
+  :init
+  (global-set-key (kbd "C-x b") #'consult-buffer)
+  (global-set-key (kbd "M-y")   #'consult-yank-pop))
+
+(use-package orderless
+  :ensure t
+  :custom
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch))
+  ;; (orderless-component-separator #'orderless-escapable-split-on-space)
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  (completion-category-defaults nil) ;; Disable defaults, use our settings
+  (completion-pcm-leading-wildcard t)) ;; Emacs 31: partial-completion behaves like substring
+
+(use-package corfu
+  :ensure t
+  :defer 1
+  :custom
+  (corfu-auto t)
+  (corfu-auto-delay 0.3)
+  :config
+  (global-corfu-mode 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Search
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package rg
+  :ensure t
+  :defer t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Window management
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package ace-window
+  :ensure t
+  :defer t
+  :custom-face
+  (aw-leading-char-face ((t (:foreground "#FF5555" :height 1536 :font "Lobster"))))
+  :config
+  (when (display-graphic-p)
+    (ace-window-posframe-enable)))
+
+(use-package smartparens
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook #'smartparens-mode)
+  :config
+  (require 'smartparens-config))
+
+(use-package auto-highlight-symbol
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook #'auto-highlight-symbol-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Appearance
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package dracula-theme
+  :ensure t
+  :config
+  (load-theme 'dracula t)
+  (set-face-attribute 'line-number-current-line nil
+                      :inherit 'highlight
+                      :weight 'bold)
+  (set-face-attribute 'default nil :font "Inconsolata-13")
+  ;; Makes emojis have the same height as the monospace font 😀
+  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 16)))
+
+(use-package doom-modeline
+  :ensure t
+  :defer 3
+  :config (doom-modeline-mode 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Languages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package eglot
+  :ensure t
+  :defer t)
+
+(use-package clang-format
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'c-mode-hook #'clang-format-on-save-mode))
+
+(use-package rust-mode
+  :ensure t
+  :defer t
+  :custom
+  (rust-enable-format-on-save t)
+  :init
+  (add-hook 'rust-mode-hook #'rust-enable-format-on-save)
+  (add-hook 'rust-mode-hook #'eglot-ensure))
+
+;; Defined in user-lisp/
+(use-package cargo
+  :defer t)
+
+;; Defined in user-lisp/
+(use-package disasm
+  :defer t)
+
+(use-package gn-mode
+  :ensure t
+  :defer t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Org
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package org
+  :ensure t
+  :defer t
+  :custom
+  (org-src-preserve-indentation t)
+  (org-html-postamble nil)
+  (org-use-sub-superscripts nil)
+  (org-export-with-sub-superscripts nil)
+  (org-fontify-special-blocks t))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shell/Compilation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package compile
+  :defer t
+  :custom
+  (compilation-scroll-output 'first-error)
+  (compile-command           ""))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Performance
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar gc--idle-timer nil)
+(unless gc--idle-timer
+  (setq gc--idle-timer
+        (run-with-idle-timer 4 t #'garbage-collect)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Version Control
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package diff-hl
+  :ensure t
+  :defer 2
+  :config (global-diff-hl-mode 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Keybindings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun unhighlight-all ()
   "Remove all highlighting from the current buffer."
   (interactive)
   (unhighlight-regexp t))
 
-(with-eval-after-load 'smartparens
-  (require 'smartparens-config))
-(add-hook 'prog-mode-hook #'smartparens-mode)
-(add-hook 'prog-mode-hook #'auto-highlight-symbol-mode)
-
-(defun string-filter-whitespace (string)
-  (unless (string-match-p "\\`[[:space:]]*\\'" string)
-       string))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; UI
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun use-light-theme-p ()
-  "Return non-nil when the system prefers a light color scheme."
-  (string-equal (string-trim (shell-command-to-string
-                              "gsettings get org.gnome.desktop.interface color-scheme"))
-                "'prefer-light'"))
-
-(defun wm-load-theme ()
-  "Apply the user's theme.
-
-Defers `use-light-theme' (and thus the gsettings subprocess) until
-after startup.  The light/dark decision is cached so it is only
-computed once."
-  (interactive)
-  (setq-default
-   catppuccin-flavor (if (use-light-theme-p)
-                         'latte
-                       'mocha))
-  (cl-loop for theme in custom-enabled-themes
-           do (disable-theme theme))
-  (require 'dracula-theme)
-  (load-theme 'dracula t)
-  ;; Make it a bit darker
-  (set-face-attribute 'default nil :background "#191a21")
-  (set-face-attribute 'fringe nil :background "#191a21")
-  (set-face-attribute 'hl-line nil :background "#3d4158")
-  (set-face-attribute 'region nil :background "#3d4158")
-  (doom-modeline-mode t))
-
-(add-hook 'after-init-hook #'wm-load-theme)
-
-(defun init-evil-cursor ()
-  (unless (display-graphic-p)
-    (require 'evil-terminal-cursor-changer)
-    (evil-terminal-cursor-changer-activate)))
-(add-hook 'after-init-hook #'init-evil-cursor)
-
-(defun init-look-lines ()
-  (column-number-mode t)
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  (scroll-bar-mode -1)
-  (global-display-line-numbers-mode t)
-  (global-hl-line-mode t)
-  (blink-cursor-mode -1))
-(add-hook 'after-init-hook #'init-look-lines)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Completion
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun init-vertico ()
-  (vertico-mode t)
-  (marginalia-mode t) ;; Decorate consult-buffer and consult-find-file and the like
-  (recentf-mode t))
-
-(add-hook 'after-init-hook #'init-vertico)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Code Completion
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(with-eval-after-load 'company
-  (define-key company-active-map (kbd "C-s") #'completion-at-point)
-  (define-key company-active-map (kbd "C-h") nil))
-(add-hook 'prog-mode-hook #'company-mode)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Compilation
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(with-eval-after-load 'compile
-  (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
-  (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
-
-;; VC
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun init-diff-hl ()
-  (global-diff-hl-mode)
-  (add-hook 'diff-hl-mode #'diff-hl-flydiff-mode))
-
-(add-hook 'after-init-hook #'init-diff-hl)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Eglot
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eglot-inlay-hints-off ()
-  "Disable inlay hints mode."
-  (interactive)
-  (eglot-inlay-hints-mode -1))
-(add-hook 'eglot-managed-mode-hook #'eglot-inlay-hints-off)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Flymake
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'display-buffer-alist
-             '("\\*Flymake diagnostics.*\\*"
-               (display-buffer-in-side-window)
-               (side . bottom)
-               (slot . 0)
-               (window-height . 0.25)))
-
-(defun flymake-eglot-fix-all ()
-  "Interactively fix all errors with eglot.
-
-Note: A bit buggy at the moment."
-  (interactive)
-  (condition-case nil
-      (while t
-        (flymake-goto-next-error)
-        (condition-case nil
-            (when (eglot-code-actions (point) (point))
-              (call-interactively #'eglot-code-actions)
-              (flymake-goto-next-error))
-          (error
-           ;; On error, move to the end of the current diagnostic region
-           (let ((diag (get-char-property (point) 'flymake-diagnostic)))
-             (when diag
-               (goto-char (flymake-diagnostic-end diag)))))))
-    (user-error nil)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Languages
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Elisp
-(cl-loop for path in load-path
-         do (add-to-list
-             'elisp-flymake-byte-compile-load-path
-             path))
-
-;; Python
-(add-hook 'python-mode-hook #'eglot-ensure)
-
-;; Typescript
-(defun typescript-mode-setup ()
-  "Setup C/C++ mode configuration."
-  (setq-local tab-width 2))
-(add-hook 'typescript-mode-hook #'typescript-mode-setup)
-(add-hook 'typescript-mode-hook #'eglot-ensure)
-
-;; C++
-(add-hook 'c++-mode-hook #'eglot-ensure)
-
-;; Rust
-(defun rust-mode-setup ()
-  "Setup rust-mode configuration."
-  (setq fill-column 100))
-
-(add-hook 'rust-mode-hook #'eglot-ensure)
-(add-hook 'rust-mode-hook #'rust-mode-setup)
-
-(require 'cargo)
-
-;; C / C++
-
-(defun c-mode-setup ()
-  "Setup C/C++ mode configuration."
-  (setq-local tab-width 2)
-  (c-set-offset 'innamespace 0))
-
-(add-hook 'c-mode-hook #'c-mode-setup)
-(add-hook 'c++-mode-hook #'c-mode-setup)
-
-;; Generate Ninja
-
-(add-to-list 'auto-mode-alist '("\\.gn\\'" . gn-mode))
-(add-to-list 'auto-mode-alist '("\\.lock\\'" . conf-toml-mode))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Contextual functions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun format-buffer-dwim ()
-  "Format the current buffer.
-Uses `rust-format-buffer' in rust-mode, `clang-format-buffer' in
-c-mode/c++-mode, `eglot-format-buffer' when eglot is active, or
-falls back to `delete-trailing-whitespace'."
-  (interactive)
-  (cond
-   ((memq major-mode '(c-mode c++-mode))
-    (clang-format-buffer))
-   ((eglot-managed-p)
-    (eglot-format-buffer))
-   ((eq major-mode 'rust-mode)
-    (rust-format-buffer))
-   (t
-    (delete-trailing-whitespace))))
-
-(add-hook 'before-save-hook #'format-buffer-dwim)
-(global-set-key (kbd "C-c C-f") #'format-buffer-dwim)
-
-
-(defun compile-dwim ()
-  "Compile based on context.
-If a *compilation* buffer window exists, recompile.
-If in a Chromium project, run autoninja.
-If in `rust-mode' or editing Cargo.toml, run `cargo-test'.
-If in `emacs-lisp-mode', `eval-buffer'.
-Otherwise, call compile interactively."
-  (interactive)
-  (cond
-   ((get-buffer-window "*compilation*")
-    (with-current-buffer "*compilation*"
-      (recompile)))
-   ((or (eq major-mode 'rust-mode)
-        (when-let ((file (buffer-file-name)))
-          (string-suffix-p "/Cargo.toml" file)))
-    (cargo-test))
-   ((eq major-mode 'emacs-lisp-mode)
-    (eval-buffer))
-   (t
-    (call-interactively #'compile))))
-
-(defun copy-filename ()
-  "Copy the current file name to `kill-new'.
-If `project-current' returns a project, make the path relative to
-the project root."
-  (interactive)
-  (let* ((file (buffer-file-name))
-         (project (and (fboundp 'project-current)
-                       (project-current)))
-         (root (and project (expand-file-name (project-root project))))
-         (name (if (and root (string-prefix-p root file))
-                   (file-relative-name file root)
-                 file)))
-    (unless file
-      (user-error "No file name for current buffer"))
-    (kill-new name)
-    (message "Copied: %s" name)))
-
-(defun copy-absolute-filename ()
-  "Copy the current aboslute file name to `kill-new'."
-  (interactive)
-  (let ((name (buffer-file-name)))
-    (unless name
-      (user-error "No file name for current buffer"))
-    (kill-new name)
-    (message "Copied: %s" name)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Org mode
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(with-eval-after-load 'ob
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((dot . t)
-     (emacs-lisp . t)
-     (gnuplot . t))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Evil Mode
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(unless (display-graphic-p)
-  (setq-default evil-normal-state-cursor  '(box  . "#51afef")   ; blue
-                evil-insert-state-cursor  '(bar  . "#ff8c00")   ; orange
-                evil-visual-state-cursor  '(box  . "#a9a1e1")   ; purple
-                evil-emacs-state-cursor   '(box  . "#ffffff")   ; white
-                evil-motion-state-cursor  '(box  . "#51afef")   ; blue
-                evil-replace-state-cursor '(hbar . "#ff8c00"))) ; orange
-(evil-mode 1)
-(add-hook 'after-init-hook #'global-anzu-mode)
-
-;; Keybinds
-(cl-loop for map in (list evil-motion-state-map evil-normal-state-map evil-visual-state-map)
-         do (progn
-              (define-key map "h" #'evil-backward-char)
-              (define-key map "n" #'evil-next-line)
-              (define-key map "e" #'evil-previous-line)
-              (define-key map "i" #'evil-forward-char)
-              (define-key map "gx" #'xref-find-references)))
-(define-key evil-normal-state-map "[" nil)
-(define-key evil-normal-state-map "]" nil)
-(define-key evil-motion-state-map (kbd "RET") nil)
-(define-key evil-normal-state-map (kbd "RET") #'ignore)
-(define-key evil-motion-state-map "[" #'evil-goto-first-line)
-(define-key evil-motion-state-map "]" #'evil-goto-line)
-(define-key evil-normal-state-map "s" #'evil-insert)
-(define-key evil-normal-state-map "S" #'evil-insert-line)
-(define-key evil-motion-state-map "/" #'consult-line)
-(define-key evil-motion-state-map "?" #'consult-line-multi)
-(define-key evil-motion-state-map (kbd "C-.") #'embark-act)
-(define-key evil-normal-state-map (kbd "TAB") #'indent-for-tab-command)
-
-(defvar leader-map (make-sparse-keymap) "Leader key keymap.")
-(define-key evil-motion-state-map (kbd "SPC") leader-map)
-(define-key leader-map "B" #'consult-buffer-other-window)
-(define-key leader-map "b" #'consult-buffer)
-(define-key leader-map "ea" #'eglot-code-actions)
-(define-key leader-map "ee" #'consult-flymake)
-(define-key leader-map "ef" #'flymake-eglot-fix-all)
-(define-key leader-map "ei" #'eglot-inlay-hints-mode)
-(define-key leader-map "er" #'eglot-rename)
-(define-key leader-map "es" #'eglot)
-(define-key leader-map "hK" #'unhighlight-regexp)
-(define-key leader-map "he" #'eldoc)
-(define-key leader-map "hh" #'highlight-symbol-at-point)
-(define-key leader-map "hk" #'unhighlight-all)
-(define-key leader-map "nf" #'format-buffer-dwim)
-(define-key leader-map "nk" #'consult-keep-lines)
-(define-key leader-map "ns" #'sort-lines)
-(define-key leader-map "oe" #'consult-eglot-symbols)
-(define-key leader-map "of" #'project-find-file)
-(define-key leader-map "or" #'consult-recent-file)
-(define-key leader-map "p" project-prefix-map)
-(define-key leader-map "rD" #'consult-jj-diff-from)
-(define-key leader-map "rd" #'consult-jj-diff-at)
-(define-key leader-map "re" #'consult-jj-edit)
-(define-key leader-map "rm" #'consult-jj-describe)
-(define-key leader-map "rn" #'consult-jj-new)
-(define-key leader-map "rp" #'consult-jj-git-push)
-(define-key leader-map "sA" #'consult-line-multi)
-(define-key leader-map "sI" #'consult-imenu-multi)
-(define-key leader-map "sa" #'consult-line)
-(define-key leader-map "sf" #'consult-flymake)
-(define-key leader-map "si" #'consult-imenu)
-(define-key leader-map "so" #'occur)
-(define-key leader-map "sr" #'rg)
-(define-key leader-map "ss" #'consult-ripgrep)
-(define-key leader-map "w" #'ace-window)
-
-;; Ace Window
-(with-eval-after-load 'ace-window
-  (when (posframe-workable-p)
-    (ace-window-posframe-mode t)))
-(define-key evil-motion-state-map (kbd "C-w") #'ace-window)
-(define-key evil-insert-state-map (kbd "C-w") #'ace-window)
-
-;; Motion modes
-(cl-loop
- for mode in '(diff-mode dired-mode xref--xref-buffer-mode ttx-mode)
- do (add-to-list 'evil-motion-state-modes mode))
-(add-to-list 'evil-insert-state-modes 'jj-describe-mode)
-
-;; Global Keybindings
-(global-set-key (kbd "C-x b")   #'consult-buffer)
-(global-set-key (kbd "C-x p b") #'consult-project-buffer)
-(global-set-key (kbd "M-y")     #'consult-yank-pop)
-(global-set-key (kbd "C-.")     #'embark-act)
-(global-set-key (kbd "M-i")     #'consult-imenu)
-(global-set-key (kbd "M-I")     #'consult-imenu-multi)
-(global-set-key (kbd "C-z")     #'undo)
-(global-set-key (kbd "C-w")     #'ace-window)
-(global-set-key (kbd "<f1>")    #'eldoc)
-(global-set-key (kbd "<f2>")    #'eglot-rename)
-(global-set-key (kbd "<f5>")    #'compile-dwim)
-
-(put 'narrow-to-region 'disabled nil)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Performance
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar gc-timer nil
-  "Timer for idle garbage collection.")
-(when gc-timer
-  (cancel-timer gc-timer))
-(setq gc-timer (run-with-idle-timer 4 t #'garbage-collect))
-
-
-(provide 'init)
-
-;;; init.el ends here
+(use-package evil
+  :ensure t
+  :config
+  (evil-mode 1)
+  ;; Motion
+  (define-key evil-motion-state-map (kbd "h") #'evil-backward-char)
+  (define-key evil-normal-state-map (kbd "h") nil)
+  (define-key evil-visual-state-map (kbd "h") nil)
+  (define-key evil-motion-state-map (kbd "n") #'evil-next-line)
+  (define-key evil-normal-state-map (kbd "n") nil)
+  (define-key evil-visual-state-map (kbd "n") nil)
+  (define-key evil-motion-state-map (kbd "e") #'evil-previous-line)
+  (define-key evil-normal-state-map (kbd "e") nil)
+  (define-key evil-visual-state-map (kbd "e") nil)
+  (define-key evil-motion-state-map (kbd "i") #'evil-forward-char)
+  (define-key evil-normal-state-map (kbd "i") nil)
+  (define-key evil-visual-state-map (kbd "i") nil)
+  ;; Insert
+  (define-key evil-normal-state-map (kbd "s") #'evil-insert)
+  ;; Search
+  (define-key evil-motion-state-map (kbd "/") #'consult-line)
+  (define-key evil-motion-state-map (kbd "?") #'consult-line-multi)
+  ;; Leader (SPC)
+  (define-key evil-motion-state-map (kbd "SPC") (make-sparse-keymap))
+  (define-key evil-motion-state-map (kbd "SPC b") #'consult-buffer)
+  (define-key evil-motion-state-map (kbd "SPC p") project-prefix-map)
+  (define-key evil-motion-state-map (kbd "SPC w") #'ace-window)
+  (define-key evil-motion-state-map (kbd "SPC h") (make-sparse-keymap))
+  (define-key evil-motion-state-map (kbd "SPC h K") #'unhighlight-regexp)
+  (define-key evil-motion-state-map (kbd "SPC h e") #'eldoc)
+  (define-key evil-motion-state-map (kbd "SPC h h") #'highlight-symbol-at-point)
+  (define-key evil-motion-state-map (kbd "SPC h k") #'unhighlight-all)
+  (define-key evil-motion-state-map (kbd "SPC s") (make-sparse-keymap))
+  (define-key evil-motion-state-map (kbd "SPC s a") #'consult-line)
+  (define-key evil-motion-state-map (kbd "SPC s f") #'consult-flymake)
+  (define-key evil-motion-state-map (kbd "SPC s i") #'consult-imenu)
+  (define-key evil-motion-state-map (kbd "SPC s o") #'occur)
+  (define-key evil-motion-state-map (kbd "SPC s r") #'rg)
+  (define-key evil-motion-state-map (kbd "SPC s s") #'consult-ripgrep)
+  (define-key evil-motion-state-map (kbd "SPC e") (make-sparse-keymap))
+  (define-key evil-motion-state-map (kbd "SPC e a") #'eglot-code-actions)
+  (define-key evil-motion-state-map (kbd "SPC e s") #'eglot)
+  (define-key evil-motion-state-map (kbd "SPC n") (make-sparse-keymap))
+  (define-key evil-normal-state-map (kbd "SPC n s") #'sort-lines))
