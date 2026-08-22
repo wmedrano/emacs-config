@@ -9,8 +9,6 @@
  '(c-basic-offset 2)
  '(c-default-style '((java-mode . "java") (awk-mode . "awk") (other . "k&r")))
  '(comment-fill-column 80)
- '(corfu-auto t nil nil "Customized with use-package corfu")
- '(corfu-auto-delay 0.3 nil nil "Customized with use-package corfu")
  '(display-line-numbers-width 3)
  '(enable-recursive-minibuffers t)
  '(gc-cons-percentage 2.0)
@@ -226,6 +224,10 @@
   :ensure t
   :defer 2
   :config (global-diff-hl-mode 1))
+
+(use-package vundo
+  :ensure t
+  :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybindings
