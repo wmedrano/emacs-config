@@ -20,8 +20,8 @@
  '(package-selected-packages
    '(ace-window auto-highlight-symbol clang-format consult corfu diff-hl
                 doom-modeline dracula-theme eglot evil gn-mode
-                markdown-mode orderless posframe rg rust-mode
-                smartparens vertico))
+                markdown-mode orderless posframe rg smartparens
+                ttx-mode vertico))
  '(ring-bell-function 'ignore)
  '(scroll-conservatively 4)
  '(tab-width 4)
@@ -51,11 +51,6 @@
                (expand-file-name "user-lisp" user-emacs-directory)))
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
-;; Defined in user-lisp/
-(use-package monorepo
-  :defer t)
-
 (use-package posframe
   :ensure t
   :defer t)
@@ -167,7 +162,14 @@
 
 (use-package eglot
   :ensure t
-  :defer t)
+  :defer t
+  :config
+  (require 'eglot-extra))
+
+;; In user-lisp/eglot-extra.el
+(use-package eglot-extra
+  :defer t
+  :autoload (eglot-format-on-save-mode))
 
 (use-package clang-format
   :ensure t
@@ -175,27 +177,37 @@
   :init
   (add-hook 'c-mode-hook #'clang-format-on-save-mode))
 
-(use-package rust-mode
-  :ensure t
+(use-package rust-ts-mode
   :defer t
-  :custom
-  (rust-enable-format-on-save t)
+  :init
+  (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
   :config
-  (add-hook 'rust-mode-hook #'rust-enable-format-on-save)
-  (add-hook 'rust-mode-hook #'eglot-ensure)
-  (define-key rust-mode-map (kbd "C-c C-t") #'cargo-test))
+  (add-hook 'rust-ts-mode-hook #'eglot-ensure)
+  (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
+  (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
+  (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
 
 ;; Defined in user-lisp/
-(use-package cargo
-  :defer t)
+(use-package rust-extra
+  :defer t
+  :autoload (cargo-cmd
+             cargo-check cargo-build cargo-criterion cargo-test
+             cargo-doc cargo-clippy cargo-fix))
 
 ;; Defined in user-lisp/
 (use-package disasm
-  :defer t)
+  :defer t
+  :commands (disasm))
 
 (use-package gn-mode
   :ensure t
   :defer t)
+
+(use-package ttx-mode
+  :ensure t
+  :defer t
+  :mode ("\\.[ot]tf\\'" "\\.woff2\\'")
+  :commands (ttx-mode ttx-load-table ttx-load-all-tables ttx-unload-table))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org/Markdown
@@ -234,7 +246,7 @@
         (run-with-idle-timer 4 t #'garbage-collect)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Version Control
+;; Project Management + Version Control
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package diff-hl
@@ -247,9 +259,25 @@
   :defer t)
 
 ;; Defined under user-lisp/
-(use-package jj)
-(use-package jj-diff)
-(use-package jj-describe)
+(use-package jj
+  :defer t
+  :commands (jj-new jj-edit jj-git-push jj-git-fetch jj-abandon jj-duplicate jj-rebase jj-rebase-onto))
+(use-package jj-diff
+  :defer t
+  :commands (jj-diff-at jj-diff-from))
+(use-package jj-describe
+  :defer t
+  :commands (jj-describe jj-describe-accept jj-describe-reject jj-describe-diff))
+
+;; Defined in user-lisp/
+(use-package monorepo
+  :defer t
+  :autoload (project-try-monorepo))
+
+(use-package project
+  :defer t
+  :config
+  (add-to-list 'project-find-functions #'project-try-monorepo))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybindings
@@ -291,8 +319,8 @@
   (define-key evil-motion-state-map (kbd "?") #'consult-line-multi)
   ;; Leader (SPC)
   (defvar leader-map (make-sparse-keymap))
-  (require 'cus-edit)
-  (define-key custom-mode-map       (kbd "SPC") leader-map)
+  (require 'simple)
+  (define-key special-mode-map      (kbd "SPC") leader-map)
   (define-key evil-motion-state-map (kbd "SPC") leader-map)
   (define-key leader-map (kbd "b") #'consult-buffer)
   (define-key leader-map (kbd "p") project-prefix-map)

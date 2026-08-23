@@ -15,14 +15,16 @@
 
 ;;;###autoload
 (defun project-try-monorepo (dir)
+  "Return the `monorepo' project at DIR or nil if there is none."
   (when-let* ((root (locate-dominating-file dir ".monorepo")))
     (monorepo--from-config-file root
                                 (expand-file-name ".monorepo" root))))
 
-;;;###autoload
-(add-to-list 'project-find-functions 'project-try-monorepo)
-
 (defun monorepo--from-config-file (root config-path)
+  "Get the `monorepo' struct from the .monorepo config.
+
+ROOT - The root of the monorepo project.
+CONFIG-PATH - The path to the .monorepo config."
   (let ((directories))
     (with-temp-buffer
       (insert-file-contents config-path)
@@ -51,11 +53,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (cl-defmethod project-root ((project monorepo))
+  "Get the project root for PROJECT."
   (monorepo-root project))
 
-;; TODO: Respect _DIRS argument. When set, only files under _DIRS should be
-;; returned.
 (cl-defmethod project-files ((project monorepo) &optional _dirs)
+  "Get the files inside of PROJECT.
+
+_DIRS - _DIRS is ignored.  TODO: We should only return files under
+_DIRS."
   (let* ((default-directory (monorepo-root project))
          (dirs              (cl-remove-if-not #'file-directory-p
                                               (monorepo-directories project)))

@@ -1,11 +1,13 @@
-;;; cargo.el --- Cargo commands -*- lexical-binding: t; -*-
+;;; rust-extra.el --- Cargo commands -*- lexical-binding: t; -*-
 ;;; Commentary:
 ;;; Code:
 
 (require 'subr-x)
 
 (defun cargo-workspace-root (&optional dir)
-  "The root of the current workspace"
+  "The root of the current workspace with working directory DIR.
+
+`default-directory' is used if DIR is nil."
   (let ((default-directory (or dir default-directory)))
     (string-trim
      (shell-command-to-string
@@ -62,5 +64,5 @@
   (interactive)
   (cargo-cmd "fix --allow-dirty"))
 
-(provide 'cargo)
-;;; cargo.el ends here
+(provide 'rust-extra)
+;;; rust-extra.el ends here
