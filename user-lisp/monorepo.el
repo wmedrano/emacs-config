@@ -60,7 +60,8 @@
          (dirs              (cl-remove-if-not #'file-directory-p
                                               (monorepo-directories project)))
          (find-args         (append dirs '("-type" "f")))
-         (files             (apply #'process-lines "find" find-args)))
+         (files             (cons ".monorepo"
+                                  (apply #'process-lines "find" find-args))))
     (mapcar (lambda (f) (expand-file-name f default-directory))
             files)))
 
