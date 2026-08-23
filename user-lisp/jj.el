@@ -386,5 +386,36 @@ Runs `jj duplicate' synchronously and displays its output."
   (interactive (list (jj-read-revision "jj duplicate" "@")))
   (jj-run-command `("duplicate" ,rev)))
 
+;;;###autoload
+(defun jj-rebase-onto (rev dest)
+  "Rebase revision REV, without its descendants, onto revision DEST.
+
+REV is the revision to rebase and DEST is the destination revision.
+When called interactively, REV defaults to \"@\" unless called with a
+prefix argument, in which case prompt for REV with `completing-read'.
+Runs `jj rebase -r' synchronously and displays its output."
+  (interactive
+   (list (if current-prefix-arg
+             (jj-read-revision "jj rebase" "@")
+           "@")
+         (or (jj-read-revision "jj rebase onto" nil)
+             (user-error "No destination selected"))))
+  (jj-run-command `("rebase" "-r" ,rev "-o" ,dest)))
+
+;;;###autoload
+(defun jj-rebase (src dest)
+  "Rebase revision SRC and its descendants onto revision DEST.
+
+SRC is the source revision and DEST is the destination revision.  When
+called interactively, prompt for both with `completing-read',
+defaulting SRC to \"@\".  Runs `jj rebase -s' synchronously and
+displays its output."
+  (interactive
+   (let ((src (jj-read-revision "jj rebase" "@")))
+     (list src
+           (or (jj-read-revision "jj rebase onto" nil)
+               (user-error "No destination selected")))))
+  (jj-run-command `("rebase" "-s" ,src "-o" ,dest)))
+
 (provide 'jj)
 ;;; jj.el ends here

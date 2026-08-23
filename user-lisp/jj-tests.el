@@ -100,6 +100,17 @@ Overwrites the contents if they exist."
         (error "jj log failed %d:\n%s" result output))
       (string-trim output))))
 
+(defun test-jj-parent-change-id (revision)
+  "Return the first parent change ID for REVISION."
+  (with-temp-buffer
+    (let* ((result (call-process "jj" nil t nil "log" "-r" revision
+                                 "--no-graph" "-T"
+                                 "parents.map(|p| p.change_id()).join(\" \")"))
+           (output (buffer-string)))
+       (unless (zerop result)
+        (error "jj log failed %d:\n%s" result output))
+      (car (string-split (string-trim output))))))
+
 
 (defun test-wait-for-process (&optional buffer)
   "Wait for the `jj' process running in BUFFER to finish and run sentinels."
@@ -450,6 +461,86 @@ Overwrites the contents if they exist."
 (ert-deftest duplicate-errors-on-unresolvable-revision ()
   (with-test-repo
     (should-error (jj-duplicate "no-such-revision")
+                  :type 'jj-error)))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; rebase
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest rebase-moves-source-and-descendants-onto-destination ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'A'"
+     "jj bookmark create A"
+     "jj new -m 'B'"
+     "jj bookmark create B"
+     "jj new -m 'C'"
+     "jj bookmark create C"
+     "jj new A -m 'D'"
+     "jj bookmark create D")
+    (let ((d-change (test-jj-change-id "D"))
+          (b-change (test-jj-change-id "B")))
+      (jj-rebase "B" "D")
+      (should (string= d-change (test-jj-parent-change-id "B")))
+      (should (string= b-change (test-jj-parent-change-id "C"))))))
+
+(ert-deftest rebase-errors-on-unresolvable-source ()
+  (with-test-repo
+    (should-error (jj-rebase "no-such-revision" "root()")
+                  :type 'jj-error)))
+
+(ert-deftest rebase-errors-on-unresolvable-destination ()
+  (with-test-repo
+    (should-error (jj-rebase "root()" "no-such-revision")
+                  :type 'jj-error)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; rebase onto
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest rebase-onto-moves-single-revision-onto-destination ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'A'"
+     "jj bookmark create A"
+     "jj new -m 'B'"
+     "jj bookmark create B"
+     "jj new -m 'C'"
+     "jj bookmark create C"
+     "jj new A -m 'D'"
+     "jj bookmark create D")
+    (let ((d-change (test-jj-change-id "D")))
+      (jj-rebase-onto "B" "D")
+      (should (string= d-change (test-jj-parent-change-id "B"))))))
+
+(ert-deftest rebase-onto-leaves-descendants-on-original-parent ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'A'"
+     "jj bookmark create A"
+     "jj new -m 'B'"
+     "jj bookmark create B"
+     "jj new -m 'C'"
+     "jj bookmark create C"
+     "jj new A -m 'D'"
+     "jj bookmark create D")
+    (let ((a-change (test-jj-change-id "A"))
+          (d-change (test-jj-change-id "D")))
+      (jj-rebase-onto "B" "D")
+      (should (string= d-change (test-jj-parent-change-id "B")))
+      (should (string= a-change (test-jj-parent-change-id "C"))))))
+
+(ert-deftest rebase-onto-errors-on-unresolvable-source ()
+  (with-test-repo
+    (should-error (jj-rebase-onto "no-such-revision" "root()")
+                  :type 'jj-error)))
+
+(ert-deftest rebase-onto-errors-on-unresolvable-destination ()
+  (with-test-repo
+    (should-error (jj-rebase-onto "root()" "no-such-revision")
                   :type 'jj-error)))
 
 
