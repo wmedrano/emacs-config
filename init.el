@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -16,14 +17,15 @@
  '(global-auto-revert-mode t)
  '(inhibit-startup-screen t)
  '(make-backup-files nil)
- '(ring-bell-function 'ignore)
- '(scroll-conservatively 4)
- '(tab-width 4)
- '(use-short-answers t)
  '(package-selected-packages
    '(ace-window auto-highlight-symbol clang-format consult corfu diff-hl
                 doom-modeline dracula-theme eglot evil gn-mode
-                orderless posframe rg rust-mode smartparens vertico)))
+                markdown-mode orderless posframe rg rust-mode
+                smartparens vertico))
+ '(ring-bell-function 'ignore)
+ '(scroll-conservatively 4)
+ '(tab-width 4)
+ '(use-short-answers t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -196,7 +198,7 @@
   :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Org
+;; Org/Markdown
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package org
@@ -208,6 +210,10 @@
   (org-use-sub-superscripts nil)
   (org-export-with-sub-superscripts nil)
   (org-fontify-special-blocks t))
+
+(use-package markdown-mode
+  :ensure t
+  :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Shell/Compilation
