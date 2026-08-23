@@ -18,8 +18,8 @@
  '(make-backup-files nil)
  '(package-selected-packages
    '(ace-window auto-highlight-symbol clang-format consult corfu diff-hl
-                doom-modeline dracula-theme evil gn-mode orderless
-                posframe rg rust-mode smartparens vertico))
+                doom-modeline dracula-theme eglot evil gn-mode
+                orderless posframe rg rust-mode smartparens vertico))
  '(ring-bell-function 'ignore)
  '(scroll-conservatively 4)
  '(tab-width 4)
@@ -231,6 +231,11 @@
   :ensure t
   :defer t)
 
+;; Defined under user-lisp/
+(use-package jj :defer t)
+(use-package jj-diff :defer t)
+(use-package jj-describe :defer t)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -267,6 +272,13 @@
   (define-key evil-motion-state-map (kbd "SPC b") #'consult-buffer)
   (define-key evil-motion-state-map (kbd "SPC p") project-prefix-map)
   (define-key evil-motion-state-map (kbd "SPC w") #'ace-window)
+  (let ((vc-map (make-sparse-keymap)))
+    (define-key evil-motion-state-map (kbd "SPC r") vc-map)
+    (define-key vc-map (kbd "d") #'jj-diff-at)
+    (define-key vc-map (kbd "D") #'jj-diff-from)
+    (define-key vc-map (kbd "m") #'jj-describe)
+    (define-key vc-map (kbd "e") #'jj-edit)
+    (define-key vc-map (kbd "n") #'jj-new))
   (let ((highlight-map (make-sparse-keymap)))
     (define-key evil-motion-state-map (kbd "SPC h") highlight-map)
     (define-key highlight-map (kbd "K") #'unhighlight-regexp)
@@ -284,6 +296,7 @@
   (let ((lsp-map (make-sparse-keymap)))
     (define-key evil-motion-state-map (kbd "SPC e") lsp-map)
     (define-key lsp-map (kbd "a") #'eglot-code-actions)
+    (define-key lsp-map (kbd "r") #'eglot-rename)
     (define-key lsp-map (kbd "s") #'eglot))
   (let ((edit-map (make-sparse-keymap)))
     (define-key evil-motion-state-map (kbd "SPC n") edit-map)
