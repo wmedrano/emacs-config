@@ -362,6 +362,12 @@ When called interactively, prompt with `completing-read', defaulting to \"@\"."
   (jj-run-command `("git" "push" "-r" ,rev)))
 
 ;;;###autoload
+(defun jj-git-fetch ()
+  "Run jj git fetch."
+  (interactive)
+  (jj-run-command `("git" "fetch")))
+
+;;;###autoload
 (defun jj-abandon (rev)
   "Abandon revision REV.
 

@@ -32,6 +32,7 @@
  )
 
 (global-display-line-numbers-mode 1)
+(savehist-mode 1)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
@@ -92,8 +93,13 @@
   :custom
   (corfu-auto t)
   (corfu-auto-delay 0.3)
+  (corfu-candidates 100)
+  (corfu-cycle t)
+  (corfu-min-width 64)
   :config
-  (global-corfu-mode 1))
+  (global-corfu-mode 1)
+  (corfu-history-mode 1)
+  (corfu-popupinfo-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Search
@@ -109,6 +115,8 @@
 (use-package ace-window
   :ensure t
   :defer t
+  :custom
+  (aw-dispatch-always t)
   :custom-face
   (aw-leading-char-face ((t (:foreground "#FF5555" :height 1536 :font "Lobster"))))
   :config
@@ -142,13 +150,13 @@
   (set-face-attribute 'line-number-current-line nil
                       :inherit 'highlight
                       :weight 'bold)
-  (set-face-attribute 'default nil :font "Inconsolata-13")
+  (set-face-attribute 'default nil :font "Inconsolata-14")
   ;; Makes emojis have the same height as the monospace font 😀
-  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 16)))
+  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 18)))
 
 (use-package doom-modeline
   :ensure t
-  :defer 3
+  :defer 1
   :config (doom-modeline-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,9 +178,10 @@
   :defer t
   :custom
   (rust-enable-format-on-save t)
-  :init
+  :config
   (add-hook 'rust-mode-hook #'rust-enable-format-on-save)
-  (add-hook 'rust-mode-hook #'eglot-ensure))
+  (add-hook 'rust-mode-hook #'eglot-ensure)
+  (define-key rust-mode-map (kbd "C-c C-t") #'cargo-test))
 
 ;; Defined in user-lisp/
 (use-package cargo
@@ -224,7 +233,7 @@
 
 (use-package diff-hl
   :ensure t
-  :defer 2
+  :defer 1
   :config (global-diff-hl-mode 1))
 
 (use-package vundo
@@ -239,6 +248,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybindings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package which-key
+  :defer 3
+  :custom
+  (which-key-idle-delay 1)
+  :init
+  (which-key-mode 1))
 
 (defun unhighlight-all ()
   "Remove all highlighting from the current buffer."
@@ -268,25 +284,28 @@
   (define-key evil-motion-state-map (kbd "/") #'consult-line)
   (define-key evil-motion-state-map (kbd "?") #'consult-line-multi)
   ;; Leader (SPC)
-  (define-key evil-motion-state-map (kbd "SPC") (make-sparse-keymap))
-  (define-key evil-motion-state-map (kbd "SPC b") #'consult-buffer)
-  (define-key evil-motion-state-map (kbd "SPC p") project-prefix-map)
-  (define-key evil-motion-state-map (kbd "SPC w") #'ace-window)
+  (defvar leader-map (make-sparse-keymap))
+  (require 'cus-edit)
+  (define-key custom-mode-map       (kbd "SPC") leader-map)
+  (define-key evil-motion-state-map (kbd "SPC") leader-map)
+  (define-key leader-map (kbd "b") #'consult-buffer)
+  (define-key leader-map (kbd "p") project-prefix-map)
+  (define-key leader-map (kbd "w") #'ace-window)
   (let ((vc-map (make-sparse-keymap)))
-    (define-key evil-motion-state-map (kbd "SPC r") vc-map)
+    (define-key leader-map (kbd "r") vc-map)
     (define-key vc-map (kbd "d") #'jj-diff-at)
     (define-key vc-map (kbd "D") #'jj-diff-from)
     (define-key vc-map (kbd "m") #'jj-describe)
     (define-key vc-map (kbd "e") #'jj-edit)
     (define-key vc-map (kbd "n") #'jj-new))
   (let ((highlight-map (make-sparse-keymap)))
-    (define-key evil-motion-state-map (kbd "SPC h") highlight-map)
+    (define-key leader-map (kbd "h") highlight-map)
     (define-key highlight-map (kbd "K") #'unhighlight-regexp)
     (define-key highlight-map (kbd "e") #'eldoc)
     (define-key highlight-map (kbd "h") #'highlight-symbol-at-point)
     (define-key highlight-map (kbd "k") #'unhighlight-all))
   (let ((search-map (make-sparse-keymap)))
-    (define-key evil-motion-state-map (kbd "SPC s") search-map)
+    (define-key leader-map (kbd "s") search-map)
     (define-key search-map (kbd "a") #'consult-line)
     (define-key search-map (kbd "f") #'consult-flymake)
     (define-key search-map (kbd "i") #'consult-imenu)
@@ -294,10 +313,10 @@
     (define-key search-map (kbd "r") #'rg)
     (define-key search-map (kbd "s") #'consult-ripgrep))
   (let ((lsp-map (make-sparse-keymap)))
-    (define-key evil-motion-state-map (kbd "SPC e") lsp-map)
+    (define-key leader-map (kbd "e") lsp-map)
     (define-key lsp-map (kbd "a") #'eglot-code-actions)
     (define-key lsp-map (kbd "r") #'eglot-rename)
     (define-key lsp-map (kbd "s") #'eglot))
   (let ((edit-map (make-sparse-keymap)))
-    (define-key evil-motion-state-map (kbd "SPC n") edit-map)
+    (define-key leader-map (kbd "n") edit-map)
     (define-key edit-map (kbd "s") #'sort-lines)))
