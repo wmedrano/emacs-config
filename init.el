@@ -25,7 +25,8 @@
  '(ring-bell-function 'ignore)
  '(scroll-conservatively 4)
  '(tab-width 4)
- '(use-short-answers t))
+ '(use-short-answers t)
+ '(warning-suppress-log-types '((treesit))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -177,6 +178,7 @@
   :init
   (add-hook 'c-mode-hook #'clang-format-on-save-mode))
 
+;; Requires M-x treesit-install-language-grammar for rust
 (use-package rust-ts-mode
   :defer t
   :init
@@ -194,6 +196,21 @@
              cargo-check cargo-build cargo-criterion cargo-test
              cargo-doc cargo-clippy cargo-fix))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Aux Languages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Install from https://github.com/tree-sitter-grammars/tree-sitter-yaml
+(use-package yaml-ts-mode
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode)))
+
+(use-package json-ts-mode
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.json\\'" . json-ts-mode)))
+
 ;; Defined in user-lisp/
 (use-package disasm
   :defer t
@@ -205,9 +222,7 @@
 
 (use-package ttx-mode
   :ensure t
-  :defer t
-  :mode ("\\.[ot]tf\\'" "\\.woff2\\'")
-  :commands (ttx-mode ttx-load-table ttx-load-all-tables ttx-unload-table))
+  :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org/Markdown
@@ -234,7 +249,11 @@
   :defer t
   :custom
   (compilation-scroll-output 'first-error)
-  (compile-command           ""))
+  (compilation-skip-threshold 2) ;; 2 = skip warnings/info (only errors), 1 = skip info, 0 = don't skip
+  (compile-command           "")
+  :config
+  (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
+  (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
