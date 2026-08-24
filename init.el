@@ -361,6 +361,8 @@
   ;; Search
   (define-key evil-motion-state-map (kbd "/") #'consult-line)
   (define-key evil-motion-state-map (kbd "?") #'consult-line-multi)
+  (define-key evil-motion-state-map (kbd "gx") #'xref-find-references)
+  (define-key evil-normal-state-map (kbd "gx") #'xref-find-references)
   ;; Leader (SPC)
   (defvar leader-map (make-sparse-keymap))
   (require 'simple)
