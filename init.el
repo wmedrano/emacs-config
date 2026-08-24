@@ -109,6 +109,11 @@
   :ensure t
   :defer t)
 
+(use-package paths-extra
+  :ensure nil ;; Defined under user-lisp/
+  :defer t
+  :commands (copy-filename copy-filename-absolute))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -135,6 +140,8 @@
 (use-package auto-highlight-symbol
   :ensure t
   :defer t
+  :custom
+  (ahs-idle-interval 0.4)
   :init
   (add-hook 'prog-mode-hook #'auto-highlight-symbol-mode))
 
@@ -193,6 +200,7 @@
   (add-hook 'rust-ts-mode-hook #'eglot-ensure)
   (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
+  (define-key rust-ts-mode-map (kbd "C-c C-l") #'cargo-clippy)
   (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
 
 (use-package cargo-extra
@@ -343,7 +351,11 @@
   :defer nil
   :config
   (evil-mode 1)
+  ;; Modes
+  (add-to-list 'evil-motion-state-modes 'diff-mode)
   ;; Motion
+  (define-key evil-motion-state-map (kbd "RET") nil)
+  (define-key evil-normal-state-map (kbd "RET") #'evil-ret)
   (define-key evil-motion-state-map (kbd "h") #'evil-backward-char)
   (define-key evil-normal-state-map (kbd "h") nil)
   (define-key evil-visual-state-map (kbd "h") nil)
@@ -377,7 +389,8 @@
     (define-key vc-map (kbd "D") #'jj-diff-from)
     (define-key vc-map (kbd "m") #'jj-describe)
     (define-key vc-map (kbd "e") #'jj-edit)
-    (define-key vc-map (kbd "n") #'jj-new))
+    (define-key vc-map (kbd "n") #'jj-new)
+    (define-key vc-map (kbd "p") #'jj-git-push))
   (let ((highlight-map (make-sparse-keymap)))
     (define-key leader-map (kbd "h") highlight-map)
     (define-key highlight-map (kbd "K") #'unhighlight-regexp)
@@ -395,6 +408,8 @@
   (let ((lsp-map (make-sparse-keymap)))
     (define-key leader-map (kbd "e") lsp-map)
     (define-key lsp-map (kbd "a") #'eglot-code-actions)
+    (define-key lsp-map (kbd "e") #'consult-flymake)
+    (define-key lsp-map (kbd "i") #'eglot-inlay-hints-mode)
     (define-key lsp-map (kbd "r") #'eglot-rename)
     (define-key lsp-map (kbd "s") #'eglot))
   (let ((edit-map (make-sparse-keymap)))

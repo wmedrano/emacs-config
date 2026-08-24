@@ -3,7 +3,7 @@ ELPA_DIRS := $(shell for d in elpa/*/; do if [ "$$d" = "elpa/archives/" ] || [ "
 LOAD_PATH := $(addprefix -L ,$(ELPA_DIRS)) -L user-lisp
 
 JJ_FILES := user-lisp/jj.el user-lisp/jj-diff.el user-lisp/jj-describe.el
-CHECKDOC_FILES := $(JJ_FILES) user-lisp/eglot-extra.el user-lisp/cargo-extra.el user-lisp/disasm.el user-lisp/monorepo.el
+CHECKDOC_FILES := $(JJ_FILES) user-lisp/eglot-extra.el user-lisp/cargo-extra.el user-lisp/disasm.el user-lisp/monorepo.el user-lisp/paths-extra.el
 BYTE_COMPILE_FILES := $(CHECKDOC_FILES)
 
 .PHONY: all jj-test checkdoc byte-compile test
