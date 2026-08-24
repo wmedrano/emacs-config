@@ -23,6 +23,8 @@
                 markdown-mode orderless posframe rg smartparens
                 ttx-mode vertico vundo))
  '(ring-bell-function 'ignore)
+ '(select-enable-primary t)
+ '(select-enable-clipboard t)
  '(scroll-conservatively 4)
  '(tab-width 4)
  '(use-short-answers t)
