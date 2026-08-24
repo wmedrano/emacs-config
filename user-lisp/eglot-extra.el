@@ -10,9 +10,7 @@
 
 ;;; Code:
 
-(defvar eglot-format-on-save-mode)
-(declare-function eglot-managed-p "eglot")
-(declare-function eglot-format-buffer "eglot")
+(require 'eglot)
 
 (defun eglot-extra--maybe-format-on-save ()
   "Format the current buffer if eglot is enabled."
@@ -31,6 +29,12 @@
     (remove-hook 'before-save-hook
                  #'eglot-extra--maybe-format-on-save
                  t)))
+
+;;;###autoload
+(defun eglot-extra-disable-inlay-hints ()
+  "Disable `eglot-inlay-hints-mode' in the current buffer."
+  (interactive)
+  (eglot-inlay-hints-mode -1))
 
 (provide 'eglot-extra)
 ;;; eglot-extra.el ends here

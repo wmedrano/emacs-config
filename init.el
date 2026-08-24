@@ -176,13 +176,13 @@
   :ensure t
   :defer t
   :config
-  (require 'eglot-extra))
+  (add-hook 'eglot-managed-mode-hook #'eglot-extra-disable-inlay-hints))
 
 ;; In user-lisp/eglot-extra.el
 (use-package eglot-extra
   :defer t
   :defer nil
-  :autoload (eglot-format-on-save-mode))
+  :autoload (eglot-format-on-save-mode eglot-extra-disable-inlay-hints))
 
 (use-package clang-format
   :ensure t
