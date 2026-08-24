@@ -21,7 +21,7 @@
    '(ace-window auto-highlight-symbol clang-format consult corfu diff-hl
                 doom-modeline dracula-theme eglot evil gn-mode
                 markdown-mode orderless posframe rg smartparens
-                ttx-mode vertico))
+                ttx-mode vertico vundo))
  '(ring-bell-function 'ignore)
  '(scroll-conservatively 4)
  '(tab-width 4)
@@ -180,6 +180,7 @@
 
 ;; Requires M-x treesit-install-language-grammar for rust
 (use-package rust-ts-mode
+  :ensure nil ;; builtin
   :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
@@ -189,8 +190,8 @@
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
   (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
 
-;; Defined in user-lisp/
 (use-package rust-extra
+  :ensure nil ;; Defined in user-lisp/
   :defer t
   :autoload (cargo-cmd
              cargo-check cargo-build cargo-criterion cargo-test
@@ -202,17 +203,27 @@
 
 ;; Install from https://github.com/tree-sitter-grammars/tree-sitter-yaml
 (use-package yaml-ts-mode
+  :ensure nil ;; builtin
   :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode)))
 
 (use-package json-ts-mode
+  :ensure nil ;; builtin
   :defer t
   :init
-  (add-to-list 'auto-mode-alist '("\\.json\\'" . json-ts-mode)))
+  (add-to-list 'auto-mode-alist '("\\.json\\'" . json-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.json5\\'" . json-ts-mode)))
+
+(use-package toml-ts-mode
+  :ensure nil ;; builtin
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.toml\\'" . toml-ts-mode)))
 
 ;; Defined in user-lisp/
 (use-package disasm
+  :ensure nil ;; Defined in user-lisp/
   :defer t
   :commands (disasm))
 
@@ -229,7 +240,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package org
-  :ensure t
+  :ensure nil ;; builtin
   :defer t
   :custom
   (org-src-preserve-indentation t)
@@ -246,6 +257,7 @@
 ;; Shell/Compilation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package compile
+  :ensure nil ;; builtin
   :defer t
   :custom
   (compilation-scroll-output 'first-error)
@@ -303,6 +315,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package which-key
+  :ensure nil ;; builtin
   :defer 3
   :custom
   (which-key-idle-delay 1)
