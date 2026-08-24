@@ -62,6 +62,7 @@
 
 (use-package vertico
   :ensure t
+  :defer nil
   :config (vertico-mode 1))
 
 (use-package consult
@@ -76,6 +77,7 @@
 
 (use-package orderless
   :ensure t
+  :defer nil
   :custom
   ;; Configure a custom style dispatcher (see the Consult wiki)
   ;; (orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch))
@@ -141,6 +143,7 @@
 
 (use-package dracula-theme
   :ensure t
+  :defer nil
   :custom
   (doom-modeline-buffer-encoding nil)
   :config
@@ -170,6 +173,7 @@
 ;; In user-lisp/eglot-extra.el
 (use-package eglot-extra
   :defer t
+  :defer nil
   :autoload (eglot-format-on-save-mode))
 
 (use-package clang-format
@@ -289,23 +293,28 @@
   :ensure t
   :defer t)
 
-;; Defined under user-lisp/
 (use-package jj
+  :ensure nil ;; Defined under user-lisp/
   :defer t
   :commands (jj-new jj-edit jj-git-push jj-git-fetch jj-abandon jj-duplicate jj-rebase jj-rebase-onto))
+
 (use-package jj-diff
+  :ensure nil ;; Defined under user-lisp/
   :defer t
   :commands (jj-diff-at jj-diff-from))
+
 (use-package jj-describe
+  :ensure nil ;; Defined under user-lisp/
   :defer t
   :commands (jj-describe jj-describe-accept jj-describe-reject jj-describe-diff))
 
-;; Defined in user-lisp/
 (use-package monorepo
+  :ensure nil ;; Defined under user-lisp/
   :defer t
   :autoload (project-try-monorepo))
 
 (use-package project
+  :ensure nil ;; builtin
   :defer t
   :config
   (add-to-list 'project-find-functions #'project-try-monorepo))
@@ -316,7 +325,7 @@
 
 (use-package which-key
   :ensure nil ;; builtin
-  :defer 3
+  :defer 1
   :custom
   (which-key-idle-delay 1)
   :init
@@ -329,6 +338,7 @@
 
 (use-package evil
   :ensure t
+  :defer nil
   :config
   (evil-mode 1)
   ;; Motion
