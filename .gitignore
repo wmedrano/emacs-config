@@ -1,6 +1,7 @@
 *.elc
 .#*
 .org-id-locations
+custom.el
 projects
 recentf
 user-lisp/.user-lisp-autoloads.el

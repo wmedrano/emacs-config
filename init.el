@@ -398,3 +398,10 @@
   (let ((edit-map (make-sparse-keymap)))
     (define-key leader-map (kbd "n") edit-map)
     (define-key edit-map (kbd "s") #'sort-lines)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Extra private stuff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(let ((custom-file (expand-file-name "custom.el" user-emacs-directory)))
+  (when (file-exists-p custom-file)
+    (load-file custom-file)))
