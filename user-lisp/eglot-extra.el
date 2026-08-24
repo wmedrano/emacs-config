@@ -11,6 +11,7 @@
 ;;; Code:
 
 (require 'eglot)
+(require 'flymake)
 
 ;;;###autoload
 (define-minor-mode eglot-format-on-save-mode
@@ -29,6 +30,16 @@
   "Format the current buffer if eglot is enabled."
   (when (and (eglot-managed-p) eglot-format-on-save-mode)
     (eglot-format-buffer)))
+
+;;;###autoload
+(defun eglot-autofix-next (&optional arg)
+  "Fix the next error or warning."
+  (interactive "p")
+  (dotimes (_ (or arg 1))
+    (flymake-goto-next-error)
+    (call-interactively #'eglot-code-actions)
+    (save-buffer)
+    (sit-for 0.1)))
 
 ;;;###autoload
 (defun eglot-extra-disable-inlay-hints ()

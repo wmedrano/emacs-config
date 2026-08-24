@@ -184,6 +184,7 @@
 (use-package eglot-extra
   :defer t
   :defer nil
+  :commands (eglot-autofix-next)
   :autoload (eglot-format-on-save-mode eglot-extra-disable-inlay-hints))
 
 (use-package clang-format
@@ -308,7 +309,9 @@
 (use-package diff-hl
   :ensure t
   :defer 1
-  :config (global-diff-hl-mode 1))
+  :config
+  (global-diff-hl-mode 1)
+  (add-hook 'diff-hl-mode-hook #'diff-hl-flydiff-mode))
 
 (use-package vundo
   :ensure t
