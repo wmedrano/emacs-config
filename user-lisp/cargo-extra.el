@@ -1,4 +1,4 @@
-;;; rust-extra.el --- Cargo commands -*- lexical-binding: t; -*-
+;;; cargo-extra.el --- Cargo commands -*- lexical-binding: t; -*-
 ;;; Commentary:
 ;;; Code:
 
@@ -64,5 +64,5 @@
   (interactive)
   (cargo-cmd "fix --allow-dirty"))
 
-(provide 'rust-extra)
-;;; rust-extra.el ends here
+(provide 'cargo-extra)
+;;; cargo-extra.el ends here

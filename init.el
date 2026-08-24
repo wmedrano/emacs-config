@@ -51,6 +51,7 @@
   (add-to-list 'load-path
                (expand-file-name "user-lisp" user-emacs-directory)))
 
+(require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (use-package posframe
   :ensure t
@@ -194,7 +195,7 @@
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
   (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
 
-(use-package rust-extra
+(use-package cargo-extra
   :ensure nil ;; Defined in user-lisp/
   :defer t
   :autoload (cargo-cmd

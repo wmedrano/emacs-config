@@ -1,7 +1,11 @@
 *.elc
 .#*
-.hermes/
 .org-id-locations
+projects
+recentf
+user-lisp/.user-lisp-autoloads.el
+
+.hermes/
 /.agent-shell/
 agent-shell-data/
 agent/
@@ -11,7 +15,5 @@ elpa/
 eshell/
 history
 multisession/
-projects
-recentf
 transient/
 tree-sitter/
