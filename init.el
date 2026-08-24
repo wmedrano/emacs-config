@@ -9,9 +9,9 @@
  '(blink-cursor-mode nil)
  '(c-basic-offset 2)
  '(c-default-style '((java-mode . "java") (awk-mode . "awk") (other . "k&r")))
- '(comment-fill-column 80)
  '(display-line-numbers-width 3)
  '(enable-recursive-minibuffers t)
+ '(fill-column 80)
  '(gc-cons-percentage 2.0)
  '(gc-cons-threshold 1000000)
  '(global-auto-revert-mode t)
@@ -190,6 +190,10 @@
   :init
   (add-hook 'c-mode-hook #'clang-format-on-save-mode))
 
+(defun set-fill-column-100 ()
+  "Set `fill-column' to 100."
+  (setq fill-column 100))
+
 ;; Requires M-x treesit-install-language-grammar for rust
 (use-package rust-ts-mode
   :ensure nil ;; builtin
@@ -199,6 +203,7 @@
   :config
   (add-hook 'rust-ts-mode-hook #'eglot-ensure)
   (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
+  (add-hook 'rust-ts-mode-hook #'set-fill-column-100)
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
   (define-key rust-ts-mode-map (kbd "C-c C-l") #'cargo-clippy)
   (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
