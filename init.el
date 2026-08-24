@@ -198,9 +198,10 @@
 (use-package cargo-extra
   :ensure nil ;; Defined in user-lisp/
   :defer t
-  :autoload (cargo-cmd
-             cargo-check cargo-build cargo-criterion cargo-test
-             cargo-doc cargo-clippy cargo-fix))
+  :autoload (cargo-cmd)
+  :commands (cargo-check
+             cargo-build cargo-criterion cargo-test cargo-doc cargo-clippy
+             cargo-fix))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Aux Languages
