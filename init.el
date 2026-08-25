@@ -18,14 +18,14 @@
  '(inhibit-startup-screen t)
  '(make-backup-files nil)
  '(package-selected-packages
-   '(ace-window auto-highlight-symbol clang-format consult corfu diff-hl
-                doom-modeline dracula-theme eglot evil gn-mode
-                markdown-mode orderless posframe rg smartparens
-                ttx-mode vertico vundo))
+   '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
+                diff-hl doom-modeline dracula-theme eglot evil gn-mode
+                markdown-mode orderless posframe rg smartparens ttx-mode vertico
+                vundo))
  '(ring-bell-function 'ignore)
- '(select-enable-primary t)
- '(select-enable-clipboard t)
  '(scroll-conservatively 4)
+ '(select-enable-clipboard t)
+ '(select-enable-primary t)
  '(tab-width 4)
  '(use-short-answers t)
  '(warning-suppress-log-types '((treesit))))
@@ -103,6 +103,15 @@
   (global-corfu-mode 1)
   (corfu-history-mode 1)
   (corfu-popupinfo-mode 1))
+
+(use-package yasnippet
+  :ensure t
+  :defer t)
+
+(use-package consult-yasnippet
+  :ensure t
+  :defer t
+  :config (yas-minor-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Search
@@ -440,12 +449,15 @@
   (let ((lsp-map (make-sparse-keymap)))
     (define-key leader-map (kbd "e") lsp-map)
     (define-key lsp-map (kbd "a") #'eglot-code-actions)
+    (define-key lsp-map (kbd "d") #'flymake-show-buffer-diagnostics)
+    (define-key lsp-map (kbd "D") #'flymake-show-project-diagnostics)
     (define-key lsp-map (kbd "e") #'consult-flymake)
     (define-key lsp-map (kbd "i") #'eglot-inlay-hints-mode)
     (define-key lsp-map (kbd "r") #'eglot-rename)
     (define-key lsp-map (kbd "s") #'eglot))
   (let ((edit-map (make-sparse-keymap)))
     (define-key leader-map (kbd "n") edit-map)
+    (define-key edit-map (kbd "n") #'consult-yasnippet)
     (define-key edit-map (kbd "s") #'sort-lines)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
