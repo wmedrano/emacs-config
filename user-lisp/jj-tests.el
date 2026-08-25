@@ -4,6 +4,7 @@
 (require 'jj)
 (require 'jj-diff)
 (require 'jj-describe)
+(require 'seq)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -312,6 +313,67 @@ Overwrites the contents if they exist."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; read bookmark
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest read-bookmark-outside-repo-signals-error ()
+  (let ((temp-dir (make-temp-file "jj-outside-repo" t)))
+    (unwind-protect
+        (let ((default-directory temp-dir))
+          (should-error (jj-read-bookmark) :type 'jj-error))
+      (delete-directory temp-dir t))))
+
+(ert-deftest read-bookmark-offers-empty-collection-when-no-bookmarks ()
+  (with-test-repo
+    (let* ((got-collection 'unset)
+           (got-require-match 'unset)
+           (completing-read-function (lambda (_ collection &rest args)
+                                       (setq got-collection collection
+                                             got-require-match (nth 1 args))
+                                       "new-bookmark")))
+      (should (equal "new-bookmark" (jj-read-bookmark)))
+      (should (equal nil got-collection))
+      (should (equal nil got-require-match)))))
+
+(ert-deftest read-bookmark-offers-all-bookmarks-as-candidates ()
+  (with-test-repo
+    (test-sh "jj bookmark create bookmark-a"
+             "jj bookmark create bookmark-b"
+             "jj bookmark create bookmark-c")
+    (let* ((got-collection nil)
+           (completing-read-function (lambda (_ collection &rest _)
+                                       (setq got-collection collection)
+                                       "bookmark-a")))
+      (should (equal "bookmark-a" (jj-read-bookmark)))
+      (should (seq-set-equal-p
+               '("bookmark-a" "bookmark-b" "bookmark-c")
+               got-collection)))))
+
+(ert-deftest read-bookmark-allows-custom-string-with-existing-bookmarks ()
+  (with-test-repo
+    (test-sh "jj bookmark create existing")
+    (let* ((got-collection nil)
+           (got-require-match 'unset)
+           (completing-read-function (lambda (_ collection &rest args)
+                                       (setq got-collection collection)
+                                       (setq got-require-match (nth 1 args))
+                                       "totally-new-bookmark")))
+      (should (equal "totally-new-bookmark" (jj-read-bookmark)))
+      (should (equal '("existing") got-collection))
+      (should (equal nil got-require-match)))))
+
+(ert-deftest read-bookmark-require-match-passes-through ()
+  (with-test-repo
+    (test-sh "jj bookmark create existing")
+    (let* ((got-require-match nil)
+           (completing-read-function (lambda (_ _ &rest args)
+                                       (setq got-require-match (nth 1 args))
+                                       "existing")))
+      (should (equal "existing" (jj-read-bookmark "Bookmark to delete: " t)))
+      (should (equal t got-require-match)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; run command
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -541,6 +603,153 @@ Overwrites the contents if they exist."
 (ert-deftest rebase-onto-errors-on-unresolvable-destination ()
   (with-test-repo
     (should-error (jj-rebase-onto "root()" "no-such-revision")
+                  :type 'jj-error)))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bookmark set
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest bookmark-set-creates-new-bookmark ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'initial'")
+    (let ((target (test-jj-change-id "@")))
+      (jj-bookmark-set "new-bookmark" "@")
+      (should (string= target (test-jj-change-id "new-bookmark"))))))
+
+(ert-deftest bookmark-set-moves-existing-bookmark ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'A'"
+     "jj bookmark create my-bookmark"
+     "jj new -m 'B'")
+    (let ((initial-target (test-jj-change-id "my-bookmark"))
+          (new-target (test-jj-change-id "@")))
+      (should-not (string= initial-target new-target))
+      (jj-bookmark-set "my-bookmark" "@")
+      (should (string= new-target (test-jj-change-id "my-bookmark"))))))
+
+(ert-deftest bookmark-set-errors-on-unresolvable-revision ()
+  (with-test-repo
+    (should-error (jj-bookmark-set "my-bookmark" "no-such-revision")
+                  :type 'jj-error)))
+
+(ert-deftest bookmark-set-sets-bookmark-to-specific-revision ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'A'"
+     "jj bookmark create A"
+     "jj new -m 'B'"
+     "jj bookmark create B"
+     "jj new -m 'C'"
+     "jj bookmark create C")
+    (let ((b-change (test-jj-change-id "B")))
+      (jj-bookmark-set "my-bookmark" "B")
+      (should (string= b-change (test-jj-change-id "my-bookmark")))
+      ;; Move the same bookmark to a different (forward) revision.
+      (let ((c-change (test-jj-change-id "C")))
+        (jj-bookmark-set "my-bookmark" "C")
+        (should (string= c-change (test-jj-change-id "my-bookmark")))))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bookmark delete
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest bookmark-delete-deletes-existing-bookmark ()
+  (with-test-repo
+    (test-sh
+     "jj describe -m 'A'"
+     "jj bookmark create my-bookmark")
+    (let ((target (test-jj-change-id "my-bookmark")))
+      (should (member "my-bookmark" (jj--read-bookmark-candidates)))
+      (jj-bookmark-delete "my-bookmark")
+      (should-not (member "my-bookmark" (jj--read-bookmark-candidates)))
+      ;; Deleting the bookmark does not delete the commit itself.
+      (should (string= target (test-jj-change-id target))))))
+
+(ert-deftest bookmark-delete-leaves-other-bookmarks ()
+  (with-test-repo
+    (test-sh
+     "jj bookmark create a"
+     "jj bookmark create b"
+     "jj bookmark create c")
+    (jj-bookmark-delete "b")
+    (should (seq-set-equal-p '("a" "c") (jj--read-bookmark-candidates)))))
+
+(ert-deftest bookmark-delete-errors-on-invalid-name ()
+  (with-test-repo
+    (should-error (jj-bookmark-delete "bad name")
+                  :type 'jj-error)
+    (should-error (jj-bookmark-delete "")
+                  :type 'user-error)
+    (should-error (jj-bookmark-delete "   ")
+                  :type 'user-error)))
+
+(ert-deftest bookmark-delete-is-no-op-for-missing-bookmark ()
+  (with-test-repo
+    (test-sh
+     "jj bookmark create a")
+    ;; jj is idempotent for missing bookmarks (warns but exits 0).
+    (jj-bookmark-delete "no-such-bookmark")
+    (should (member "a" (jj--read-bookmark-candidates)))
+    (should (string= (test-jj-change-id "a") (test-jj-change-id "a")))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bookmark track
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest bookmark-track-uses-default-remote ()
+  (with-test-repo
+    (let ((captured nil))
+      (cl-letf (((symbol-function 'jj-run-command)
+                 (lambda (args) (setq captured args))))
+        (jj-bookmark-track "my-bookmark" nil)
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "origin") captured))
+        (jj-bookmark-track "my-bookmark" "")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "origin") captured))
+        (jj-bookmark-track "my-bookmark" "   ")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "origin") captured))))))
+
+(ert-deftest bookmark-track-uses-custom-remote ()
+  (with-test-repo
+    (let ((captured nil))
+      (cl-letf (((symbol-function 'jj-run-command)
+                 (lambda (args) (setq captured args))))
+        (jj-bookmark-track "my-bookmark" "upstream")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "upstream") captured))))))
+
+(ert-deftest bookmark-track-trims-whitespace ()
+  (with-test-repo
+    (let ((captured nil))
+      (cl-letf (((symbol-function 'jj-run-command)
+                 (lambda (args) (setq captured args))))
+        (jj-bookmark-track "  my-bookmark  " "  upstream  ")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "upstream") captured))))))
+
+(ert-deftest bookmark-track-errors-on-empty-bookmark ()
+  (with-test-repo
+    (should-error (jj-bookmark-track "" nil) :type 'user-error)
+    (should-error (jj-bookmark-track "   " nil) :type 'user-error)
+    (should-error (jj-bookmark-track "" "origin") :type 'user-error)))
+
+(ert-deftest bookmark-track-is-no-op-for-missing-bookmark ()
+  (with-test-repo
+    ;; jj warns but exits 0 for missing bookmark/remote (idempotent).
+    (test-sh "jj bookmark create a")
+    (jj-bookmark-track "no-such-bookmark" "origin")
+    (should (member "a" (jj--read-bookmark-candidates)))))
+
+(ert-deftest bookmark-track-errors-for-invalid-name ()
+  (with-test-repo
+    (should-error (jj-bookmark-track "bad name" "origin")
+                  :type 'jj-error)
+    (should-error (jj-bookmark-track "bad name" "bad remote")
                   :type 'jj-error)))
 
 

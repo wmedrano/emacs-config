@@ -147,6 +147,44 @@ ON-DONE is called in the process buffer when the process exits."
 
 (declare-function vertico--candidate "vertico")
 
+(defun jj--read-bookmark-candidates ()
+  "Return the list of known bookmarks.
+
+Signals a `jj-error' if the current directory is not in a jj
+repository."
+  (let ((default-directory (jj-root)))
+    (with-temp-buffer
+      (let* ((stderr-file (make-temp-file "jj-stderr"))
+             (status
+              (apply #'call-process jj-executable nil
+                     (list (current-buffer) stderr-file) nil
+                     (append jj-global-args
+                             '("bookmark" "list" "-T" "name ++ \"\n\""))))
+             (stderr (with-temp-buffer
+                       (insert-file-contents stderr-file)
+                       (buffer-string)))
+             (stdout (buffer-string)))
+        (delete-file stderr-file)
+        (if (zerop status)
+            (split-string stdout "\n" t)
+          (jj--signal (if (string-empty-p (string-trim stderr))
+                          stdout
+                        stderr)))))))
+
+(defun jj-read-bookmark (&optional prompt require-match)
+  "Read a bookmark from the user.
+
+Uses PROMPT if available, otherwise uses Bookmark:.  If REQUIRE-MATCH
+is non-nil, the bookmark must be selected from the existing bookmarks;
+otherwise custom strings are allowed.
+
+Signals a `jj-error' if the current directory is not in a jj
+repository."
+  (completing-read (or prompt "Bookmark: ")
+                   (jj--read-bookmark-candidates)
+                   nil
+                   require-match))
+
 (defun jj-read-revision (prompt-prefix default-revision)
   "Read a revision from the user.
 
@@ -194,19 +232,19 @@ DEFAULT-REVISION is returned if the user selects the empty string."
 If the candidate selection is empty, then DEFAULT-REVISION is used."
   (when-let* ((selected (when (fboundp 'vertico--candidate)
                           (or (vertico--candidate) ""))))
-         (cl-loop
-          for (candidate . overlay) in candidates
-          for revision = (overlay-get overlay 'jj--revision)
-          when revision
-          do (overlay-put
-              overlay
-              'face
-              (when (or (string= candidate selected)
-                        (and default-revision
-                             (string= "@" default-revision)
-                             (or (string= "@" selected) (string= "" selected))
-                             (jj--revision-current-working-copy-p revision)))
-                'jj-selected-face)))))
+    (cl-loop
+     for (candidate . overlay) in candidates
+     for revision = (overlay-get overlay 'jj--revision)
+     when revision
+     do (overlay-put
+         overlay
+         'face
+         (when (or (string= candidate selected)
+                   (and default-revision
+                        (string= "@" default-revision)
+                        (or (string= "@" selected) (string= "" selected))
+                        (jj--revision-current-working-copy-p revision)))
+           'jj-selected-face)))))
 
 (defconst jj--revision-fields
   '((:change-id              . "json(change_id)")
@@ -416,6 +454,63 @@ displays its output."
            (or (jj-read-revision "jj rebase onto" nil)
                (user-error "No destination selected")))))
   (jj-run-command `("rebase" "-s" ,src "-o" ,dest)))
+
+;;;###autoload
+(defun jj-bookmark-set (bookmark revision)
+  "Set BOOKMARK to point at REVISION.
+
+BOOKMARK is the bookmark name.  REVISION is the target revision.
+When called interactively, prompt for BOOKMARK with `jj-read-bookmark'
+and for REVISION with `jj-read-revision', defaulting to \"@\".
+Runs `jj bookmark set BOOKMARK -r REVISION' synchronously and
+signals `jj-error' on failure."
+  (interactive
+   (let ((bookmark (string-trim (jj-read-bookmark "Bookmark: ")))
+         (revision (jj-read-revision "jj bookmark set" "@")))
+     (when (string-empty-p bookmark)
+       (user-error "No bookmark selected"))
+     (list bookmark revision)))
+  (when (string-empty-p (string-trim bookmark))
+    (user-error "No bookmark selected"))
+  (jj-run-command `("bookmark" "set" ,(string-trim bookmark) "-r" ,revision)))
+
+;;;###autoload
+(defun jj-bookmark-delete (bookmark)
+  "Delete bookmark BOOKMARK.
+
+BOOKMARK is the bookmark to delete.  When called interactively, prompt
+with `jj-read-bookmark' requiring a match.  Runs `jj bookmark delete
+BOOKMARK' synchronously and signals `jj-error' on failure."
+  (interactive
+   (let ((bookmark (string-trim (jj-read-bookmark "Bookmark to delete: " t))))
+     (when (string-empty-p bookmark)
+       (user-error "No bookmark selected"))
+     (list bookmark)))
+  (when (string-empty-p (string-trim bookmark))
+    (user-error "No bookmark selected"))
+  (jj-run-command `("bookmark" "delete" ,(string-trim bookmark))))
+
+;;;###autoload
+(defun jj-bookmark-track (bookmark &optional remote)
+  "Track bookmark BOOKMARK on REMOTE.
+
+BOOKMARK is the bookmark to track.  REMOTE is the remote name, defaulting to
+\"origin\" when nil.
+
+When called interactively, prompt for BOOKMARK with `jj-read-bookmark' and for
+REMOTE with `read-string', defaulting to \"origin\".  Runs `jj bookmark track
+BOOKMARK --remote REMOTE' synchronously and signals `jj-error' on failure."
+  (interactive
+   (list (let ((b (jj-read-bookmark "Bookmark to track: ")))
+           (string-trim b))
+         (let* ((raw (read-string "Remote (default origin): " nil nil "origin"))
+                (trimmed (string-trim raw)))
+           (unless (string-empty-p trimmed) trimmed))))
+  (when (string-empty-p (string-trim bookmark))
+    (user-error "No bookmark selected"))
+  (let ((remote (let ((r (and remote (string-trim remote))))
+                  (if (and r (not (string-empty-p r))) r "origin"))))
+    (jj-run-command `("bookmark" "track" ,(string-trim bookmark) "--remote" ,remote))))
 
 (provide 'jj)
 ;;; jj.el ends here
