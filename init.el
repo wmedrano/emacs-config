@@ -26,11 +26,11 @@
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
                 diff-hl doom-modeline dracula-theme eglot evil gn-mode
                 markdown-mode orderless posframe rg smartparens ttx-mode vertico
-                vundo))
+                vundo yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
- '(scroll-conservatively 4)
+ '(scroll-conservatively 101)
  '(select-enable-clipboard t)
  '(select-enable-primary t)
  '(tab-width 4)
