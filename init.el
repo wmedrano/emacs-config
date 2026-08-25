@@ -392,7 +392,12 @@
 (use-package jj
   :ensure nil ;; Defined under user-lisp/
   :defer t
-  :commands (jj-new jj-edit jj-git-push jj-git-fetch jj-abandon jj-duplicate jj-rebase jj-rebase-onto))
+  :commands
+  (jj-new jj-edit
+          jj-git-push jj-git-fetch
+          jj-abandon jj-duplicate
+          jj-rebase jj-rebase-onto
+          jj-bookmark-set jj-bookmark-delete jj-bookmark-track))
 
 (use-package jj-diff
   :ensure nil ;; Defined under user-lisp/
@@ -482,12 +487,15 @@
   (define-key leader-map (kbd "w") #'ace-window)
   (let ((vc-map (make-sparse-keymap)))
     (define-key leader-map (kbd "r") vc-map)
+    (define-key vc-map (kbd "b") #'jj-bookmark-set)
+    (define-key vc-map (kbd "B") #'jj-bookmark-delete)
     (define-key vc-map (kbd "d") #'jj-diff-at)
     (define-key vc-map (kbd "D") #'jj-diff-from)
     (define-key vc-map (kbd "m") #'jj-describe)
     (define-key vc-map (kbd "e") #'jj-edit)
     (define-key vc-map (kbd "n") #'jj-new)
-    (define-key vc-map (kbd "p") #'jj-git-push))
+    (define-key vc-map (kbd "p") #'jj-git-push)
+    (define-key vc-map (kbd "t") #'jj-bookmark-track))
   (let ((highlight-map (make-sparse-keymap)))
     (define-key leader-map (kbd "h") highlight-map)
     (define-key highlight-map (kbd "K") #'unhighlight-regexp)
