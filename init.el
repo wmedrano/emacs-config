@@ -120,6 +120,24 @@
 ;; Window management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package window
+  :ensure nil
+  :custom
+  (display-buffer-alist
+   '(("\\`\\*Warnings\\*\\'"
+      (display-buffer-in-side-window)
+      (side . bottom)
+      (slot . 0)
+      (window-height . 0.2)
+      (window-parameters . ((no-other-window . t))))
+     ((or (derived-mode . flymake-diagnostics-buffer-mode)
+          (derived-mode . flymake-project-diagnostics-mode))
+      (display-buffer-in-side-window)
+      (side . bottom)
+      (slot . 0)
+      (window-height . 0.2)
+      (window-parameters . ((no-other-window . t)))))))
+
 (use-package ace-window
   :ensure t
   :defer t
