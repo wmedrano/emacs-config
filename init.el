@@ -28,6 +28,8 @@
                 markdown-mode orderless posframe rg smartparens ttx-mode vertico
                 vundo))
  '(ring-bell-function 'ignore)
+ '(safe-local-variable-values
+   '((compilation-scroll-output . first-error) (vc-handled-backends)))
  '(scroll-conservatively 4)
  '(select-enable-clipboard t)
  '(select-enable-primary t)
@@ -350,6 +352,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Shell/Compilation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setenv "JJ_PAGER" "cat")
 (use-package compile
   :ensure nil ;; builtin
   :defer t
