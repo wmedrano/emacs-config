@@ -68,7 +68,7 @@ Upon completion, the previous current buffer is restored."
        (unwind-protect
            (with-current-buffer ,buf
              ,@body)
-         (when-let (proc (get-buffer-process ,buf))
+         (when-let* ((proc (get-buffer-process ,buf)))
            (kill-process proc))
          (when (buffer-live-p ,buf)
            (kill-buffer ,buf))
@@ -79,7 +79,7 @@ Upon completion, the previous current buffer is restored."
   "Sets the contents of FILENAME to CONTENTS.
 
 Overwrites the contents if they exist."
-  (when-let ((dir (file-name-directory filename)))
+  (when-let* ((dir (file-name-directory filename)))
     (make-directory dir t))
   (write-region contents nil filename nil 'silent))
 

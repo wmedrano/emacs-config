@@ -12,11 +12,6 @@
 
 (require 'eglot)
 
-(defun eglot-extra--maybe-format-on-save ()
-  "Format the current buffer if eglot is enabled."
-  (when (and (eglot-managed-p) eglot-format-on-save-mode)
-    (eglot-format-buffer)))
-
 ;;;###autoload
 (define-minor-mode eglot-format-on-save-mode
   "Format eglot buffers on save."
@@ -29,6 +24,11 @@
     (remove-hook 'before-save-hook
                  #'eglot-extra--maybe-format-on-save
                  t)))
+
+(defun eglot-extra--maybe-format-on-save ()
+  "Format the current buffer if eglot is enabled."
+  (when (and (eglot-managed-p) eglot-format-on-save-mode)
+    (eglot-format-buffer)))
 
 ;;;###autoload
 (defun eglot-extra-disable-inlay-hints ()
