@@ -1,4 +1,9 @@
-;; -*- lexical-binding: t; -*-
+;;; init.el --- User configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Personal Emacs configuration.
+
+;;; Code:
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -66,11 +71,20 @@
 (use-package vertico
   :ensure t
   :defer nil
+  :commands (vertico-mode)
   :config (vertico-mode 1))
 
 (use-package consult
   :ensure t
   :defer t
+  :commands (consult-buffer
+             consult-flymake
+             consult-imenu
+             consult-line
+             consult-line-multi
+             consult-ripgrep
+             consult-xref
+             consult-yank-pop)
   :custom
   (xref-show-xrefs-function       #'consult-xref)
   (xref-show-definitions-function #'consult-xref)
@@ -93,6 +107,7 @@
 (use-package corfu
   :ensure t
   :defer 1
+  :commands (corfu-history-mode corfu-popupinfo-mode global-corfu-mode)
   :custom
   (corfu-auto t)
   (corfu-auto-delay 0.3)
@@ -106,11 +121,15 @@
 
 (use-package yasnippet
   :ensure t
-  :defer t)
+  :defer t
+  :commands (yas-minor-mode))
 
 (use-package consult-yasnippet
   :ensure t
   :defer t
+  :commands (consult-yasnippet)
+  :init
+  (global-set-key (kbd "C-c y") #'consult-yasnippet)
   :config (yas-minor-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -118,7 +137,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package rg
   :ensure t
-  :defer t)
+  :defer t
+  :commands (rg))
 
 (use-package paths-extra
   :ensure nil ;; Defined under user-lisp/
@@ -150,6 +170,7 @@
 (use-package ace-window
   :ensure t
   :defer t
+  :commands (ace-window ace-window-posframe-mode)
   :custom
   (aw-dispatch-always t)
   :custom-face
@@ -161,6 +182,7 @@
 (use-package smartparens
   :ensure t
   :defer t
+  :commands (smartparens-mode)
   :init
   (add-hook 'prog-mode-hook #'smartparens-mode)
   :config
@@ -169,6 +191,7 @@
 (use-package auto-highlight-symbol
   :ensure t
   :defer t
+  :commands (auto-highlight-symbol-mode)
   :custom
   (ahs-idle-interval 0.4)
   :init
@@ -195,28 +218,46 @@
 (use-package doom-modeline
   :ensure t
   :defer 1
+  :commands (doom-modeline-mode)
   :config (doom-modeline-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Languages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package flymake
+  :ensure nil ;; builtin
+  :defer t
+  :commands (flymake-show-buffer-diagnostics flymake-show-project-diagnostics))
+
 (use-package eglot
   :ensure t
   :defer t
+  :commands (eglot
+             eglot-code-actions
+             eglot-ensure
+             eglot-format
+             eglot-inlay-hints-mode
+             eglot-rename)
   :config
   (add-hook 'eglot-managed-mode-hook #'eglot-extra-disable-inlay-hints))
 
-;; In user-lisp/eglot-extra.el
-(use-package eglot-extra
+(use-package elisp-mode
+  :ensure nil ;; builtin
   :defer t
-  :defer nil
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'flymake-mode))
+
+(use-package eglot-extra
+  :ensure nil ;; Defined in user-lisp/eglot-extra.el
+  :defer t
   :commands (eglot-autofix-next)
   :autoload (eglot-format-on-save-mode eglot-extra-disable-inlay-hints))
 
 (use-package clang-format
   :ensure t
   :defer t
+  :commands (clang-format-on-save-mode clang-format-buffer clang-format-region)
   :init
   (add-hook 'c-mode-hook #'clang-format-on-save-mode))
 
@@ -336,6 +377,7 @@
 (use-package diff-hl
   :ensure t
   :defer 1
+  :commands (diff-hl-flydiff-mode global-diff-hl-mode)
   :config
   (global-diff-hl-mode 1)
   (add-hook 'diff-hl-mode-hook #'diff-hl-flydiff-mode))
@@ -390,6 +432,17 @@
 (use-package evil
   :ensure t
   :defer nil
+  :defines (evil-motion-state-map
+            evil-motion-state-modes
+            evil-normal-state-map
+            evil-visual-state-map)
+  :functions (evil-backward-char
+              evil-forward-char
+              evil-insert
+              evil-mode
+              evil-next-line
+              evil-previous-line
+              evil-ret)
   :config
   (evil-mode 1)
   ;; Modes
@@ -466,3 +519,6 @@
 (let ((custom-file (expand-file-name "custom.el" user-emacs-directory)))
   (when (file-exists-p custom-file)
     (load-file custom-file)))
+
+(provide 'init)
+;;; init.el ends here
