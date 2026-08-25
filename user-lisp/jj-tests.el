@@ -341,8 +341,7 @@ Overwrites the contents if they exist."
              "jj bookmark create bookmark-b"
              "jj bookmark create bookmark-c")
     (let* ((got-collection nil)
-           (completing-read-function (lambda (_ collection &rest _
-                                                )
+           (completing-read-function (lambda (_ collection &rest _)
                                        (setq got-collection collection)
                                        "bookmark-a")))
       (should (equal "bookmark-a" (jj-read-bookmark)))
@@ -679,25 +678,79 @@ Overwrites the contents if they exist."
      "jj bookmark create b"
      "jj bookmark create c")
     (jj-bookmark-delete "b")
-    (should (seq-set-equal-p '("a" "c") (jj--read-bookmark-candidates)))
-    (should (string= (test-jj-change-id "a") (test-jj-change-id "a")))
-    (should (string= (test-jj-change-id "c") (test-jj-change-id "c")))))
+    (should (seq-set-equal-p '("a" "c") (jj--read-bookmark-candidates)))))
 
 (ert-deftest bookmark-delete-errors-on-invalid-name ()
   (with-test-repo
     (should-error (jj-bookmark-delete "bad name")
                   :type 'jj-error)
     (should-error (jj-bookmark-delete "")
-                  :type 'jj-error)))
+                  :type 'user-error)
+    (should-error (jj-bookmark-delete "   ")
+                  :type 'user-error)))
 
 (ert-deftest bookmark-delete-is-no-op-for-missing-bookmark ()
   (with-test-repo
     (test-sh
      "jj bookmark create a")
-    ;; Deleting a non-existent bookmark is not an error (jj is idempotent).
+    ;; jj is idempotent for missing bookmarks (warns but exits 0).
     (jj-bookmark-delete "no-such-bookmark")
     (should (member "a" (jj--read-bookmark-candidates)))
     (should (string= (test-jj-change-id "a") (test-jj-change-id "a")))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bookmark track
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(ert-deftest bookmark-track-uses-default-remote ()
+  (with-test-repo
+    (let ((captured nil))
+      (cl-letf (((symbol-function 'jj-run-command)
+                 (lambda (args) (setq captured args))))
+        (jj-bookmark-track "my-bookmark" nil)
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "origin") captured))
+        (jj-bookmark-track "my-bookmark" "")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "origin") captured))
+        (jj-bookmark-track "my-bookmark" "   ")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "origin") captured))))))
+
+(ert-deftest bookmark-track-uses-custom-remote ()
+  (with-test-repo
+    (let ((captured nil))
+      (cl-letf (((symbol-function 'jj-run-command)
+                 (lambda (args) (setq captured args))))
+        (jj-bookmark-track "my-bookmark" "upstream")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "upstream") captured))))))
+
+(ert-deftest bookmark-track-trims-whitespace ()
+  (with-test-repo
+    (let ((captured nil))
+      (cl-letf (((symbol-function 'jj-run-command)
+                 (lambda (args) (setq captured args))))
+        (jj-bookmark-track "  my-bookmark  " "  upstream  ")
+        (should (equal '("bookmark" "track" "my-bookmark" "--remote" "upstream") captured))))))
+
+(ert-deftest bookmark-track-errors-on-empty-bookmark ()
+  (with-test-repo
+    (should-error (jj-bookmark-track "" nil) :type 'user-error)
+    (should-error (jj-bookmark-track "   " nil) :type 'user-error)
+    (should-error (jj-bookmark-track "" "origin") :type 'user-error)))
+
+(ert-deftest bookmark-track-is-no-op-for-missing-bookmark ()
+  (with-test-repo
+    ;; jj warns but exits 0 for missing bookmark/remote (idempotent).
+    (test-sh "jj bookmark create a")
+    (jj-bookmark-track "no-such-bookmark" "origin")
+    (should (member "a" (jj--read-bookmark-candidates)))))
+
+(ert-deftest bookmark-track-errors-for-invalid-name ()
+  (with-test-repo
+    (should-error (jj-bookmark-track "bad name" "origin")
+                  :type 'jj-error)
+    (should-error (jj-bookmark-track "bad name" "bad remote")
+                  :type 'jj-error)))
 
 
 ;; 

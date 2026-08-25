@@ -116,11 +116,12 @@ from the buffer in `jj--describe-revision'."
                                 (append jj-global-args
                                         `("describe" "-r" ,revision "--stdin")))))
           (jj--signal (with-temp-buffer
-                                (insert-file-contents tmp-error-file)
-                                (buffer-string))))
+                        (insert-file-contents tmp-error-file)
+                        (buffer-string))))
       (delete-file tmp-error-file))
     (with-current-buffer buffer
-      (funcall jj--display-function "Description for %s updated" revision)
+      (funcall jj--display-function
+               (format "Description for %s updated" revision))
       (kill-buffer))))
 
 (defun jj--insert-sanitized-describe (src-buffer)

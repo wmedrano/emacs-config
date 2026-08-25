@@ -13,7 +13,6 @@
 
 (require 'subr-x)
 (require 'cl-lib)
-(require 'json)
 
 (defgroup jj nil
   "JJ integration for Emacs."
@@ -153,20 +152,24 @@ ON-DONE is called in the process buffer when the process exits."
 
 Signals a `jj-error' if the current directory is not in a jj
 repository."
-  (with-temp-buffer
-    (let ((status
-           (apply #'process-file jj-executable nil (current-buffer) nil
-                  (append jj-global-args
-                          '("bookmark" "list" "-T" "json(name) ++ \",\"")))))
-      (unless (zerop status)
-        (jj--signal (buffer-string))))
-    (goto-char (point-min))
-    (insert "[")
-    (goto-char (point-max))
-    (insert "]")
-    (goto-char (point-min))
-    (let ((json-array-type 'list))
-      (json-read))))
+  (let ((default-directory (jj-root)))
+    (with-temp-buffer
+      (let* ((stderr-file (make-temp-file "jj-stderr"))
+             (status
+              (apply #'call-process jj-executable nil
+                     (list (current-buffer) stderr-file) nil
+                     (append jj-global-args
+                             '("bookmark" "list" "-T" "name ++ \"\n\""))))
+             (stderr (with-temp-buffer
+                       (insert-file-contents stderr-file)
+                       (buffer-string)))
+             (stdout (buffer-string)))
+        (delete-file stderr-file)
+        (if (zerop status)
+            (split-string stdout "\n" t)
+          (jj--signal (if (string-empty-p (string-trim stderr))
+                          stdout
+                        stderr)))))))
 
 (defun jj-read-bookmark (&optional prompt require-match)
   "Read a bookmark from the user.
@@ -177,8 +180,10 @@ otherwise custom strings are allowed.
 
 Signals a `jj-error' if the current directory is not in a jj
 repository."
-  (let ((candidates (jj--read-bookmark-candidates)))
-    (completing-read (or prompt "Bookmark: ") candidates nil require-match)))
+  (completing-read (or prompt "Bookmark: ")
+                   (jj--read-bookmark-candidates)
+                   nil
+                   require-match))
 
 (defun jj-read-revision (prompt-prefix default-revision)
   "Read a revision from the user.
@@ -460,12 +465,14 @@ and for REVISION with `jj-read-revision', defaulting to \"@\".
 Runs `jj bookmark set BOOKMARK -r REVISION' synchronously and
 signals `jj-error' on failure."
   (interactive
-   (let ((bookmark (jj-read-bookmark "Bookmark: "))
+   (let ((bookmark (string-trim (jj-read-bookmark "Bookmark: ")))
          (revision (jj-read-revision "jj bookmark set" "@")))
      (when (string-empty-p bookmark)
        (user-error "No bookmark selected"))
      (list bookmark revision)))
-  (jj-run-command `("bookmark" "set" ,bookmark "-r" ,revision)))
+  (when (string-empty-p (string-trim bookmark))
+    (user-error "No bookmark selected"))
+  (jj-run-command `("bookmark" "set" ,(string-trim bookmark) "-r" ,revision)))
 
 ;;;###autoload
 (defun jj-bookmark-delete (bookmark)
@@ -475,11 +482,13 @@ BOOKMARK is the bookmark to delete.  When called interactively, prompt
 with `jj-read-bookmark' requiring a match.  Runs `jj bookmark delete
 BOOKMARK' synchronously and signals `jj-error' on failure."
   (interactive
-   (let ((bookmark (jj-read-bookmark "Bookmark to delete: " t)))
+   (let ((bookmark (string-trim (jj-read-bookmark "Bookmark to delete: " t))))
      (when (string-empty-p bookmark)
        (user-error "No bookmark selected"))
      (list bookmark)))
-  (jj-run-command `("bookmark" "delete" ,bookmark)))
+  (when (string-empty-p (string-trim bookmark))
+    (user-error "No bookmark selected"))
+  (jj-run-command `("bookmark" "delete" ,(string-trim bookmark))))
 
 ;;;###autoload
 (defun jj-bookmark-track (bookmark &optional remote)
@@ -492,13 +501,16 @@ When called interactively, prompt for BOOKMARK with `jj-read-bookmark' and for
 REMOTE with `read-string', defaulting to \"origin\".  Runs `jj bookmark track
 BOOKMARK --remote REMOTE' synchronously and signals `jj-error' on failure."
   (interactive
-   (list (jj-read-bookmark "Bookmark to track: ")
-         (let ((remote (read-string "Remote (default origin): " nil nil "origin")))
-           (unless (string-empty-p remote) remote))))
-  (when (string-empty-p bookmark)
+   (list (let ((b (jj-read-bookmark "Bookmark to track: ")))
+           (string-trim b))
+         (let* ((raw (read-string "Remote (default origin): " nil nil "origin"))
+                (trimmed (string-trim raw)))
+           (unless (string-empty-p trimmed) trimmed))))
+  (when (string-empty-p (string-trim bookmark))
     (user-error "No bookmark selected"))
-  (let ((remote (or remote "origin")))
-    (jj-run-command `("bookmark" "track" ,bookmark "--remote" ,remote))))
+  (let ((remote (let ((r (and remote (string-trim remote))))
+                  (if (and r (not (string-empty-p r))) r "origin"))))
+    (jj-run-command `("bookmark" "track" ,(string-trim bookmark) "--remote" ,remote))))
 
 (provide 'jj)
 ;;; jj.el ends here
