@@ -206,6 +206,7 @@
   (add-hook 'rust-ts-mode-hook #'eglot-ensure)
   (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
   (add-hook 'rust-ts-mode-hook #'set-fill-column-100)
+  (add-hook 'rust-ts-mode-hook #'cargo-minor-mode)
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
   (define-key rust-ts-mode-map (kbd "C-c C-l") #'cargo-clippy)
   (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
@@ -214,9 +215,9 @@
   :ensure nil ;; Defined in user-lisp/
   :defer t
   :autoload (cargo-cmd)
-  :commands (cargo-check
-             cargo-build cargo-criterion cargo-test cargo-doc cargo-clippy
-             cargo-fix))
+  :commands (cargo-minor-mode
+             cargo-check cargo-build cargo-criterion cargo-test cargo-doc
+             cargo-clippy cargo-fix))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Aux Languages
@@ -231,16 +232,19 @@
 
 (use-package json-ts-mode
   :ensure nil ;; builtin
-  :defer t
-  :init
-  (add-to-list 'auto-mode-alist '("\\.json\\'" . json-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.json5\\'" . json-ts-mode)))
+  :mode ("\\.json\\'" "\\.json5\\'"))
 
 (use-package toml-ts-mode
   :ensure nil ;; builtin
   :defer t
-  :init
-  (add-to-list 'auto-mode-alist '("\\.toml\\'" . toml-ts-mode)))
+  :mode ("\\.toml\\'" . toml-ts-mode))
+
+(use-package cargo-toml-mode
+  :ensure nil ;; Defined in user-lisp/
+  :defer t
+  :mode ("/Cargo\\.toml\\'" . cargo-toml-mode)
+  :config
+  (add-hook 'cargo-toml-mode-hook #'cargo-minor-mode))
 
 ;; Defined in user-lisp/
 (use-package disasm

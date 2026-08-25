@@ -64,5 +64,15 @@
   (interactive)
   (cargo-cmd "fix --allow-dirty"))
 
+;;;###autoload
+(define-minor-mode cargo-minor-mode
+  "Provides access to cargo commands."
+  :keymap (let ((keymap (make-sparse-keymap)))
+            (define-key keymap (kbd "C-c C-l") #'cargo-clippy)
+            (define-key keymap (kbd "C-c C-t") #'cargo-test)
+            (define-key keymap (kbd "C-c C-e") #'cargo-build)
+            (define-key keymap (kbd "C-c C-h") #'cargo-doc)
+            keymap))
+
 (provide 'cargo-extra)
 ;;; cargo-extra.el ends here
