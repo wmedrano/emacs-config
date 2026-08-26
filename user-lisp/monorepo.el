@@ -33,12 +33,36 @@ CONFIG-PATH - The path to the .monorepo config."
         (let* ((line (buffer-substring-no-properties (line-beginning-position)
                                                      (line-end-position)))
                (trimmed (string-trim line)))
-          (unless (string-empty-p trimmed)
+          (unless (or (string-empty-p trimmed)
+                      (string-prefix-p "#" trimmed))
             (push trimmed directories)))
         (forward-line 1)))
     (make-monorepo
      :root root
      :directories directories)))
+
+(defvar monorepo-mode-syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?# "< b" table)
+    (modify-syntax-entry ?\n "> b" table)
+    table)
+  "Syntax table for `monorepo-mode'.")
+
+;;;###autoload
+(define-derived-mode monorepo-mode prog-mode "Monorepo"
+  "Major mode for `.monorepo' files.
+Each non-blank, non-comment line is a directory path.
+Lines starting with `#' (after optional whitespace) are comments."
+  :syntax-table monorepo-mode-syntax-table
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
+  (setq-local comment-end "")
+  (setq-local comment-use-syntax t)
+  (setq-local font-lock-defaults
+              '((("^\\s-*#.*$" . font-lock-comment-face)) t)))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.monorepo\\'" . monorepo-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
