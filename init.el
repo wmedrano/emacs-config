@@ -23,10 +23,10 @@
  '(inhibit-startup-screen t)
  '(make-backup-files nil)
  '(package-selected-packages
-   '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
-                diff-hl doom-modeline dracula-theme eglot evil evil-commentary
-                gn-mode markdown-mode orderless posframe rg smartparens ttx-mode
-                vertico vundo yasnippet))
+   '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet
+                corfu diff-hl doom-modeline dracula-theme eat eglot evil
+                evil-commentary gn-mode markdown-mode orderless posframe rg
+                smartparens ttx-mode vertico vundo yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
@@ -325,11 +325,30 @@
 
 (use-package gn-mode
   :ensure t
-  :defer t)
+  :defer t
+  :mode ("\\.gn\\'" . gn-mode))
 
 (use-package ttx-mode
   :ensure t
   :defer t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Weird dev environments
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package chromium-dev-mode
+  :ensure nil ;; Under user-lisp/
+  :defer t
+  :commands (chromium-dev-mode)
+  :init
+  ;; `compile' runs via shell, so `exec-path' alone is not enough — the
+  ;; shell's PATH (in `process-environment') must also contain depot_tools.
+  ;; Use :init (not :config) so this runs eagerly despite :defer t.
+  (let ((depot-tools-path (expand-file-name "~/src/chromium/depot_tools")))
+    (when (file-directory-p depot-tools-path)
+      (add-to-list 'exec-path depot-tools-path)
+      (let ((path (or (getenv "PATH") "")))
+        (unless (string-match-p (regexp-quote depot-tools-path) path)
+          (setenv "PATH" (concat depot-tools-path "/" path)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org/Markdown
@@ -363,6 +382,17 @@
   :config
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
   (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
+
+(use-package eat
+  :ensure t
+  :defer t
+  :commands (eat-eshell-mode))
+
+(use-package eshell
+  :ensure nil ;; builtin
+  :defer t
+  :config
+  (add-hook 'eshell-mode-hook #'eat-eshell-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Performance
