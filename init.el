@@ -259,9 +259,25 @@
 (use-package clang-format
   :ensure t
   :defer t
-  :commands (clang-format-on-save-mode clang-format-buffer clang-format-region)
+  :commands (clang-format-on-save-mode clang-format-buffer clang-format-region))
+
+(use-package c-mode
+  :ensure nil ;; builtin (cc-mode)
+  :defer t
+  :defines c-mode-map
   :init
-  (add-hook 'c-mode-hook #'clang-format-on-save-mode))
+  (add-hook 'c-mode-hook #'eglot-ensure)
+  (with-eval-after-load 'cc-mode
+    (define-key c-mode-map (kbd "C-c C-f") #'clang-format-region)))
+
+(use-package c++-mode
+  :ensure nil ;; builtin (cc-mode)
+  :defer t
+  :defines c++-mode-map
+  :init
+  (add-hook 'c++-mode-hook #'eglot-ensure)
+  (with-eval-after-load 'cc-mode
+    (define-key c++-mode-map (kbd "C-c C-f") #'clang-format-region)))
 
 (defun set-fill-column-100 ()
   "Set `fill-column' to 100."
