@@ -24,9 +24,9 @@
  '(make-backup-files nil)
  '(package-selected-packages
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
-                diff-hl doom-modeline dracula-theme eglot evil gn-mode
-                markdown-mode orderless posframe rg smartparens ttx-mode vertico
-                vundo yasnippet))
+                diff-hl doom-modeline dracula-theme eglot evil evil-commentary
+                gn-mode markdown-mode orderless posframe rg smartparens ttx-mode
+                vertico vundo yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
@@ -437,6 +437,11 @@
   (interactive)
   (unhighlight-regexp t))
 
+(use-package evil-commentary
+  :ensure t
+  :defer t
+  :commands (evil-commentary-mode))
+
 (use-package evil
   :ensure t
   :defer nil
@@ -453,6 +458,7 @@
               evil-ret)
   :config
   (evil-mode 1)
+  (evil-commentary-mode 1)
   ;; Modes
   (add-to-list 'evil-motion-state-modes 'diff-mode)
   ;; Motion
