@@ -21,41 +21,15 @@
   :type 'string
   :group 'chromium-dev)
 
-(defcustom chromium-dev-blink-target "blink_unittests"
-  "GN target / binary name for Blink unit tests."
-  :type 'string
+(defcustom chromium-dev-targets
+  '("chrome"
+    "blink_unittests"
+    "blink_common_unittests"
+    "blink_platform_unittests"
+    "blink_heap_unittests")
+  "List of GN targets offered by `chromium-dev--read-target'."
+  :type '(repeat string)
   :group 'chromium-dev)
-
-(defcustom chromium-dev-depot-tools-path (expand-file-name "~/src/chromium/depot_tools")
-  "Path to depot_tools checkout containing `autoninja'."
-  :type 'directory
-  :group 'chromium-dev)
-
-(defvaralias 'chromium-dev--compile-commands-generating
-  'chromium-dev--one-time-setup-done)
-
-(defvar chromium-dev--one-time-setup-done nil
-  "Non-nil if one-time setup has run this session.")
-
-(defun chromium-dev--ensure-depot-tools-on-path ()
-  "Ensure `chromium-dev-depot-tools-path' is on `exec-path' and PATH.
-Needed because `compile' runs via shell which uses PATH, not just
-`exec-path'.  Safe to call repeatedly."
-  (when (file-directory-p chromium-dev-depot-tools-path)
-    (add-to-list 'exec-path chromium-dev-depot-tools-path)
-    (let ((path (or (getenv "PATH") "")))
-      (unless (string-match-p (regexp-quote chromium-dev-depot-tools-path) path)
-        (setenv "PATH" (concat chromium-dev-depot-tools-path
-                               path-separator path))))))
-
-(defun chromium-dev--autoninja-executable ()
-  "Return absolute path to autoninja or signal a useful error."
-  (chromium-dev--ensure-depot-tools-on-path)
-  (or (executable-find "autoninja")
-      (let ((direct (expand-file-name "autoninja" chromium-dev-depot-tools-path)))
-        (when (file-executable-p direct) direct))
-      (user-error "Cannot find `autoninja' on PATH. Add depot_tools (%s) to PATH or set `chromium-dev-depot-tools-path'"
-                  chromium-dev-depot-tools-path)))
 
 (defun chromium-dev--project-root ()
   "Return the current project root or signal a `user-error'."
@@ -64,12 +38,76 @@ Needed because `compile' runs via shell which uses PATH, not just
       (user-error "Not in a project"))
     (project-root project)))
 
-(defun chromium-dev--clangd-config-path ()
-  "Return path to clangd's config.yaml."
-  (expand-file-name "clangd/config.yaml"
-                    (or (let ((xdg (getenv "XDG_CONFIG_HOME")))
-                          (and xdg (not (string-empty-p xdg)) xdg))
-                        (expand-file-name "~/.config"))))
+(defun chromium-dev--read-target ()
+  "Read a chromium target."
+  (completing-read "Target: " chromium-dev-targets))
+
+(defvar chromium-dev--run-args-history nil
+  "Alist mapping TARGET string to list of past ARGS strings.
+Most recent first, per target.  Used for history in `chromium-dev-run'.")
+
+(defvar chromium-dev--run-args-temp-history nil
+  "Temporary history variable for `completing-read' in `chromium-dev--read-args'.")
+
+(defun chromium-dev--run-args-history-get (target)
+  "Return history list for TARGET."
+  (alist-get target chromium-dev--run-args-history nil nil #'equal))
+
+(defun chromium-dev--run-args-history-push (target args)
+  "Push ARGS onto history for TARGET if non-empty.
+Keeps most recent first, de-duplicated, capped at 20 entries."
+  (when (and args (not (string-empty-p args)))
+    (let* ((old (alist-get target chromium-dev--run-args-history nil nil #'equal))
+           (new (cons args (delete args (copy-sequence old)))))
+      (when (> (length new) 20)
+        (setcdr (nthcdr 19 new) nil))
+      (setf (alist-get target chromium-dev--run-args-history nil nil #'equal) new))))
+
+(defun chromium-dev--read-args (target)
+  "Read args for TARGET with per-target history and completion."
+  (let* ((hist (chromium-dev--run-args-history-get target)))
+    (setq chromium-dev--run-args-temp-history hist)
+    (completing-read (format "Args for %s (empty for none): " target)
+                     hist nil nil nil 'chromium-dev--run-args-temp-history nil)))
+
+(defun chromium-dev-build (target)
+  "Build TARGET with autoninja."
+  (interactive (list (chromium-dev--read-target)))
+  (let* ((default-directory (chromium-dev--project-root))
+         (cmd (format "autoninja -C %s %s"
+                      (shell-quote-argument chromium-dev-out-dir)
+                      (shell-quote-argument target))))
+    (compile cmd)))
+
+(defun chromium-dev-run (target &optional args)
+  "Build and run the unit tests.
+
+Builds TARGET with autoninja, then runs the resulting binary.  With ARGS, append
+ARGS to the run command.
+
+ARGS history is kept per TARGET in `chromium-dev--run-args-history' and offered
+for completion on subsequent invocations."
+  (interactive (let ((target (chromium-dev--read-target)))
+                 (list target (chromium-dev--read-args target))))
+  (chromium-dev--run-args-history-push target args)
+  (let* ((default-directory (chromium-dev--project-root))
+          (binary            (format "%s/%s"
+                                     chromium-dev-out-dir
+                                     target))
+          (args-str          (if (and args (not (string-empty-p args)))
+                                 (format " %s" args)
+                               ""))
+          (build-cmd         (format "autoninja -C %s %s"
+                                     (shell-quote-argument chromium-dev-out-dir)
+                                     (shell-quote-argument target)))
+          (run-cmd           (format "%s%s" binary args-str))
+          (cmd (string-join (list build-cmd run-cmd)
+                            " &&")))
+    (compile cmd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Remote index
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun chromium-dev--remote-index-configured-p (root config-file)
   "Return non-nil if CONFIG-FILE already contains remote-index entry for ROOT."
@@ -97,29 +135,56 @@ Caller should ensure not already configured."
       (write-region (point-min) (point-max) config-file nil 'silent))
     (message "Configured clangd remote-index for %s -> %s" root config-file)))
 
-(defun chromium-dev--vendored-rust-analyzer-path (root)
-  "Return vendored rust-analyzer path for ROOT."
-  (expand-file-name "third_party/rust-toolchain/bin/rust-analyzer" root))
+(defun chromium-dev--clangd-config-path ()
+  "Return path to clangd's config.yaml."
+  (expand-file-name "clangd/config.yaml"
+                    (or (let ((xdg (getenv "XDG_CONFIG_HOME")))
+                          (and xdg (not (string-empty-p xdg)) xdg))
+                        (expand-file-name "~/.config"))))
 
-(defun chromium-dev--rust-analyzer-resolve (&optional _interactive _project)
-  "Return vendored rust-analyzer contact if in Chromium checkout.
-Used as dynamic CONTACT in `eglot-server-programs'.
-Returns a list like (\"/path/to/rust-analyzer\") suitable for eglot."
-  (let* ((root (ignore-errors (chromium-dev--project-root)))
-         (cr (or root (locate-dominating-file default-directory "rust-project.json")))
-         (prog (if cr
-                   (let ((vendored (chromium-dev--vendored-rust-analyzer-path cr)))
-                     (if (file-executable-p vendored) vendored "rust-analyzer"))
-                 "rust-analyzer")))
-    (list prog)))
+(defun chromium-dev-setup-remote-index ()
+  "Setup clangd remote-index config for current checkout.
+Creates config.yaml entry for project root.
+Idempotent if already configured."
+  (interactive)
+  (let* ((root (chromium-dev--project-root))
+         (config-file (chromium-dev--clangd-config-path)))
+    (if (chromium-dev--remote-index-configured-p root config-file)
+        (message "clangd remote-index already configured for %s" root)
+      (chromium-dev--write-remote-index-config root config-file))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; compile_commands.json
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun chromium-dev-regen-compile-json (root)
+  "Regenerate `compile_commands.json' asynchronously.
+
+Assumes that chromium is at ROOT.  ROOT is inferred when called interactively."
+  (interactive (list (chromium-dev--project-root)))
+  (let* ((default-directory root)
+         (cmd (format "%s -p %s > %s"
+                      (shell-quote-argument "tools/clang/scripts/generate_compdb.py")
+                      (shell-quote-argument chromium-dev-out-dir)
+                      (shell-quote-argument "compile_commands.json"))))
+    (message "Generating compile_commands.json...")
+    (start-process-shell-command "chromium-compdb" "*chromium-compdb*" cmd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Rust Analyzer (Needs Cleanup)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun chromium-dev--rust-project-json-path (root)
   "Return path to `rust-project.json' symlink at ROOT."
   (expand-file-name "rust-project.json" root))
 
-(defun chromium-dev--rust-project-build-path (root)
-  "Return path to `rust-project.json' in build dir for ROOT."
-  (expand-file-name "rust-project.json" (expand-file-name chromium-dev-out-dir root)))
+(defun chromium-dev--ensure-rust-project-symlink (root)
+  "Ensure `rust-project.json' symlink at ROOT points to build dir.
+Creates relative symlink `out/Default/rust-project.json' if missing."
+  (let* ((dst (chromium-dev--rust-project-json-path root))
+         (target (concat (file-name-as-directory chromium-dev-out-dir) "rust-project.json")))
+    (unless (or (file-symlink-p dst) (file-exists-p dst))
+      (make-symbolic-link target dst t)
+      (message "Linked %s -> %s" dst target))))
 
 (defun chromium-dev--generate-rust-project-json (root)
   "Generate `rust-project.json' in ROOT via `gn gen'.
@@ -131,35 +196,27 @@ Asynchronously runs `gn gen --export-rust-project'."
     (message "Generating rust-project.json...")
     (start-process-shell-command "chromium-rust-project" "*chromium-rust-project*" cmd)))
 
-(defun chromium-dev--ensure-rust-project-symlink (root)
-  "Ensure `rust-project.json' symlink at ROOT points to build dir.
-Creates relative symlink `out/Default/rust-project.json' if missing."
-  (let* ((dst (chromium-dev--rust-project-json-path root))
-         (target (concat (file-name-as-directory chromium-dev-out-dir) "rust-project.json")))
-    (unless (or (file-symlink-p dst) (file-exists-p dst))
-      (make-symbolic-link target dst t)
-      (message "Linked %s -> %s" dst target))))
-
 (defun chromium-dev-regen-rust-project-json ()
   "Regenerate `rust-project.json' via `gn gen'.
 Ensures symlink at repo root; works even if setup already ran."
   (interactive)
   (let ((root (chromium-dev--project-root)))
-    (setq chromium-dev--one-time-setup-done t)
     (chromium-dev--generate-rust-project-json root)
     (chromium-dev--ensure-rust-project-symlink root)))
 
-(defun chromium-dev--maybe-ensure-rust-project ()
-  "Ensure `rust-project.json' exists, generation is async.
-Idempotent check for one-time setup path."
-  (unless chromium-dev--one-time-setup-done
-    (when-let* ((root (ignore-errors (chromium-dev--project-root)))
-                (dst (chromium-dev--rust-project-json-path root))
-                (build (chromium-dev--rust-project-build-path root))
-                ((not (file-exists-p dst))))
-      (if (file-exists-p build)
-          (chromium-dev--ensure-rust-project-symlink root)
-        (chromium-dev-regen-rust-project-json)))))
+(defun chromium-dev--rust-analyzer-resolve (&optional _interactive _project)
+  "Return vendored rust-analyzer contact if in Chromium checkout.
+Used as dynamic CONTACT in `eglot-server-programs'.
+Returns a list like (\"/path/to/rust-analyzer\") suitable for eglot."
+  (let* ((root (ignore-errors (chromium-dev--project-root)))
+         (cr (or root (locate-dominating-file default-directory "rust-project.json")))
+         (prog (if cr
+                   (let ((vendored (expand-file-name
+                                    "third_party/rust-toolchain/bin/rust-analyzer"
+                                    cr)))
+                     (if (file-executable-p vendored) vendored "rust-analyzer"))
+                 "rust-analyzer")))
+    (list prog)))
 
 (defun chromium-dev--setup-eglot-rust-analyzer ()
   "Configure eglot to use vendored rust-analyzer for Chromium.
@@ -190,151 +247,49 @@ Safe to call repeatedly; only adds once."
 ;; Eagerly register vendored resolver so `M-x eglot` works even before `chromium-dev-mode`.
 (chromium-dev--setup-eglot-rust-analyzer)
 
-(defun chromium-dev-setup-remote-index ()
-  "Setup clangd remote-index config for current checkout.
-Creates config.yaml entry for project root.
-Idempotent if already configured."
-  (interactive)
-  (let* ((root (chromium-dev--project-root))
-         (config-file (chromium-dev--clangd-config-path)))
-    (setq chromium-dev--one-time-setup-done t)
-    (if (chromium-dev--remote-index-configured-p root config-file)
-        (message "clangd remote-index already configured for %s" root)
-      (chromium-dev--write-remote-index-config root config-file))))
+(defun chromium-dev--rust-project-build-path (root)
+  "Return path to `rust-project.json' in build dir for ROOT."
+  (expand-file-name "rust-project.json" (expand-file-name chromium-dev-out-dir root)))
 
-(defun chromium-dev--generate-compile-commands (root)
-  "Asynchronously generate `compile_commands.json' in ROOT."
-  (let* ((default-directory root)
-         (cmd (format "%s -p %s > %s"
-                      (shell-quote-argument "tools/clang/scripts/generate_compdb.py")
-                      (shell-quote-argument chromium-dev-out-dir)
-                      (shell-quote-argument "compile_commands.json"))))
-    (message "Generating compile_commands.json...")
-    (start-process-shell-command "chromium-compdb" "*chromium-compdb*" cmd)))
-
-(defun chromium-dev-regen-compile-json ()
-  "Regenerate `compile_commands.json' asynchronously.
-Runs \"tools/clang/scripts/generate_compdb.py -p out/Default >
-compile_commands.json\" in the project root, where `out/Default'
-is `chromium-dev-out-dir'.  Can be invoked manually even if
-generation was already attempted."
-  (interactive)
-  (let ((root (chromium-dev--project-root)))
-    (setq chromium-dev--one-time-setup-done t)
-    (chromium-dev--generate-compile-commands root)))
-
-(defun chromium-dev--maybe-generate-compile-commands ()
-  "Generate `compile_commands.json' if missing, asynchronously."
-  (unless chromium-dev--one-time-setup-done
-    (when-let* ((root (ignore-errors (chromium-dev--project-root)))
-                (compdb (expand-file-name "compile_commands.json" root))
-                ((not (file-exists-p compdb))))
-      (chromium-dev-regen-compile-json))))
-
-(defun chromium-dev--ensure-remote-index ()
-  "Ensure clangd remote-index config exists for current checkout, once."
-  (unless chromium-dev--one-time-setup-done
-    (when-let* ((root (ignore-errors (chromium-dev--project-root)))
-                (config-file (chromium-dev--clangd-config-path))
-                ((not (chromium-dev--remote-index-configured-p root config-file))))
-      (chromium-dev-setup-remote-index))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; chromium-dev-mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun chromium-dev--one-time-setup ()
   "Run one-time setup checks once per session.
 Guards compile_commands, clangd remote-index, rust-project.json and eglot setup."
-  (unless chromium-dev--one-time-setup-done
-    (when-let* ((root (ignore-errors (chromium-dev--project-root))))
-      (setq chromium-dev--one-time-setup-done t)
-      ;; Ensure eglot uses vendored rust-analyzer (idempotent, global).
-      (chromium-dev--setup-eglot-rust-analyzer)
-      (let ((compdb (expand-file-name "compile_commands.json" root))
-            (config-file (chromium-dev--clangd-config-path))
-            (rust-dst (chromium-dev--rust-project-json-path root))
-            (rust-build (chromium-dev--rust-project-build-path root)))
-        (unless (file-exists-p compdb)
-          (chromium-dev--generate-compile-commands root))
-        (unless (chromium-dev--remote-index-configured-p root config-file)
-          (chromium-dev--write-remote-index-config root config-file))
-        ;; Rust: ensure rust-project.json symlink / generation.
-        (unless (file-exists-p rust-dst)
-          (if (file-exists-p rust-build)
-              (chromium-dev--ensure-rust-project-symlink root)
-            (progn
-              (chromium-dev--generate-rust-project-json root)
-              (chromium-dev--ensure-rust-project-symlink root))))))))
+  (when-let* ((root (ignore-errors (chromium-dev--project-root))))
+    ;; Ensure eglot uses vendored rust-analyzer (idempotent, global).
+    (chromium-dev--setup-eglot-rust-analyzer)
+    (let ((compdb (expand-file-name "compile_commands.json" root))
+          (clangd-config-path (chromium-dev--clangd-config-path))
+          (rust-dst (chromium-dev--rust-project-json-path root))
+          (rust-build (chromium-dev--rust-project-build-path root)))
+      (unless (file-exists-p compdb)
+        (chromium-dev-regen-compile-json root))
+      (unless (chromium-dev--remote-index-configured-p root clangd-config-path)
+        (chromium-dev--write-remote-index-config root clangd-config-path))
+      ;; Rust: ensure rust-project.json symlink / generation.
+      (unless (file-exists-p rust-dst)
+        (if (file-exists-p rust-build)
+            (chromium-dev--ensure-rust-project-symlink root)
+          (progn
+            (chromium-dev--generate-rust-project-json root)
+            (chromium-dev--ensure-rust-project-symlink root)))))))
 
-(defun chromium-dev-build (&optional verbose)
-  "Build Chromium with autoninja.
-Pass --quiet to reduce output in `M-x compile'.  With prefix
-argument VERBOSE, omit --quiet for this invocation."
-  (interactive "P")
-  (let* ((default-directory (chromium-dev--project-root))
-         (autoninja (shell-quote-argument (chromium-dev--autoninja-executable)))
-         (cmd (format "%s %s-C %s %s"
-                      autoninja
-                      (if verbose "" "--quiet ")
-                      (shell-quote-argument chromium-dev-out-dir)
-                      "chrome")))
-    (compile cmd)))
-
-(defun chromium-dev-build-blink-unittests (&optional verbose)
-  "Build the Blink unit tests target with autoninja.
-With prefix argument VERBOSE, omit --quiet for this invocation."
-  (interactive "P")
-  (let* ((default-directory (chromium-dev--project-root))
-         (autoninja (shell-quote-argument (chromium-dev--autoninja-executable)))
-         (cmd (format "%s %s-C %s %s"
-                      autoninja
-                      (if verbose "" "--quiet ")
-                      (shell-quote-argument chromium-dev-out-dir)
-                      (shell-quote-argument chromium-dev-blink-target))))
-    (compile cmd)))
-
-(defun chromium-dev-run-blink-unittests (&optional filter)
-  "Run the Blink unit tests binary.
-With FILTER, pass --gtest_filter=FILTER to the test binary.
-When called interactively, prompt for FILTER (empty means run all)."
-  (interactive (list (read-string "GTest filter (empty for all): ")))
-  (let* ((default-directory (chromium-dev--project-root))
-         (binary (format "%s/%s" chromium-dev-out-dir chromium-dev-blink-target))
-         (filter-arg (if (and filter (not (string-empty-p filter)))
-                         (format " --gtest_filter=%s" (shell-quote-argument filter))
-                       ""))
-         (cmd (format "%s%s" binary filter-arg)))
-    (compile cmd)))
-
-(defun chromium-dev-blink-unittests (&optional filter verbose)
-  "Build and run the Blink unit tests.
-Builds `chromium-dev-blink-target' with autoninja, then runs the
-resulting binary.  With FILTER, pass --gtest_filter=FILTER.
-With prefix argument VERBOSE, omit --quiet for the build step.
-
-When called interactively, prompt for FILTER and use the prefix
-argument for VERBOSE."
-  (interactive (list (read-string "GTest filter (empty for all): ")
-                     current-prefix-arg))
-  (let* ((default-directory (chromium-dev--project-root))
-         (autoninja (shell-quote-argument (chromium-dev--autoninja-executable)))
-         (build-cmd (format "%s %s-C %s %s"
-                            autoninja
-                            (if verbose "" "--quiet ")
-                            (shell-quote-argument chromium-dev-out-dir)
-                            (shell-quote-argument chromium-dev-blink-target)))
-         (binary (format "%s/%s" chromium-dev-out-dir chromium-dev-blink-target))
-         (filter-arg (if (and filter (not (string-empty-p filter)))
-                         (format " --gtest_filter=%s" (shell-quote-argument filter))
-                       ""))
-         (run-cmd (format "%s%s" binary filter-arg))
-         (cmd (format "%s && %s" build-cmd run-cmd)))
-    (compile cmd)))
+(defvar chromium-dev--one-time-setup-done nil
+  "Non-nil if one-time setup has run this session.")
 
 (define-minor-mode chromium-dev-mode
   "Stuff for working with Chromium."
   :keymap (let ((keymap (make-sparse-keymap)))
             (define-key keymap (kbd "C-c C-e") #'chromium-dev-build)
-            (define-key keymap (kbd "C-c C-t") #'chromium-dev-blink-unittests)
+            (define-key keymap (kbd "C-c C-t") #'chromium-dev-run)
             keymap)
-  (when chromium-dev-mode
+  (when (and chromium-dev-mode
+             (ignore-errors (chromium-dev--project-root))
+             (not chromium-dev--one-time-setup-done))
+    (setq chromium-dev--one-time-setup-done t)
     (chromium-dev--one-time-setup)))
 
 (provide 'chromium-dev-mode)
