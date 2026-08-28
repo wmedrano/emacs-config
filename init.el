@@ -283,6 +283,10 @@
   "Set `fill-column' to 100."
   (setq fill-column 100))
 
+(use-package rust-mode
+  :ensure t
+  :defer t)
+
 ;; Requires M-x treesit-install-language-grammar for rust
 (use-package rust-ts-mode
   :ensure nil ;; builtin
@@ -370,6 +374,10 @@
 ;; Org/Markdown
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package htmlize
+  :ensure t
+  :defer t)
+
 (use-package org
   :ensure nil ;; builtin
   :defer t
@@ -378,7 +386,14 @@
   (org-html-postamble nil)
   (org-use-sub-superscripts nil)
   (org-export-with-sub-superscripts nil)
-  (org-fontify-special-blocks t))
+  (org-fontify-special-blocks t)
+  (org-html-htmlize-output-type 'css)
+  (org-html-style-default "
+<link rel=\"stylesheet\" href=\"https://wmedrano.dev/css/styles.css\">
+<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">
+<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
+<link href=\"https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,100..1000;1,100..1000&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Sen:wght@400;700;800&display=swap\" rel=\"stylesheet\">
+"))
 
 (use-package markdown-mode
   :ensure t
