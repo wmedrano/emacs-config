@@ -13,7 +13,7 @@
 
 (require 'jj)
 (require 'jj-diff)
-(require 'markdown-mode)
+(require 'markdown-ts-mode)
 
 (defvar-local jj--describe-revision nil
   "Change id of the revision whose description is being edited.
@@ -21,7 +21,7 @@
 Buffer-local in `jj-describe-mode' buffers.")
 (put 'jj--describe-revision 'permanent-local t)
 
-(define-derived-mode jj-describe-mode markdown-mode "jj-describe"
+(define-derived-mode jj-describe-mode markdown-ts-mode "jj-describe"
   "Major mode for editing a jj change description.
 
 The revision being edited is recorded in the buffer-local variable
