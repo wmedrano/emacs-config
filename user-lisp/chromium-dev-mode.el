@@ -255,9 +255,10 @@ Safe to call repeatedly; only adds once."
 ;; chromium-dev-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun chromium-dev--one-time-setup ()
+(defun chromium-dev-setup ()
   "Run one-time setup checks once per session.
 Guards compile_commands, clangd remote-index, rust-project.json and eglot setup."
+  (interactive)
   (when-let* ((root (ignore-errors (chromium-dev--project-root))))
     ;; Ensure eglot uses vendored rust-analyzer (idempotent, global).
     (chromium-dev--setup-eglot-rust-analyzer)
@@ -277,20 +278,12 @@ Guards compile_commands, clangd remote-index, rust-project.json and eglot setup.
             (chromium-dev--generate-rust-project-json root)
             (chromium-dev--ensure-rust-project-symlink root)))))))
 
-(defvar chromium-dev--one-time-setup-done nil
-  "Non-nil if one-time setup has run this session.")
-
 (define-minor-mode chromium-dev-mode
   "Stuff for working with Chromium."
   :keymap (let ((keymap (make-sparse-keymap)))
             (define-key keymap (kbd "C-c C-e") #'chromium-dev-build)
             (define-key keymap (kbd "C-c C-t") #'chromium-dev-run)
-            keymap)
-  (when (and chromium-dev-mode
-             (ignore-errors (chromium-dev--project-root))
-             (not chromium-dev--one-time-setup-done))
-    (setq chromium-dev--one-time-setup-done t)
-    (chromium-dev--one-time-setup)))
+            keymap)))
 
 (provide 'chromium-dev-mode)
 ;;; chromium-dev-mode.el ends here
