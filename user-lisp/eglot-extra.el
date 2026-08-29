@@ -32,10 +32,10 @@
     (eglot-format-buffer)))
 
 ;;;###autoload
-(defun eglot-autofix-next (&optional arg)
+(defun eglot-autofix-all ()
   "Fix the next error or warning."
-  (interactive "p")
-  (dotimes (_ (or arg 1))
+  (interactive)
+  (dotimes (_ 100)
     (flymake-goto-next-error)
     (call-interactively #'eglot-code-actions)
     (save-buffer)

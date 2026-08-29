@@ -283,7 +283,7 @@ Guards compile_commands, clangd remote-index, rust-project.json and eglot setup.
   :keymap (let ((keymap (make-sparse-keymap)))
             (define-key keymap (kbd "C-c C-e") #'chromium-dev-build)
             (define-key keymap (kbd "C-c C-t") #'chromium-dev-run)
-            keymap)))
+            keymap))
 
 (provide 'chromium-dev-mode)
 ;;; chromium-dev-mode.el ends here

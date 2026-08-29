@@ -56,9 +56,8 @@
 ;; Packages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(when (< emacs-major-version 32)
-  (add-to-list 'load-path
-               (expand-file-name "user-lisp" user-emacs-directory)))
+(add-to-list 'load-path
+             (expand-file-name "user-lisp" user-emacs-directory))
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -235,6 +234,7 @@
 (use-package eglot
   :ensure t
   :defer t
+  :custom (eglot-extend-to-xref t)
   :commands (eglot
              eglot-code-actions
              eglot-ensure
@@ -253,7 +253,7 @@
 (use-package eglot-extra
   :ensure nil ;; Defined in user-lisp/eglot-extra.el
   :defer t
-  :commands (eglot-autofix-next)
+  :commands (eglot-autofix-all)
   :autoload (eglot-format-on-save-mode eglot-extra-disable-inlay-hints))
 
 (use-package clang-format
@@ -337,6 +337,13 @@
   :config
   (add-hook 'cargo-toml-mode-hook #'cargo-minor-mode))
 
+;; Ensure Cargo.toml takes precedence over generic .toml (auto-mode-alist is
+;; first-match). `add-to-list' won't move an existing entry, so delete then
+;; push to front to guarantee precedence even if autoloads added it earlier.
+(setq auto-mode-alist
+      (cons '("/Cargo\\.toml\\'" . cargo-toml-mode)
+            (assoc-delete-all "/Cargo\\.toml\\'" auto-mode-alist)))
+
 ;; Defined in user-lisp/
 (use-package disasm
   :ensure nil ;; Defined in user-lisp/
@@ -412,6 +419,7 @@
   (compilation-skip-threshold 2)
   (compile-command           "")
   :config
+  (global-set-key (kbd "<f5>") #'recompile)
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
   (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
 
@@ -585,6 +593,7 @@
     (define-key leader-map (kbd "ed") #'flymake-show-buffer-diagnostics)
     (define-key leader-map (kbd "eD") #'flymake-show-project-diagnostics)
     (define-key leader-map (kbd "ee") #'consult-flymake)
+    (define-key leader-map (kbd "ef") #'eglot-autofix-all)
     (define-key leader-map (kbd "ei") #'eglot-inlay-hints-mode)
     (define-key leader-map (kbd "er") #'eglot-rename)
     (define-key leader-map (kbd "es") #'eglot)
