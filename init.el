@@ -214,7 +214,7 @@
                       :weight 'bold)
   (set-face-attribute 'default nil :font "Inconsolata-14")
   ;; Makes emojis have the same height as the monospace font 😀
-  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 18)))
+  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 16)))
 
 (use-package doom-modeline
   :ensure t
