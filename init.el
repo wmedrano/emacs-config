@@ -23,10 +23,10 @@
  '(inhibit-startup-screen t)
  '(make-backup-files nil)
  '(package-selected-packages
-   '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet
-                corfu diff-hl doom-modeline dracula-theme eat eglot evil
-                evil-commentary gn-mode markdown-mode orderless posframe rg
-                smartparens ttx-mode vertico vundo yasnippet))
+   '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
+                diff-hl doom-modeline dracula-theme eat eglot evil
+                evil-commentary gn-mode markdown-mode markdown-ts-mode orderless
+                posframe rg smartparens ttx-mode vertico vundo yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
@@ -401,6 +401,10 @@
 <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
 <link href=\"https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,100..1000;1,100..1000&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Sen:wght@400;700;800&display=swap\" rel=\"stylesheet\">
 "))
+
+(use-package markdown-ts-mode
+  :ensure t
+  :defer t)
 
 (use-package markdown-mode
   :ensure t

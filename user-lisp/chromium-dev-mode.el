@@ -102,7 +102,7 @@ for completion on subsequent invocations."
                                      (shell-quote-argument target)))
           (run-cmd           (format "%s%s" binary args-str))
           (cmd (string-join (list build-cmd run-cmd)
-                            " &&")))
+                            " && ")))
     (compile cmd)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
