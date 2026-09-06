@@ -4,6 +4,7 @@
 custom.el
 projects
 recentf
+tramp
 user-lisp/.user-lisp-autoloads.el
 
 .hermes/
