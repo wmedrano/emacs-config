@@ -880,7 +880,7 @@ Overwrites the contents if they exist."
     (as-temp-buffer (jj-describe "@")
       (as-temp-buffer (jj-describe-diff)
         (test-wait-for-process)
-        (should (eq major-mode 'diff-mode))
+        (should (eq major-mode 'jj-diff-mode))
         (should (equal (buffer-string)
                        "diff --git a/file.txt b/file.txt
 new file mode 100644\nindex 0000000000..86436d0dd5
@@ -896,7 +896,7 @@ new file mode 100644\nindex 0000000000..86436d0dd5
     (as-temp-buffer (jj-describe "@")
       (as-temp-buffer (jj-describe-diff)
         (test-wait-for-process)
-        (should (eq major-mode 'diff-mode))
+        (should (eq major-mode 'jj-diff-mode))
         (should (equal (buffer-string) ""))))))
 
 (ert-deftest describe-diff-outside-describe-buffer-is-error ()
@@ -917,7 +917,8 @@ new file mode 100644\nindex 0000000000..86436d0dd5
     (as-temp-buffer (jj-diff-at "@")
       (test-wait-for-process)
       (should (string-prefix-p "*jj-diff*" (buffer-name)))
-      (should (derived-mode-p 'diff-mode)))))
+      (should (derived-mode-p 'diff-mode))
+      (should (derived-mode-p 'jj-diff-mode)))))
 
 (ert-deftest diff-at-shows-diff-of-revision ()
   (with-test-repo
@@ -928,7 +929,7 @@ new file mode 100644\nindex 0000000000..86436d0dd5
     (test-sh "jj bookmark set other")
     (as-temp-buffer (jj-diff-at "target")
       (test-wait-for-process)
-      (should (eq major-mode 'diff-mode))
+      (should (eq major-mode 'jj-diff-mode))
       (should (equal "diff --git a/file-a.txt b/file-a.txt
 new file mode 100644
 index 0000000000..2ceb84c5b3
@@ -942,7 +943,7 @@ index 0000000000..2ceb84c5b3
   (with-test-repo
     (as-temp-buffer (jj-diff-at "@")
       (test-wait-for-process)
-      (should (eq major-mode 'diff-mode))
+      (should (eq major-mode 'jj-diff-mode))
       (should (equal (buffer-string) "")))))
 
 (ert-deftest diff-at-on-unresolvable-revision-shows-error-in-buffer ()
@@ -950,6 +951,7 @@ index 0000000000..2ceb84c5b3
     (as-temp-buffer (jj-diff-at "no-such-revision")
       (test-wait-for-process)
       (should-not (derived-mode-p 'diff-mode))
+      (should-not (derived-mode-p 'jj-diff-mode))
       (should (equal "Error: Revision `no-such-revision` doesn't exist\n"
                      (buffer-string))))))
 
@@ -974,7 +976,8 @@ index 0000000000..2ceb84c5b3
     (as-temp-buffer (jj-diff-from "root()")
       (test-wait-for-process)
       (should (string-prefix-p "*jj-diff*" (buffer-name)))
-      (should (derived-mode-p 'diff-mode)))))
+      (should (derived-mode-p 'diff-mode))
+      (should (derived-mode-p 'jj-diff-mode)))))
 
 (ert-deftest diff-from-shows-diff-of-revision ()
   (with-test-repo
@@ -989,7 +992,7 @@ index 0000000000..2ceb84c5b3
     (test-write-file "file-c.txt" "this one too\n")
     (as-temp-buffer (jj-diff-from "rev1")
       (test-wait-for-process)
-      (should (eq major-mode 'diff-mode))
+      (should (eq major-mode 'jj-diff-mode))
       (should (equal "diff --git a/file-b.txt b/file-b.txt
 new file mode 100644
 index 0000000000..e45c9c2666
@@ -1022,7 +1025,7 @@ index 0000000000..b28a266836
     ;; test
     (as-temp-buffer (jj-diff-from "rev1" "rev2")
       (test-wait-for-process)
-      (should (eq major-mode 'diff-mode))
+      (should (eq major-mode 'jj-diff-mode))
       (should (equal "diff --git a/file-b.txt b/file-b.txt
 new file mode 100644
 index 0000000000..e019be006c
@@ -1036,7 +1039,7 @@ index 0000000000..e019be006c
   (with-test-repo
     (as-temp-buffer (jj-diff-from "@")
       (test-wait-for-process)
-      (should (eq major-mode 'diff-mode))
+      (should (eq major-mode 'jj-diff-mode))
       (should (equal (buffer-string) "")))))
 
 (ert-deftest diff-from-on-unresolvable-revision-shows-error-in-buffer ()
@@ -1044,6 +1047,7 @@ index 0000000000..e019be006c
     (as-temp-buffer (jj-diff-from "no-such-revision")
       (test-wait-for-process)
       (should-not (derived-mode-p 'diff-mode))
+      (should-not (derived-mode-p 'jj-diff-mode))
       (should (equal "Error: Revision `no-such-revision` doesn't exist\n"
                      (buffer-string))))))
 
@@ -1055,3 +1059,86 @@ index 0000000000..e019be006c
       (unwind-protect
           (should (eq diff-buffer (current-buffer)))
         (kill-buffer diff-buffer)))))
+
+(ert-deftest diff-at-reuses-existing-buffer-in-same-repo ()
+  (with-test-repo
+    (test-write-file "file-a.txt" "first\n")
+    (test-sh "jj bookmark set rev1"
+             "jj new")
+    (test-write-file "file-b.txt" "second\n")
+    (let ((buf1 (jj-diff-at "rev1")))
+      (test-wait-for-process buf1)
+      (unwind-protect
+          (let ((buf2 (jj-diff-at "@")))
+            (test-wait-for-process buf2)
+            (should (eq buf1 buf2))
+            (with-current-buffer buf1
+              (should (string-match-p "file-b\\.txt" (buffer-string)))
+              (should-not (string-match-p "file-a\\.txt" (buffer-string)))))
+        (when (buffer-live-p buf1)
+          (kill-buffer buf1))))))
+
+(ert-deftest diff-at-creates-new-buffer-when-reuse-disabled ()
+  (with-test-repo
+    (let ((jj-diff-reuse-buffer nil))
+      (test-write-file "file.txt" "content\n")
+      (let ((buf1 (jj-diff-at "@")))
+        (test-wait-for-process buf1)
+        (unwind-protect
+            (let ((buf2 (jj-diff-at "@")))
+              (test-wait-for-process buf2)
+              (unwind-protect
+                  (progn
+                    (should-not (eq buf1 buf2))
+                    (should (buffer-live-p buf1))
+                    (should (buffer-live-p buf2)))
+                (when (buffer-live-p buf2)
+                  (kill-buffer buf2))))
+          (when (buffer-live-p buf1)
+            (kill-buffer buf1)))))))
+
+(ert-deftest diff-at-does-not-reuse-buffer-across-different-repos ()
+  (let ((repo1 (make-temp-file "jj-test-repo1" t))
+        (repo2 (make-temp-file "jj-test-repo2" t))
+        buf1 buf2)
+    (unwind-protect
+        (progn
+          (with-temp-buffer
+            (setq default-directory repo1)
+            (test-sh "jj git init")
+            (test-write-file (expand-file-name "file1.txt" repo1) "repo1\n")
+            (setq buf1 (jj-diff-at "@"))
+            (test-wait-for-process buf1))
+          (with-temp-buffer
+            (setq default-directory repo2)
+            (test-sh "jj git init")
+            (test-write-file (expand-file-name "file2.txt" repo2) "repo2\n")
+            (setq buf2 (jj-diff-at "@"))
+            (test-wait-for-process buf2))
+          (should-not (eq buf1 buf2)))
+      (when (and buf1 (buffer-live-p buf1))
+        (kill-buffer buf1))
+      (when (and buf2 (buffer-live-p buf2))
+        (kill-buffer buf2))
+      (delete-directory repo1 t)
+      (delete-directory repo2 t))))
+
+(ert-deftest diff-at-error-in-reused-buffer-resets-mode ()
+  (with-test-repo
+    (test-write-file "file.txt" "content\n")
+    (let ((buf (jj-diff-at "@")))
+      (test-wait-for-process buf)
+      (unwind-protect
+          (progn
+            (should (derived-mode-p 'jj-diff-mode))
+            ;; Now trigger an error in the reused buffer
+            (jj-diff-at "no-such-revision")
+            (test-wait-for-process buf)
+            (should (eq buf (current-buffer)))
+            (with-current-buffer buf
+              (should-not (derived-mode-p 'jj-diff-mode))
+              (should-not (derived-mode-p 'diff-mode))
+              (should (string-match-p "Error: Revision `no-such-revision` doesn't exist"
+                                     (buffer-string)))))
+        (when (buffer-live-p buf)
+          (kill-buffer buf))))))
