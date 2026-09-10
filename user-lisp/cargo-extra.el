@@ -47,10 +47,14 @@
   (cargo-cmd "nextest run"))
 
 ;;;###autoload
-(defun cargo-doc ()
-  "Run cargo doc at the project root."
-  (interactive)
-  (cargo-cmd "doc"))
+(defun cargo-doc (&optional arg)
+  "Run cargo doc at the project root.
+
+With ARG, pass the \"--open\" flag."
+  (interactive "P")
+  (cargo-cmd
+   (if arg "doc --open" "doc")))
+
 
 ;;;###autoload
 (defun cargo-clippy ()

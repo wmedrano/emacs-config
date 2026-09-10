@@ -39,7 +39,7 @@
     (flymake-goto-next-error)
     (call-interactively #'eglot-code-actions)
     (save-buffer)
-    (sit-for 0.1)))
+    (sit-for 0.2)))
 
 ;;;###autoload
 (defun eglot-extra-disable-inlay-hints ()

@@ -26,7 +26,8 @@
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
                 diff-hl doom-modeline dracula-theme eat eglot evil
                 evil-commentary gn-mode markdown-mode markdown-ts-mode orderless
-                posframe rg smartparens ttx-mode vertico vundo yasnippet))
+                posframe rg smartparens ttx-mode vertico vundo wgsl-mode
+                yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
@@ -309,6 +310,13 @@
   :commands (cargo-minor-mode
              cargo-check cargo-build cargo-criterion cargo-test cargo-doc
              cargo-clippy cargo-fix))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GPU Languages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package wgsl-mode
+  :ensure t
+  :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Aux Languages
