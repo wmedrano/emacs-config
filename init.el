@@ -422,6 +422,14 @@
 ;; Shell/Compilation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setenv "JJ_PAGER" "cat")
+(defun compilation-maybe-enable-cargo-minor-mode ()
+  "Enable `cargo-minor-mode' for compilation commands starting with cargo."
+  (when (and compilation-arguments
+             (string-match-p
+              "\\`cargo\\(?:\\s-\\|\\'\\)"
+              (car compilation-arguments)))
+    (cargo-minor-mode)))
+
 (use-package compile
   :ensure nil ;; builtin
   :defer t
@@ -432,6 +440,7 @@
   (compile-command           "")
   :config
   (global-set-key (kbd "<f5>") #'recompile)
+  (add-hook 'compilation-mode-hook #'compilation-maybe-enable-cargo-minor-mode)
   (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
   (add-hook 'compilation-filter-hook #'ansi-osc-compilation-filter))
 
