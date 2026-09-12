@@ -25,9 +25,9 @@
  '(package-selected-packages
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
                 diff-hl doom-modeline dracula-theme eat eglot evil
-                evil-commentary gn-mode markdown-mode markdown-ts-mode orderless
-                posframe rg smartparens ttx-mode vertico vundo wgsl-mode
-                yasnippet))
+                evil-commentary gn-mode htmlize markdown-mode markdown-ts-mode
+                orderless posframe rg rust-mode smartparens ttx-mode vertico
+                vundo wgsl-mode yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
@@ -566,6 +566,9 @@
   (define-key evil-motion-state-map (kbd "gx") #'xref-find-references)
   (define-key evil-normal-state-map (kbd "gx") #'xref-find-references)
   ;; Leader (SPC)
+  (with-eval-after-load 'dired
+    (defvar dired-mode-map)
+    (define-key dired-mode-map (kbd "SPC") nil))
   (let ((leader-map (make-sparse-keymap)))
     (define-key special-mode-map      (kbd "SPC") leader-map)
     (define-key evil-motion-state-map (kbd "SPC") leader-map)
