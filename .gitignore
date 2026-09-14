@@ -2,12 +2,14 @@
 .#*
 .org-id-locations
 custom.el
+custom.el.backup
 projects
 projects.eld
 recentf
 tramp
 user-lisp/.user-lisp-autoloads.el
 
+.cache/
 .hermes/
 /.agent-shell/
 agent-shell-data/

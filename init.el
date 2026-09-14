@@ -64,7 +64,9 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (use-package posframe
   :ensure t
-  :defer t)
+  :defer t
+  :commands (posframe-delete-all)
+  :config (posframe-delete-all))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Completions
@@ -91,8 +93,7 @@
   (xref-show-xrefs-function       #'consult-xref)
   (xref-show-definitions-function #'consult-xref)
   :init
-  (global-set-key (kbd "C-x b") #'consult-buffer)
-  (global-set-key (kbd "M-y")   #'consult-yank-pop))
+  (global-set-key (kbd "C-x b") #'consult-buffer))
 
 (use-package orderless
   :ensure t
@@ -145,7 +146,9 @@
 (use-package paths-extra
   :ensure nil ;; Defined under user-lisp/
   :defer t
-  :commands (copy-filename copy-filename-absolute))
+  :commands (copy-filename
+             copy-filename-absolute
+             project-insert-file-path))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window management
@@ -215,7 +218,7 @@
                       :weight 'bold)
   (set-face-attribute 'default nil :font "Inconsolata-14")
   ;; Makes emojis have the same height as the monospace font 😀
-  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 16)))
+  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 24)))
 
 (use-package doom-modeline
   :ensure t
@@ -550,6 +553,7 @@
   :config
   (evil-mode 1)
   (evil-commentary-mode 1)
+  (global-set-key (kbd "M-y") #'consult-yank-pop)
   ;; Modes
   (add-to-list 'evil-motion-state-modes 'diff-mode)
   ;; Motion
@@ -582,7 +586,10 @@
     (define-key special-mode-map      (kbd "SPC") leader-map)
     (define-key evil-motion-state-map (kbd "SPC") leader-map)
     (define-key leader-map (kbd "b") #'consult-buffer)
+    (define-key leader-map (kbd "a") (make-sparse-keymap))
     (define-key leader-map (kbd "p") project-prefix-map)
+    (with-eval-after-load 'project
+      (define-key project-prefix-map (kbd "i") #'project-insert-file-path))
     (define-key leader-map (kbd "w") #'ace-window)
     (define-key leader-map (kbd "r") (make-sparse-keymap))
     (define-key leader-map (kbd "ra") #'jj-abandon)
@@ -590,6 +597,7 @@
     (define-key leader-map (kbd "rB") #'jj-bookmark-delete)
     (define-key leader-map (kbd "rd") #'jj-diff-at)
     (define-key leader-map (kbd "rD") #'jj-diff-from)
+
     (define-key leader-map (kbd "rf") #'jj-git-fetch)
     (define-key leader-map (kbd "rm") #'jj-describe)
     (define-key leader-map (kbd "re") #'jj-edit)
@@ -626,7 +634,7 @@
     (define-key leader-map (kbd "nn") #'consult-yasnippet)
     (define-key leader-map (kbd "ns") #'sort-lines)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Extra private stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (let ((custom-file (expand-file-name "custom.el" user-emacs-directory)))

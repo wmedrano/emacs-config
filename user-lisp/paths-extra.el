@@ -26,5 +26,31 @@ Otherwise, the path is relative to `default-directory'."
     (kill-new file)
     (message "Copied: %s" file)))
 
+;;;###autoload
+(defun project-insert-file-path ()
+  "Select a file under the current root and insert its path at point.
+In a project, use `project-files'.  Outside a project, use lazy file-name
+completion rooted at `default-directory' rather than recursively enumerating
+the directory.  This keeps the fallback usable even in large directories
+such as the home directory."
+  (interactive)
+  (let* ((project (project-current))
+         (root (file-name-as-directory
+                (expand-file-name (if project
+                                      (project-root project)
+                                    default-directory))))
+         (file (if project
+                   (completing-read "Project file: "
+                                   (project-files project)
+                                   nil t)
+                 ;; `read-file-name' completes directories lazily and does
+                 ;; not first build a recursive list of their contents.
+                 (read-file-name "File under current directory: "
+                                 root nil t)))
+         (absolute (expand-file-name file root)))
+    (unless (file-in-directory-p absolute root)
+      (user-error "File is outside the current root: %s" file))
+    (insert (file-relative-name absolute root))))
+
 (provide 'paths-extra)
 ;;; paths-extra.el ends here
