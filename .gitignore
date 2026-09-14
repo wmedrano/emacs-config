@@ -2,6 +2,7 @@
 .#*
 .org-id-locations
 custom.el
+custom.el.backup
 projects
 projects.eld
 recentf
