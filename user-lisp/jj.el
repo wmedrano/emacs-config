@@ -400,6 +400,15 @@ When called interactively, prompt with `completing-read', defaulting to \"@\"."
   (jj-run-command `("git" "push" "-r" ,rev)))
 
 ;;;###autoload
+(defun jj-upload (rev)
+  "Upload revision REV for review.
+
+When called interactively, prompt with `completing-read', defaulting to \"@\".
+Runs `jj upload' synchronously and displays its output."
+  (interactive (list (jj-read-revision "jj upload" "@")))
+  (jj-run-command `("upload" "-r" ,rev)))
+
+;;;###autoload
 (defun jj-git-fetch ()
   "Run jj git fetch."
   (interactive)

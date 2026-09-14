@@ -298,7 +298,7 @@
   (add-hook 'rust-ts-mode-hook #'eglot-ensure)
   (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
   (add-hook 'rust-ts-mode-hook #'set-fill-column-100)
-  (add-hook 'rust-ts-mode-hook #'cargo-minor-mode)
+  (add-hook 'rust-ts-mode-hook #'cargo-minor-mode-maybe-enable)
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
   (define-key rust-ts-mode-map (kbd "C-c C-l") #'cargo-clippy)
   (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
@@ -307,7 +307,7 @@
   :ensure nil ;; Defined in user-lisp/
   :defer t
   :autoload (cargo-cmd)
-  :commands (cargo-minor-mode
+  :commands (cargo-minor-mode cargo-minor-mode-maybe-enable
              cargo-check cargo-build cargo-criterion cargo-test cargo-doc
              cargo-clippy cargo-fix))
 
@@ -485,7 +485,7 @@
   :defer t
   :commands
   (jj-new jj-edit
-          jj-git-push jj-git-fetch
+          jj-git-push jj-git-fetch jj-upload
           jj-abandon jj-duplicate
           jj-rebase jj-rebase-onto
           jj-bookmark-set jj-bookmark-delete jj-bookmark-track))
@@ -596,6 +596,7 @@
     (define-key leader-map (kbd "rn") #'jj-new)
     (define-key leader-map (kbd "rp") #'jj-git-push)
     (define-key leader-map (kbd "rt") #'jj-bookmark-track)
+    (define-key leader-map (kbd "ru") #'jj-upload)
     (define-key leader-map (kbd "h") (make-sparse-keymap))
     (define-key leader-map (kbd "hK") #'unhighlight-regexp)
     (define-key leader-map (kbd "he") #'eldoc)

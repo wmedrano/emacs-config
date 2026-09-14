@@ -78,5 +78,18 @@ With ARG, pass the \"--open\" flag."
             (define-key keymap (kbd "C-c C-h") #'cargo-doc)
             keymap))
 
+(defvar cargo-minor-mode-inhibit-function nil
+  "Function of no arguments called in the buffer being set up.
+When it returns non-nil, `cargo-minor-mode-maybe-enable' leaves
+`cargo-minor-mode' off.  Useful for build environments that do not
+use Cargo, where the mode's key bindings only get in the way.")
+
+;;;###autoload
+(defun cargo-minor-mode-maybe-enable ()
+  "Enable `cargo-minor-mode' unless `cargo-minor-mode-inhibit-function' vetoes it."
+  (unless (and (functionp cargo-minor-mode-inhibit-function)
+               (funcall cargo-minor-mode-inhibit-function))
+    (cargo-minor-mode 1)))
+
 (provide 'cargo-extra)
 ;;; cargo-extra.el ends here
