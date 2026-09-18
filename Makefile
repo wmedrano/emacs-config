@@ -3,12 +3,16 @@ ELPA_DIRS := $(shell for d in elpa/*/; do if [ "$$d" = "elpa/archives/" ] || [ "
 LOAD_PATH := $(addprefix -L ,$(ELPA_DIRS)) -L user-lisp
 
 JJ_FILES := user-lisp/jj.el user-lisp/jj-diff.el user-lisp/jj-describe.el
-CHECKDOC_FILES := $(JJ_FILES) user-lisp/eglot-extra.el user-lisp/cargo-extra.el user-lisp/disasm.el user-lisp/monorepo.el user-lisp/paths-extra.el
+TAU_FILES := user-lisp/tau-agent-core.el user-lisp/tau-agent-auth.el user-lisp/tau-agent-transport.el user-lisp/tau-agent-tools.el user-lisp/tau-agent-session.el user-lisp/tau-agent.el
+CHECKDOC_FILES := $(JJ_FILES) user-lisp/eglot-extra.el user-lisp/cargo-extra.el user-lisp/disasm.el user-lisp/monorepo.el user-lisp/paths-extra.el $(TAU_FILES)
 BYTE_COMPILE_FILES := $(CHECKDOC_FILES)
 
-.PHONY: all jj-test checkdoc byte-compile test
+.PHONY: all jj-test tau-test checkdoc byte-compile test
 
-all: jj-test checkdoc byte-compile
+all: jj-test tau-test checkdoc byte-compile
+
+tau-test:
+	$(EMACS) -Q --batch --eval '(setq load-prefer-newer t)' -L user-lisp $(addprefix -L ,$(wildcard elpa/markdown-mode-*/)) -l user-lisp/tau-agent-tests.el -l user-lisp/tau-agent-tools-tests.el -f ert-run-tests-batch-and-exit
 
 jj-test:
 	$(EMACS) --batch $(LOAD_PATH) -l ert -l jj -l jj-diff -l jj-describe -l user-lisp/jj-tests.el -f ert-run-tests-batch-and-exit
@@ -19,4 +23,4 @@ checkdoc:
 byte-compile:
 	tmpdir=$$(mktemp -d); $(EMACS) --batch $(LOAD_PATH) --eval "(setq byte-compile-error-on-warn t)" --eval "(setq byte-compile-dest-file-function (lambda (f) (expand-file-name (concat (file-name-nondirectory (file-name-sans-extension f)) \".elc\") \"$$tmpdir\")))" -f batch-byte-compile $(BYTE_COMPILE_FILES); st=$$?; rm -rf "$$tmpdir"; exit $$st
 
-test: jj-test
+test: jj-test tau-test

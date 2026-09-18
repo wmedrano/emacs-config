@@ -9,6 +9,7 @@ recentf
 tramp
 user-lisp/.user-lisp-autoloads.el
 
+.cache/
 .hermes/
 /.agent-shell/
 agent-shell-data/
