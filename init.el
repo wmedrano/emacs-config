@@ -52,6 +52,7 @@
 (setq-default indent-tabs-mode nil)
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+(global-visual-line-mode 1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Packages
@@ -168,6 +169,12 @@
       (slot . 0)
       (window-height . 0.2)
       (window-parameters . ((no-other-window . t))))
+     ("\\`\\*Compile-Log\\*\\'"
+      (display-buffer-in-side-window)
+      (side . bottom)
+      (slot . 0)
+      (window-height . 0.2)
+      (window-parameters . ((no-other-window . t))))
      ((or (derived-mode . flymake-diagnostics-buffer-mode)
           (derived-mode . flymake-project-diagnostics-mode))
       (display-buffer-in-side-window)
@@ -220,9 +227,15 @@
   (set-face-attribute 'line-number-current-line nil
                       :inherit 'highlight
                       :weight 'bold)
-  (set-face-attribute 'default nil :font "Inconsolata-14")
+  (set-face-attribute 'default nil :font "Inconsolata" :height 140)
   ;; Makes emojis have the same height as the monospace font 😀
-  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 18)))
+  ;; The 150% scaled setup needs a larger emoji font.
+  (set-fontset-font
+   t 'emoji
+   (font-spec :family "Noto Color Emoji"
+              :size (if (string= (system-name) "night-train")
+                        26
+                      18))))
 
 (use-package doom-modeline
   :ensure t
@@ -549,30 +562,54 @@ Uses buffer name if not in a project."
   (gptel-use-context 'user)
   :config
   (add-hook 'gptel-mode-hook #'gptel-highlight-mode)
-  (define-key gptel-mode-map (kbd "C-c C-k") #'gptel-abort)
-  (define-key gptel-mode-map (kbd "C-c C-a") #'gptel-send)
-  (define-key gptel-mode-map (kbd "C-c C-c") #'gptel-menu))
+  (define-key gptel-mode-map (kbd "C-c k") #'gptel-abort)
+  (define-key gptel-mode-map (kbd "C-c SPC") #'gptel-send)
+  (define-key gptel-mode-map (kbd "C-c c") #'gptel-menu))
+
+(use-package gptel-commands
+  :ensure nil ;; Defined under user-lisp/
+  :after gptel
+  :commands (gptel-submit gptel-model)
+  :bind (:map gptel-mode-map
+              ("C-c RET" . gptel-submit)
+              ("C-c i" . project-insert-file-path)
+              ("C-c m" . gptel-model)
+              ("C-c c" . gptel-menu)
+              ("C-c e" . gptel-shell-insert)))
 
 (use-package gptel-openai-oauth
   :ensure nil ;; Part of gptel
   :after gptel
   :functions (gptel-make-openai-oauth)
   :config
-  (when (file-directory-p (expand-file-name "~/.codex"))
-    (setq gptel-backend (gptel-make-openai-oauth "agent"
-                          :request-params '(:reasoning (:effort "medium"))
-                          :models '(gpt-5.6-luna gpt-6-astra))
-          gptel-model 'gpt-5.6-luna)))
+  (defconst gptel-openai-backend
+    (when (file-directory-p (expand-file-name "~/.codex"))
+      (gptel-make-openai-oauth "agent"
+        :request-params '(:reasoning (:effort "medium"))
+        :models '(gpt-6-luna gpt-6-sol gpt-6-astra))))
+  (when gptel-openai-backend
+    (setq gptel-backend gptel-openai-backend
+          gptel-model 'gpt-6-luna)))
+
+(use-package gptel-ops
+  :ensure nil ;; Defined under user-lisp/
+  :after gptel)
 
 (use-package gptel-agent-tools
   :ensure nil ;; Defined under user-lisp/
   :after gptel
-  :defines (gptel-agent-tools-bash)
+  :defines (gptel-agent-tools-bash gptel-agent-tools-read
+            gptel-agent-tools-symbols gptel-agent-tools-edit
+            gptel-agent-tools-elisp)
   :functions (gptel-agent-tools-default-system-prompt)
   :config
   (setq-default
    gptel-system-prompt #'gptel-agent-tools-default-system-prompt
-   gptel-tools (list gptel-agent-tools-bash)))
+   gptel-tools (list gptel-agent-tools-bash
+                     gptel-agent-tools-read
+                     gptel-agent-tools-symbols
+                     gptel-agent-tools-edit
+                     gptel-agent-tools-elisp)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybindings
@@ -648,6 +685,7 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "b") #'consult-buffer)
     (define-key leader-map (kbd "a") (make-sparse-keymap))
     (define-key leader-map (kbd "p") project-prefix-map)
+    (define-key leader-map (kbd "x") #'project-execute-extended-command)
     (with-eval-after-load 'project
       (define-key project-prefix-map (kbd "i") #'project-insert-file-path))
     (define-key leader-map (kbd "w") #'ace-window)
@@ -657,7 +695,6 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "rB") #'jj-bookmark-delete)
     (define-key leader-map (kbd "rd") #'jj-diff-at)
     (define-key leader-map (kbd "rD") #'jj-diff-from)
-
     (define-key leader-map (kbd "rf") #'jj-git-fetch)
     (define-key leader-map (kbd "rm") #'jj-describe)
     (define-key leader-map (kbd "re") #'jj-edit)
