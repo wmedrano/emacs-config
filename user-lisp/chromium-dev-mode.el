@@ -16,6 +16,11 @@
 (defvar eglot-server-programs)
 (defvar eglot-workspace-configuration)
 
+(defgroup chromium-dev nil
+  "Tools for Chromium development."
+  :prefix "chromium-dev-"
+  :group 'tools)
+
 (defcustom chromium-dev-out-dir "out/Default"
   "Directory for Chromium build output, relative to project root."
   :type 'string
@@ -31,6 +36,14 @@
   :type '(repeat string)
   :group 'chromium-dev)
 
+(defcustom chromium-dev-remote-index-server "linux.clangd-index.chromium.org:5900"
+  "Clangd remote index server address for Chromium."
+  :type 'string
+  :group 'chromium-dev)
+
+(defvar chromium-dev--target-history nil
+  "History list of previously selected Chromium targets.")
+
 (defun chromium-dev--project-root ()
   "Return the current project root or signal a `user-error'."
   (let ((project (project-current)))
@@ -38,9 +51,17 @@
       (user-error "Not in a project"))
     (project-root project)))
 
-(defun chromium-dev--read-target ()
-  "Read a chromium target."
-  (completing-read "Target: " chromium-dev-targets))
+(defun chromium-dev--read-target (&optional prompt)
+  "Read a Chromium target with completion and history.
+PROMPT defaults to \"Target\"."
+  (let ((default (car chromium-dev--target-history)))
+    (completing-read (format "%s%s: "
+                             (or prompt "Target")
+                             (if default (format " (default %s)" default) ""))
+                     chromium-dev-targets
+                     nil nil nil
+                     'chromium-dev--target-history
+                     default)))
 
 (defvar chromium-dev--run-args-history nil
   "Alist mapping TARGET string to list of past ARGS strings.
@@ -58,9 +79,7 @@ Most recent first, per target.  Used for history in `chromium-dev-run'.")
 Keeps most recent first, de-duplicated, capped at 20 entries."
   (when (and args (not (string-empty-p args)))
     (let* ((old (alist-get target chromium-dev--run-args-history nil nil #'equal))
-           (new (cons args (delete args (copy-sequence old)))))
-      (when (> (length new) 20)
-        (setcdr (nthcdr 19 new) nil))
+           (new (take 20 (cons args (remove args old)))))
       (setf (alist-get target chromium-dev--run-args-history nil nil #'equal) new))))
 
 (defun chromium-dev--read-args (target)
@@ -70,6 +89,22 @@ Keeps most recent first, de-duplicated, capped at 20 entries."
     (completing-read (format "Args for %s (empty for none): " target)
                      hist nil nil nil 'chromium-dev--run-args-temp-history nil)))
 
+(defun chromium-dev--run-async (name buf-name cmd &optional on-success)
+  "Run CMD asynchronously in process named NAME with output in BUF-NAME.
+Calls ON-SUCCESS when the process exits with code 0."
+  (let ((proc (start-process-shell-command name buf-name cmd)))
+    (set-process-sentinel
+     proc
+     (lambda (p _event)
+       (when (memq (process-status p) '(exit signal))
+         (if (zerop (process-exit-status p))
+             (progn
+               (message "%s: finished successfully." name)
+               (when on-success (funcall on-success)))
+           (message "%s failed with exit code %s (see buffer %s)"
+                    name (process-exit-status p) buf-name)))))))
+
+;;;###autoload
 (defun chromium-dev-build (target)
   "Build TARGET with autoninja."
   (interactive (list (chromium-dev--read-target)))
@@ -79,8 +114,9 @@ Keeps most recent first, de-duplicated, capped at 20 entries."
                       (shell-quote-argument target))))
     (compile cmd)))
 
+;;;###autoload
 (defun chromium-dev-run (target &optional args)
-  "Build and run the unit tests.
+  "Build and run TARGET.
 
 Builds TARGET with autoninja, then runs the resulting binary.  With ARGS, append
 ARGS to the run command.
@@ -91,18 +127,16 @@ for completion on subsequent invocations."
                  (list target (chromium-dev--read-args target))))
   (chromium-dev--run-args-history-push target args)
   (let* ((default-directory (chromium-dev--project-root))
-          (binary            (format "%s/%s"
-                                     chromium-dev-out-dir
-                                     target))
-          (args-str          (if (and args (not (string-empty-p args)))
-                                 (format " %s" args)
-                               ""))
-          (build-cmd         (format "autoninja -C %s %s"
-                                     (shell-quote-argument chromium-dev-out-dir)
-                                     (shell-quote-argument target)))
-          (run-cmd           (format "%s%s" binary args-str))
-          (cmd (string-join (list build-cmd run-cmd)
-                            " && ")))
+         (rel-bin           (concat "./" (file-name-as-directory chromium-dev-out-dir) target))
+         (binary            (shell-quote-argument rel-bin))
+         (args-str          (if (and args (not (string-empty-p args)))
+                                (format " %s" args)
+                              ""))
+         (build-cmd         (format "autoninja -C %s %s"
+                                    (shell-quote-argument chromium-dev-out-dir)
+                                    (shell-quote-argument target)))
+         (run-cmd           (format "%s%s" binary args-str))
+         (cmd               (format "%s && %s" build-cmd run-cmd)))
     (compile cmd)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,7 +155,7 @@ for completion on subsequent invocations."
   "Write clangd remote-index config for ROOT to CONFIG-FILE.
 Appends snippet with PathMatch/Server/MountPoint, creating parent dirs.
 Caller should ensure not already configured."
-  (let* ((server "linux.clangd-index.chromium.org:5900")
+  (let* ((server chromium-dev-remote-index-server)
          (root-dir (file-name-as-directory (expand-file-name root)))
          (snippet (format "If:\n  PathMatch: %s.*\nIndex:\n  External:\n    Server: %s\n    MountPoint: %s\n"
                           root-dir server root-dir)))
@@ -142,6 +176,7 @@ Caller should ensure not already configured."
                           (and xdg (not (string-empty-p xdg)) xdg))
                         (expand-file-name "~/.config"))))
 
+;;;###autoload
 (defun chromium-dev-setup-remote-index ()
   "Setup clangd remote-index config for current checkout.
 Creates config.yaml entry for project root.
@@ -156,6 +191,8 @@ Idempotent if already configured."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; compile_commands.json
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;###autoload
 (defun chromium-dev-regen-compile-json (root)
   "Regenerate `compile_commands.json' asynchronously.
 
@@ -167,10 +204,10 @@ Assumes that chromium is at ROOT.  ROOT is inferred when called interactively."
                       (shell-quote-argument chromium-dev-out-dir)
                       (shell-quote-argument "compile_commands.json"))))
     (message "Generating compile_commands.json...")
-    (start-process-shell-command "chromium-compdb" "*chromium-compdb*" cmd)))
+    (chromium-dev--run-async "chromium-compdb" "*chromium-compdb*" cmd)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Rust Analyzer (Needs Cleanup)
+;; Rust Analyzer
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun chromium-dev--rust-project-json-path (root)
@@ -186,23 +223,27 @@ Creates relative symlink `out/Default/rust-project.json' if missing."
       (make-symbolic-link target dst t)
       (message "Linked %s -> %s" dst target))))
 
-(defun chromium-dev--generate-rust-project-json (root)
+(defun chromium-dev--generate-rust-project-json (root &optional on-success)
   "Generate `rust-project.json' in ROOT via `gn gen'.
-Asynchronously runs `gn gen --export-rust-project'."
+Asynchronously runs `gn gen --export-rust-project'.
+Calls ON-SUCCESS upon completion."
   (let* ((default-directory root)
          (cmd (format "%s gen %s --export-rust-project"
                       (shell-quote-argument "gn")
                       (shell-quote-argument chromium-dev-out-dir))))
     (message "Generating rust-project.json...")
-    (start-process-shell-command "chromium-rust-project" "*chromium-rust-project*" cmd)))
+    (chromium-dev--run-async "chromium-rust-project" "*chromium-rust-project*" cmd on-success)))
 
+;;;###autoload
 (defun chromium-dev-regen-rust-project-json ()
   "Regenerate `rust-project.json' via `gn gen'.
 Ensures symlink at repo root; works even if setup already ran."
   (interactive)
   (let ((root (chromium-dev--project-root)))
-    (chromium-dev--generate-rust-project-json root)
-    (chromium-dev--ensure-rust-project-symlink root)))
+    (chromium-dev--generate-rust-project-json
+     root
+     (lambda ()
+       (chromium-dev--ensure-rust-project-symlink root)))))
 
 (defun chromium-dev--rust-analyzer-resolve (&optional _interactive _project)
   "Return vendored rust-analyzer contact if in Chromium checkout.
@@ -255,8 +296,10 @@ Safe to call repeatedly; only adds once."
 ;; chromium-dev-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;###autoload
 (defun chromium-dev-setup ()
-  "Run one-time setup checks once per session.
+  "Run one-time setup check once per session.
+
 Guards compile_commands, clangd remote-index, rust-project.json and eglot setup."
   (interactive)
   (when-let* ((root (ignore-errors (chromium-dev--project-root))))
@@ -274,12 +317,15 @@ Guards compile_commands, clangd remote-index, rust-project.json and eglot setup.
       (unless (file-exists-p rust-dst)
         (if (file-exists-p rust-build)
             (chromium-dev--ensure-rust-project-symlink root)
-          (progn
-            (chromium-dev--generate-rust-project-json root)
-            (chromium-dev--ensure-rust-project-symlink root)))))))
+          (chromium-dev--generate-rust-project-json
+           root
+           (lambda ()
+             (chromium-dev--ensure-rust-project-symlink root))))))))
 
+;;;###autoload
 (define-minor-mode chromium-dev-mode
   "Stuff for working with Chromium."
+  :lighter " Chromium"
   :keymap (let ((keymap (make-sparse-keymap)))
             (define-key keymap (kbd "C-c C-e") #'chromium-dev-build)
             (define-key keymap (kbd "C-c C-t") #'chromium-dev-run)

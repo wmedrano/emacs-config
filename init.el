@@ -441,6 +441,7 @@
 (use-package compile
   :ensure nil ;; builtin
   :defer t
+  :commands (recompile)
   :custom
   (compilation-scroll-output 'first-error)
   ;; 2 = skip warnings/info (only errors), 1 = skip info, 0 = don't skip
@@ -516,8 +517,20 @@
 (use-package project
   :ensure nil ;; builtin
   :defer t
+  :functions (project-current project-root)
   :config
-  (add-to-list 'project-find-functions #'project-try-monorepo))
+  (add-to-list 'project-find-functions #'project-try-monorepo)
+  (defun project-frame-title ()
+    "Return the last 2 parts of the project root.
+
+Uses buffer name if not in a project."
+    (or (when-let* ((project (project-current nil))
+                    (root (ignore-errors
+                            (directory-file-name
+                             (expand-file-name (project-root project))))))
+          (string-join (last (split-string root "/" t) 2) "/"))
+        (buffer-name)))
+  (setq frame-title-format '((:eval (project-frame-title)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LLM
