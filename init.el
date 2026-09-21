@@ -150,6 +150,10 @@
              copy-filename-absolute
              project-insert-file-path))
 
+(use-package edocs
+  :ensure nil ;; Defined under user-lisp/
+  :commands (edocs))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -218,7 +222,7 @@
                       :weight 'bold)
   (set-face-attribute 'default nil :font "Inconsolata-14")
   ;; Makes emojis have the same height as the monospace font 😀
-  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 24)))
+  (set-fontset-font t 'emoji (font-spec :family "Noto Color Emoji" :size 18)))
 
 (use-package doom-modeline
   :ensure t
