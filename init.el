@@ -419,7 +419,8 @@
 
 (use-package markdown-ts-mode
   :ensure t
-  :defer t)
+  :defer t
+  :commands (markdown-ts-mode))
 
 (use-package markdown-mode
   :ensure t
@@ -517,6 +518,45 @@
   :defer t
   :config
   (add-to-list 'project-find-functions #'project-try-monorepo))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; LLM
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package gptel
+  :ensure t
+  :defer t
+  :defines (gptel-backend gptel-model gptel-mode-map)
+  :commands (gptel-highlight-mode gptel-abort gptel-send gptel-menu)
+  :custom
+  (gptel-prompt-prefix-alist nil)
+  (gptel-response-prefix-alist nil)
+  (gptel-default-mode 'markdown-ts-mode)
+  :config
+  (add-hook 'gptel-mode-hook #'gptel-highlight-mode)
+  (define-key gptel-mode-map (kbd "C-c C-k") #'gptel-abort)
+  (define-key gptel-mode-map (kbd "C-c C-a") #'gptel-send)
+  (define-key gptel-mode-map (kbd "C-c C-c") #'gptel-menu))
+
+(use-package gptel-openai-oauth
+  :ensure nil ;; Part of gptel
+  :after gptel
+  :functions (gptel-make-openai-oauth)
+  :config
+  (when (file-directory-p (expand-file-name "~/.codex"))
+    (setq gptel-backend (gptel-make-openai-oauth "agent"
+                          :request-params '(:reasoning (:effort "medium"))
+                          :models '(gpt-5.6-luna gpt-6-astra))
+          gptel-model 'gpt-5.6-luna)))
+
+(use-package gptel-agent-tools
+  :ensure nil ;; Defined under user-lisp/
+  :after gptel
+  :defines (gptel-agent-tools-bash)
+  :functions (gptel-agent-tools-default-system-prompt)
+  :config
+  (setq-default
+   gptel-system-prompt #'gptel-agent-tools-default-system-prompt
+   gptel-tools (list gptel-agent-tools-bash)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Keybindings
