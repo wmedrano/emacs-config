@@ -16,7 +16,11 @@
 
 - Use tools like rg to search.
 - Use jj for version control. Avoid looking at other branches as they are often broken prototypes.
-- Use %s for scratch files." (make-temp-file "/tmp/agent-scratch-" t))))
+
+working directory: %s
+scratch directory: %s"
+                  default-directory
+                  (make-temp-file "/tmp/agent-scratch-" t))))
   gptel-agent-tools-default-system-prompt--cache)
 
 (defun gptel-agent-tools-bash--format-output (status-message output-buffer)

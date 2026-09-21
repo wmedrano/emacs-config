@@ -26,8 +26,8 @@
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
                 diff-hl doom-modeline dracula-theme eat eglot evil
                 evil-commentary gn-mode htmlize markdown-mode markdown-ts-mode
-                orderless posframe rg rust-mode smartparens ttx-mode vertico
-                vundo wgsl-mode yasnippet))
+                orderless posframe rg rust-mode smartparens transient ttx-mode
+                vertico vundo wgsl-mode yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
@@ -530,7 +530,8 @@
   :custom
   (gptel-prompt-prefix-alist nil)
   (gptel-response-prefix-alist nil)
-  (gptel-default-mode 'markdown-ts-mode)
+  (gptel-default-mode 'org-mode)
+  (gptel-use-context 'user)
   :config
   (add-hook 'gptel-mode-hook #'gptel-highlight-mode)
   (define-key gptel-mode-map (kbd "C-c C-k") #'gptel-abort)
