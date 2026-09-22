@@ -293,7 +293,9 @@
 
 (use-package rust-mode
   :ensure t
-  :defer t)
+  ;; rust-mode has the rules for compilation buffer error highlighting so we
+  ;; load rust-mode anytime we detect rust code.
+  :after rust-ts-mode)
 
 ;; Requires M-x treesit-install-language-grammar for rust
 (use-package rust-ts-mode

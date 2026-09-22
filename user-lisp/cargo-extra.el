@@ -13,11 +13,23 @@
      (shell-command-to-string
       "cargo metadata --format-version 1 | jq -r \".workspace_root\""))))
 
+(defun cargo-package (&optional dir)
+  "The package name for working directory DIR, or nil if none.
+
+`default-directory' is used if DIR is nil."
+  (let* ((default-directory (or dir default-directory))
+         (pkg (string-trim
+               (shell-command-to-string
+                "cargo metadata --no-deps --format-version 1 2>/dev/null | jq -r --arg manifest \"$(cargo locate-project --message-format plain 2>/dev/null)\" '.packages[] | select(.manifest_path == $manifest) | .name'"))))
+    (unless (string-empty-p pkg)
+      pkg)))
+
 ;;;###autoload
 (defmacro cargo-cmd (command)
   "Run COMMAND with cargo at the project root."
-  `(let ((default-directory (cargo-workspace-root)))
-     (compile (concat "cargo " ,command))))
+  `(let ((cmd (concat "cargo " ,command))
+         (default-directory (cargo-workspace-root)))
+     (compile cmd)))
 
 ;;;###autoload
 (defun cargo-check ()
@@ -41,10 +53,16 @@
 (setenv "CARGO_TERM_COLOR" "always")
 
 ;;;###autoload
-(defun cargo-test ()
-  "Run cargo nextest at the project root."
-  (interactive)
-  (cargo-cmd "nextest run"))
+(defun cargo-test (&optional arg)
+  "Run cargo nextest at the project root.
+
+With ARG, run only tests for the current package."
+  (interactive "P")
+  (let ((pkg (if arg nil (cargo-package))))
+    (cargo-cmd
+     (if pkg
+         (concat "nextest run -p " pkg)
+       "nextest run"))))
 
 ;;;###autoload
 (defun cargo-doc (&optional arg)
