@@ -65,7 +65,9 @@ Preferred tools:
 (defconst gptel-agent-tools-read
   (gptel-make-tool
    :name "read_file"
-   :description "Read a file"
+   :description "Read a file
+
+Prefer this over sed and cat for simple use cases"
    :confirm nil
    :function #'gptel-ops-read
    :args (list

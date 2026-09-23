@@ -29,6 +29,7 @@
                 orderless posframe rg rust-mode smartparens transient ttx-mode
                 vertico vundo wgsl-mode yasnippet))
  '(ring-bell-function 'ignore)
+ '(safe-local-variable-directories '("/home/wmedrano/src/takopi/"))
  '(safe-local-variable-values
    '((compilation-scroll-output . first-error) (vc-handled-backends)))
  '(scroll-conservatively 101)
@@ -430,7 +431,14 @@
 <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">
 <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
 <link href=\"https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,100..1000;1,100..1000&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Sen:wght@400;700;800&display=swap\" rel=\"stylesheet\">
-"))
+")
+  :config
+  ;; Load the Babel backends used for common Org source blocks.
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python . t)
+     (shell . t))))
 
 (use-package markdown-ts-mode
   :ensure t

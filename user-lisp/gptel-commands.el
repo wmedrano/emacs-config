@@ -5,12 +5,19 @@
 ;;; Code:
 
 (require 'gptel)
+(require 'ob-core)
 
 ;;;###autoload
 (defun gptel-shell-insert (command)
   "Insert COMMAND as a bash source block in the current buffer."
   (interactive "sShell command: ")
-  (insert (format "#+begin_src bash\n%s\n#+end_src\n" command)))
+  (insert "#+begin_src bash :results output verbatim\n")
+  (insert command)
+  (insert "\n#+end_src\n")
+  (forward-line -2)
+  (let ((org-confirm-babel-evaluate nil))
+    (org-babel-execute-src-block))
+  (goto-char (point-max)))
 
 ;;;###autoload
 (defun gptel-submit ()
