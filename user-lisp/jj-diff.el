@@ -18,6 +18,9 @@
   "Show jj diffs."
   :group 'jj)
 
+(defvar-local jj-diff-revision nil
+  "Resolved change ID shown by `jj-diff-at', or nil for a range diff.")
+
 (defcustom jj-diff-reuse-buffer t
   "Whether to reuse an existing `jj-diff-mode' buffer for the same repository.
 When non-nil, `jj-diff' commands reuse an existing diff buffer belonging
@@ -83,7 +86,7 @@ If `jj-diff-reuse-buffer' is non-nil, an existing `jj-diff-mode' buffer
 from the same repository is reused; otherwise a new buffer is created."
   (interactive (list (jj-read-revision "jj diff at" "@")))
   (let* ((buffer (jj-diff--with-buffer
-                   (jj--diff-run `("-r" ,rev)))))
+                   (jj--diff-run `("-r" ,rev) rev))))
     (pop-to-buffer buffer)
     buffer))
 
@@ -111,12 +114,73 @@ from the same repository is reused; otherwise a new buffer is created."
     (pop-to-buffer buffer)
     buffer))
 
-(defun jj--diff-run (args)
-  "Run jj diff on the current buffer with ARGS."
+(defun jj--diff-run (args &optional revision)
+  "Run jj diff on the current buffer with ARGS.
+REVISION identifies a single revision being displayed, when applicable."
+  (setq jj-diff-revision nil)
   (jj--start-process
    (append '("diff" "--git")
            args)
-   :on-done #'jj--diff-finalize))
+   :on-done (lambda (exit-status)
+              (jj--diff-finalize exit-status)
+              (when (and (zerop exit-status) revision)
+                (setq-local jj-diff-revision
+                            (jj-diff--resolve-revision revision))))))
+
+(defun jj-diff--resolve-revision (revision)
+  "Return REVISION's change ID without snapshotting the working copy.
+Return nil if REVISION does not identify exactly one change."
+  (let ((change-ids
+         (with-temp-buffer
+           (let ((status
+                  (apply #'process-file jj-executable nil t nil
+                         (append jj-global-args
+                                 (list "--ignore-working-copy"
+                                       "log" "--no-graph" "-r" revision
+                                       "-T" "change_id ++ \"\\n\"")))))
+             (unless (zerop status)
+               (jj--signal (buffer-string)))
+             (split-string (buffer-string) "\n" t)))))
+    (when (= (length change-ids) 1)
+      (car change-ids))))
+
+(defun jj-diff--highlight-revision (buffer revision)
+  "Highlight resolved change ID REVISION in log BUFFER and move point to it."
+  (with-current-buffer buffer
+    (dolist (overlay (overlays-in (point-min) (point-max)))
+      (when-let* ((entry (overlay-get overlay 'jj--revision)))
+        (when (equal (jj--revision-change-id entry) revision)
+          (overlay-put overlay 'face 'jj-selected-face)
+          (goto-char (overlay-start overlay)))))))
+
+;;;###autoload
+(defun jj-diff-squash ()
+  "Show the jj log and squash this diff's revision after confirmation.
+Requires a single-revision diff created by `jj-diff-at'.  Run
+`jj squash -r' synchronously and display its output if the user confirms."
+  (interactive)
+  (unless (derived-mode-p 'jj-diff-mode)
+    (user-error "Not in a jj-diff buffer"))
+  (unless jj-diff-revision
+    (user-error "No single revision to squash; the current diff likely represents a range instead of a single revision"))
+  (let ((revision jj-diff-revision)
+        (log-buffer (jj--log))
+        log-window)
+    (unwind-protect
+        (progn
+          (jj-diff--highlight-revision log-buffer revision)
+          (setq log-window
+                (display-buffer-in-side-window
+                 log-buffer
+                 '((side . bottom)
+                   (window-height . fit-window-to-buffer)
+                   (window-parameters . ((mode-line-format . none))))))
+          (when (yes-or-no-p (format "Do you want to squash revision %s?" revision))
+            (jj-run-command `("squash" "-r" ,revision))))
+      (when (window-live-p log-window)
+        (delete-window log-window))
+      (when (buffer-live-p log-buffer)
+        (kill-buffer log-buffer)))))
 
 (defun jj--diff-finalize (exit-status)
   "Finalize the diff buffer by enabling `jj-diff-mode' and `read-only-mode'.
