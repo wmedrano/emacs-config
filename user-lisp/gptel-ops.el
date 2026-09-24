@@ -6,6 +6,7 @@
 
 (require 'cl-lib)
 (require 'imenu)
+(require 'subr-x)
 
 (defun gptel-ops-line-start (line-number)
   "Return the buffer position at the start of LINE-NUMBER."
@@ -105,7 +106,8 @@ STATUS-MESSAGE is a description of the result or nil to exclude it."
                   (buffer-substring-no-properties (point-min)
                                                   (point-max)))))
     (if status-message
-        (format "%s\n%s" status-message output)
+        (format "%s\nOutput:\n%s" status-message
+                (if (equal output "") "(no output)" output))
       output)))
 
 (defun gptel-agent-tools-bash--format-error (error-data)
@@ -130,21 +132,23 @@ RESULT-CALLBACK instead."
   "Return a result for BASH-PROCESS and PROCESS-EVENT.
 
 PROCESS-EVENT is the sentinel event."
-  (cond
-   ((string= process-event "finished\n")
-    (gptel-agent-tools-bash--format-output
-     nil
-     (process-buffer bash-process)))
-   ((or (string-match-p "timeout" process-event)
-        (string-match-p "exited-abnormally" process-event)
-        (string-match-p "name-of-signal" process-event))
-    (gptel-agent-tools-bash--format-output
-     process-event
-     (process-buffer bash-process)))
-   (t
-    (format
-     "bash tool call failure, abort task and report broken tool. Unknown process event %s"
-     process-event))))
+  (gptel-agent-tools-bash--format-output
+   (cond
+    ((process-get bash-process 'gptel-bash-timeout)
+     (format "Command timed out after %s seconds."
+             (process-get bash-process 'gptel-bash-timeout)))
+    ((eq (process-status bash-process) 'exit)
+     (unless (zerop (process-exit-status bash-process))
+       (format "Command exited with code %d."
+               (process-exit-status bash-process))))
+    ((eq (process-status bash-process) 'signal)
+     (format "Command terminated by signal %d (%s)."
+             (process-exit-status bash-process)
+             (string-trim process-event)))
+    (t
+     (error "Unexpected process status %s: %s"
+            (process-status bash-process) (string-trim process-event))))
+   (process-buffer bash-process)))
 
 (defun gptel-agent-tools-bash--impl
     (result-callback shell-command &optional timeout-seconds)
@@ -158,18 +162,20 @@ Call RESULT-CALLBACK with the result when done."
     (condition-case error-data
         (let ((process-sentinel
                (lambda (bash-process process-event)
-                 (unwind-protect
-                     (unless responded
-                       (setq responded t)
-                       (gptel-agent-tools-bash--call-with-error-handling
-                        result-callback
-                        (lambda ()
-                          (when timeout-timer
-                            (cancel-timer timeout-timer))
-                          (gptel-agent-tools-bash--respond
-                           bash-process process-event))))
-                   (when (buffer-live-p output-buffer)
-                     (kill-buffer output-buffer))))))
+                 (when (and (not responded)
+                            (memq (process-status bash-process) '(exit signal)))
+                   (unwind-protect
+                       (progn
+                         (setq responded t)
+                         (gptel-agent-tools-bash--call-with-error-handling
+                          result-callback
+                          (lambda ()
+                            (when timeout-timer
+                              (cancel-timer timeout-timer))
+                            (gptel-agent-tools-bash--respond
+                             bash-process process-event))))
+                     (when (buffer-live-p output-buffer)
+                       (kill-buffer output-buffer)))))))
           (setq output-buffer (generate-new-buffer "gptel-bash")
                 bash-process
                 (make-process
@@ -177,15 +183,15 @@ Call RESULT-CALLBACK with the result when done."
                  :buffer output-buffer
                  :command (list (executable-find "bash") "-c" shell-command)
                  :sentinel process-sentinel))
-          (when (and timeout-seconds (> timeout-seconds 0))
+          (when (and (not responded) timeout-seconds (> timeout-seconds 0))
             (setq timeout-timer
                   (run-at-time timeout-seconds
                                nil
                                (lambda ()
-                                 (funcall process-sentinel
-                                          bash-process
-                                          "timeout\n")
-                                 (when (process-live-p bash-process)
+                                 (when (and (not responded)
+                                            (process-live-p bash-process))
+                                   (process-put bash-process 'gptel-bash-timeout
+                                                timeout-seconds)
                                    (kill-process bash-process))))))
           nil)
       (error
