@@ -26,8 +26,8 @@
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
                 diff-hl doom-modeline dracula-theme eat eglot evil
                 evil-commentary gn-mode htmlize markdown-mode markdown-ts-mode
-                orderless posframe rg rust-mode smartparens transient ttx-mode
-                vertico vundo wgsl-mode yasnippet))
+                orderless origami posframe rg rust-mode smartparens transient
+                ttx-mode vertico vundo wgsl-mode yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-directories '("/home/wmedrano/src/takopi/"))
  '(safe-local-variable-values
@@ -259,6 +259,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Languages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package origami
+  :ensure t
+  :defer t
+  :commands (origami-mode origami-toggle-node origami-toggle-all-nodes))
 
 (use-package flymake
   :ensure nil ;; builtin
@@ -701,17 +706,19 @@ Uses buffer name if not in a project."
   (with-eval-after-load 'dired
     (defvar dired-mode-map)
     (define-key dired-mode-map (kbd "SPC") nil))
-  (let ((leader-map (make-sparse-keymap)))
+  (let ((leader-map (make-sparse-keymap "Leader")))
     (define-key special-mode-map      (kbd "SPC") leader-map)
     (define-key evil-motion-state-map (kbd "SPC") leader-map)
     (define-key leader-map (kbd "b") #'consult-buffer)
-    (define-key leader-map (kbd "a") (make-sparse-keymap))
     (define-key leader-map (kbd "p") project-prefix-map)
     (define-key leader-map (kbd "x") #'project-execute-extended-command)
     (with-eval-after-load 'project
       (define-key project-prefix-map (kbd "i") #'project-insert-file-path))
     (define-key leader-map (kbd "w") #'ace-window)
-    (define-key leader-map (kbd "r") (make-sparse-keymap))
+    (define-key leader-map (kbd "t") (make-sparse-keymap "Toggle"))
+    (define-key leader-map (kbd "tf") #'origami-toggle-node)
+    (define-key leader-map (kbd "ta") #'origami-toggle-all-nodes)
+    (define-key leader-map (kbd "r") (make-sparse-keymap "Version control"))
     (define-key leader-map (kbd "ra") #'jj-abandon)
     (define-key leader-map (kbd "rb") #'jj-bookmark-set)
     (define-key leader-map (kbd "rB") #'jj-bookmark-delete)
@@ -724,7 +731,7 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "rp") #'jj-git-push)
     (define-key leader-map (kbd "rt") #'jj-bookmark-track)
     (define-key leader-map (kbd "ru") #'jj-upload)
-    (define-key leader-map (kbd "h") (make-sparse-keymap))
+    (define-key leader-map (kbd "h") (make-sparse-keymap "Highlight"))
     (define-key leader-map (kbd "hK") #'unhighlight-regexp)
     (define-key leader-map (kbd "he") #'eldoc)
     (define-key leader-map (kbd "hh") #'highlight-symbol-at-point)
@@ -732,7 +739,7 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "hf") #'describe-function)
     (define-key leader-map (kbd "hk") #'describe-key)
     (define-key leader-map (kbd "hv") #'describe-variable)
-    (define-key leader-map (kbd "s") (make-sparse-keymap))
+    (define-key leader-map (kbd "s") (make-sparse-keymap "Search"))
     (define-key leader-map (kbd "sa") #'consult-line)
     (define-key leader-map (kbd "se") #'consult-flymake)
     (define-key leader-map (kbd "st") #'query-replace)
@@ -740,7 +747,7 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "so") #'occur)
     (define-key leader-map (kbd "sr") #'rg)
     (define-key leader-map (kbd "ss") #'consult-ripgrep)
-    (define-key leader-map (kbd "e") (make-sparse-keymap))
+    (define-key leader-map (kbd "e") (make-sparse-keymap "Eglot"))
     (define-key leader-map (kbd "ea") #'eglot-code-actions)
     (define-key leader-map (kbd "ed") #'flymake-show-buffer-diagnostics)
     (define-key leader-map (kbd "eD") #'flymake-show-project-diagnostics)
@@ -749,7 +756,7 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "ei") #'eglot-inlay-hints-mode)
     (define-key leader-map (kbd "er") #'eglot-rename)
     (define-key leader-map (kbd "es") #'eglot)
-    (define-key leader-map (kbd "n") (make-sparse-keymap))
+    (define-key leader-map (kbd "n") (make-sparse-keymap "Edit"))
     (define-key leader-map (kbd "nn") #'consult-yasnippet)
     (define-key leader-map (kbd "ns") #'sort-lines)))
 
