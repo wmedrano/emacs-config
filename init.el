@@ -242,7 +242,19 @@
   :ensure t
   :defer 1
   :commands (doom-modeline-mode)
+  :custom
+  (doom-modeline-buffer-file-name-style 'relative-from-project)
   :config (doom-modeline-mode 1))
+
+(defun project-name-from-parent-for-src (original-function project)
+  "Use the parent directory name when PROJECT is rooted in a src directory."
+  (let* ((root (directory-file-name (expand-file-name (project-root project))))
+         (name (file-name-nondirectory root))
+         (parent-name (file-name-nondirectory
+                       (directory-file-name (file-name-directory root)))))
+    (if (and (equal name "src") (not (string-empty-p parent-name)))
+        parent-name
+      (funcall original-function project))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Languages
@@ -541,6 +553,8 @@
   :ensure nil ;; builtin
   :defer t
   :functions (project-current project-root)
+  :init
+  (advice-add 'project-name :around #'project-name-from-parent-for-src)
   :config
   (add-to-list 'project-find-functions #'project-try-monorepo)
   (defun project-frame-title ()
