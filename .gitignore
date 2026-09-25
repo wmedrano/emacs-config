@@ -3,9 +3,11 @@
 .org-id-locations
 custom.el
 custom.el.backup
+places.eld
 projects
 projects.eld
 recentf
+recentf.eld
 tramp
 user-lisp/.user-lisp-autoloads.el
 

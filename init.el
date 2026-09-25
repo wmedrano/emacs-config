@@ -26,8 +26,8 @@
    '(ace-window auto-highlight-symbol clang-format consult consult-yasnippet corfu
                 diff-hl doom-modeline dracula-theme eat eglot evil
                 evil-commentary gn-mode htmlize markdown-mode markdown-ts-mode
-                orderless origami posframe rg rust-mode smartparens transient
-                ttx-mode vertico vundo wgsl-mode yasnippet))
+                orderless org origami posframe rg rust-mode smartparens
+                transient ttx-mode vertico vundo wgsl-mode yasnippet))
  '(ring-bell-function 'ignore)
  '(safe-local-variable-directories '("/home/wmedrano/src/takopi/"))
  '(safe-local-variable-values
@@ -520,7 +520,7 @@
 (use-package diff-hl
   :ensure t
   :defer 1
-  :commands (diff-hl-flydiff-mode global-diff-hl-mode)
+  :commands (diff-hl-flydiff-mode global-diff-hl-mode diff-hl-revert-hunk)
   :config
   (global-diff-hl-mode 1)
   (add-hook 'diff-hl-mode-hook #'diff-hl-flydiff-mode))
@@ -720,17 +720,18 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "ta") #'origami-toggle-all-nodes)
     (define-key leader-map (kbd "r") (make-sparse-keymap "Version control"))
     (define-key leader-map (kbd "ra") #'jj-abandon)
-    (define-key leader-map (kbd "rb") #'jj-bookmark-set)
     (define-key leader-map (kbd "rB") #'jj-bookmark-delete)
-    (define-key leader-map (kbd "rd") #'jj-diff-at)
     (define-key leader-map (kbd "rD") #'jj-diff-from)
+    (define-key leader-map (kbd "rb") #'jj-bookmark-set)
+    (define-key leader-map (kbd "rd") #'jj-diff-at)
+    (define-key leader-map (kbd "re") #'jj-edit)
     (define-key leader-map (kbd "rf") #'jj-git-fetch)
     (define-key leader-map (kbd "rm") #'jj-describe)
-    (define-key leader-map (kbd "re") #'jj-edit)
     (define-key leader-map (kbd "rn") #'jj-new)
     (define-key leader-map (kbd "rp") #'jj-git-push)
     (define-key leader-map (kbd "rt") #'jj-bookmark-track)
     (define-key leader-map (kbd "ru") #'jj-upload)
+    (define-key leader-map (kbd "rv") #'diff-hl-revert-hunk)
     (define-key leader-map (kbd "h") (make-sparse-keymap "Highlight"))
     (define-key leader-map (kbd "hK") #'unhighlight-regexp)
     (define-key leader-map (kbd "he") #'eldoc)
