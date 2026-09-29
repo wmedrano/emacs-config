@@ -341,7 +341,7 @@
   (add-hook 'rust-ts-mode-hook #'cargo-minor-mode-maybe-enable)
   (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
   (define-key rust-ts-mode-map (kbd "C-c C-l") #'cargo-clippy)
-  (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test))
+  (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test-at-point))
 
 (use-package cargo-extra
   :ensure nil ;; Defined in user-lisp/
@@ -349,7 +349,7 @@
   :autoload (cargo-cmd)
   :commands (cargo-minor-mode cargo-minor-mode-maybe-enable
              cargo-check cargo-build cargo-criterion cargo-test cargo-doc
-             cargo-clippy cargo-fix))
+             cargo-test-at-point cargo-clippy cargo-fix))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GPU Languages

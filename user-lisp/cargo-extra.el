@@ -3,6 +3,26 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'treesit)
+
+(defun cargo-extra--test-at-point ()
+  "Return the function name at point if it is preceded by a `#[test]` attribute."
+  (when (and (treesit-parser-list) (treesit-node-at (point)))
+    (let ((node (treesit-node-at (point))))
+      (while (and node (not (member (treesit-node-type node)
+                                    '("function_item" "function_definition"))))
+        (setq node (treesit-node-parent node)))
+      (when node
+        (let ((attribute (treesit-node-prev-sibling node)))
+          (when (and attribute
+                     (member (treesit-node-type attribute)
+                             '("attribute_item" "attribute"))
+                     (string-match-p "#\\[test\\]"
+                                     (treesit-node-text attribute t)))
+            (let ((name (or (treesit-node-child-by-field-name node "name")
+                            (treesit-node-child-by-field-name node "declarator"))))
+              (when name
+                (treesit-node-text name t)))))))))
 
 (defun cargo-workspace-root (&optional dir)
   "The root of the current workspace with working directory DIR.
@@ -63,6 +83,21 @@ With ARG, run only tests for the current package."
      (if pkg
          (concat "nextest run -p " pkg)
        "nextest run"))))
+
+;;;###autoload
+(defun cargo-test-at-point ()
+  "Run the test at point, or all tests if point is not on a test."
+  (interactive)
+  (let ((test-name (cargo-extra--test-at-point))
+        (pkg (cargo-package)))
+    (cargo-cmd
+     (cond
+      ((and test-name pkg)
+       (concat "nextest run -p " pkg " " test-name))
+      (test-name
+       (concat "nextest run " test-name))
+      (pkg (concat "nextest run -p " pkg))
+      (t "nextest run")))))
 
 ;;;###autoload
 (defun cargo-doc (&optional arg)
