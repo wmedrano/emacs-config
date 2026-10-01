@@ -554,12 +554,21 @@
   :defer t
   :autoload (project-try-monorepo))
 
+(defun project-remember-project-ignore-tmp (original-function project &optional no-write)
+  "Do not remember PROJECT when it is rooted under /tmp.
+Calls ORIGINAL-FUNCTION with PROJECT and NO-WRITE otherwise."
+  (unless (string-prefix-p "/tmp/"
+                           (file-name-as-directory
+                            (expand-file-name (project-root project))))
+    (funcall original-function project no-write)))
+
 (use-package project
   :ensure nil ;; builtin
   :defer t
   :functions (project-current project-root)
   :init
   (advice-add 'project-name :around #'project-name-from-parent-for-src)
+  (advice-add 'project-remember-project :around #'project-remember-project-ignore-tmp)
   :config
   (add-to-list 'project-find-functions #'project-try-monorepo)
   (defun project-frame-title ()
