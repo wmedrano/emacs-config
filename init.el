@@ -768,7 +768,12 @@ Uses buffer name if not in a project."
     (define-key leader-map (kbd "es") #'eglot)
     (define-key leader-map (kbd "n") (make-sparse-keymap "Edit"))
     (define-key leader-map (kbd "nn") #'consult-yasnippet)
-    (define-key leader-map (kbd "ns") #'sort-lines)))
+    (define-key leader-map (kbd "ns") #'sort-lines)
+    (define-key leader-map (kbd "y") (make-sparse-keymap "Yank"))
+    (define-key leader-map (kbd "ya") #'copy-filename-absolute)
+    (define-key leader-map (kbd "yf") #'copy-filename)
+    (define-key leader-map (kbd "yi") #'project-insert-file-path)
+    (define-key leader-map (kbd "yy") #'consult-yank-pop)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Extra private stuff
