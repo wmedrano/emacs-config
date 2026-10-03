@@ -7,6 +7,35 @@
 (require 'gptel)
 (require 'ob-core)
 
+(defvar gptel-commands-backends nil
+  "Alist of gptel backends available for selection.
+Each entry has the form (NAME . BACKEND), where NAME is the name
+offered during completion and BACKEND is a gptel backend object.
+Configure this alist in the `use-package gptel-commands'
+declaration.")
+
+;;;###autoload
+(defun gptel-commands-set-backend ()
+  "Select the current backend from `gptel-commands-backends'.
+Keep the current model if supported, otherwise use the first model
+advertised by the selected backend."
+  (interactive)
+  (unless gptel-commands-backends
+    (user-error "No gptel backends are configured"))
+  (let* ((choices (mapcar (lambda (entry)
+                            (cons (format "%s" (car entry)) (cdr entry)))
+                          gptel-commands-backends))
+         (name (completing-read "gptel backend: " choices nil t nil nil
+                                (and gptel-backend
+                                     (car (rassq gptel-backend choices)))))
+         (backend (cdr (assoc name choices)))
+         (models (gptel-backend-models backend)))
+    (unless models
+      (user-error "Backend %s has no available models" name))
+    (setq gptel-backend backend)
+    (unless (memq gptel-model models)
+      (setq gptel-model (car models)))))
+
 ;;;###autoload
 (defun gptel-shell-insert (command)
   "Insert COMMAND as a bash source block in the current buffer."

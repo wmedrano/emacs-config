@@ -338,10 +338,7 @@
   (add-hook 'rust-ts-mode-hook #'eglot-ensure)
   (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
   (add-hook 'rust-ts-mode-hook #'set-fill-column-100)
-  (add-hook 'rust-ts-mode-hook #'cargo-minor-mode-maybe-enable)
-  (define-key rust-ts-mode-map (kbd "C-c C-f") #'eglot-format)
-  (define-key rust-ts-mode-map (kbd "C-c C-l") #'cargo-clippy)
-  (define-key rust-ts-mode-map (kbd "C-c C-t") #'cargo-test-at-point))
+  (add-hook 'rust-ts-mode-hook #'cargo-minor-mode-maybe-enable))
 
 (use-package cargo-extra
   :ensure nil ;; Defined in user-lisp/
@@ -602,16 +599,21 @@ Uses buffer name if not in a project."
   (define-key gptel-mode-map (kbd "C-c SPC") #'gptel-send)
   (define-key gptel-mode-map (kbd "C-c c") #'gptel-menu))
 
-(use-package gptel-commands
-  :ensure nil ;; Defined under user-lisp/
+(use-package gptel-openai
+  :ensure nil ;; Part of gptel
   :after gptel
-  :commands (gptel-submit gptel-model)
-  :bind (:map gptel-mode-map
-              ("C-c RET" . gptel-submit)
-              ("C-c i" . project-insert-file-path)
-              ("C-c m" . gptel-model)
-              ("C-c c" . gptel-menu)
-              ("C-c e" . gptel-shell-insert)))
+  :functions (gptel-make-openai)
+  :config
+  (defconst gptel-halogen-backend
+    (gptel-make-openai "Halogen"
+      :host "localhost:8731"
+      :protocol "http"
+      :endpoint "/v1/chat/completions"
+      :key "dummy"
+      :stream t
+      :models '((halogen-qwen3.8-flash-next
+                 :capabilities (reasoning tool-use)
+                 :description "Local Halogen Qwen Flash")))))
 
 (use-package gptel-openai-oauth
   :ensure nil ;; Part of gptel
@@ -622,10 +624,29 @@ Uses buffer name if not in a project."
     (when (file-directory-p (expand-file-name "~/.codex"))
       (gptel-make-openai-oauth "agent"
         :request-params '(:reasoning (:effort "medium"))
-        :models '(gpt-6-luna gpt-6-sol gpt-6-astra))))
+        :models '(gpt-6-luna gpt-6-sol gpt-6.1-sol gpt-6-astra))))
   (when gptel-openai-backend
     (setq gptel-backend gptel-openai-backend
           gptel-model 'gpt-6-luna)))
+
+(use-package gptel-commands
+  :ensure nil ;; Defined under user-lisp/
+  :after (gptel gptel-openai gptel-openai-oauth)
+  :commands (gptel-submit gptel-model gptel-commands-set-backend)
+  :defines (gptel-commands-backends gptel-openai-backend gptel-halogen-backend)
+  :config
+  (setq gptel-commands-backends
+        (delq nil (list (and gptel-openai-backend
+                             (cons "agent" gptel-openai-backend))
+                        (and gptel-halogen-backend
+                             (cons "Halogen" gptel-halogen-backend)))))
+  :bind (:map gptel-mode-map
+              ("C-c RET" . gptel-submit)
+              ("C-c i" . project-insert-file-path)
+              ("C-c m" . gptel-model)
+              ("C-c c" . gptel-menu)
+              ("C-c e" . gptel-shell-insert)))
+
 
 (use-package gptel-ops
   :ensure nil ;; Defined under user-lisp/

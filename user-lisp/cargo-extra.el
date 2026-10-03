@@ -2,6 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 
+(require 'eglot)
 (require 'subr-x)
 (require 'treesit)
 
@@ -126,9 +127,10 @@ With ARG, pass the \"--open\" flag."
   "Provides access to cargo commands."
   :keymap (let ((keymap (make-sparse-keymap)))
             (define-key keymap (kbd "C-c C-l") #'cargo-clippy)
-            (define-key keymap (kbd "C-c C-t") #'cargo-test)
+            (define-key keymap (kbd "C-c C-t") #'cargo-test-at-point)
             (define-key keymap (kbd "C-c C-e") #'cargo-build)
             (define-key keymap (kbd "C-c C-h") #'cargo-doc)
+            (define-key keymap (kbd "C-c C-f") #'eglot-format)
             keymap))
 
 (defvar cargo-minor-mode-inhibit-function nil
