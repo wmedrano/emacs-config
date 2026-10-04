@@ -59,40 +59,78 @@ PATH is used to make error messages."
           (insert new-text)))
       (basic-save-buffer))))
 
-(defun gptel-ops-imenu (buffer)
-  "Return a CLI-style listing of BUFFER's Imenu entries.
+(defun gptel-ops-imenu--kind (position)
+  "Return a known declaration kind at POSITION, or nil.
+Only classify Emacs Lisp declarations; other modes retain provider labels."
+  (when (derived-mode-p 'emacs-lisp-mode)
+    (save-excursion
+      (goto-char position)
+      (when (looking-at "(\\(defun\\|cl-defun\\|defmacro\\|cl-defmacro\\|defsubst\\|defvar-local\\|defvar\\|defconst\\|defcustom\\)\\_>")
+        (pcase (match-string-no-properties 1)
+          ((or "defun" "cl-defun" "defsubst") "function")
+          ((or "defmacro" "cl-defmacro") "macro")
+          ("defconst" "constant")
+          ("defcustom" "option")
+          (_ "variable"))))))
 
+(defun gptel-ops-imenu (buffer)
+  "Return a hierarchical listing of BUFFER's Imenu entries.
+
+Preserve provider labels and indent groups and entries in the same column.
+Provider declaration kinds and group locations are included when available.
+Emacs Lisp declaration kinds are inferred when the provider omits them.
+This is an index, not necessarily an exhaustive inventory of declarations.
 Signal an error if Imenu is unavailable or has no valid entries in BUFFER."
   (unless (buffer-live-p buffer)
     (error "Not a live buffer: %s" buffer))
   (with-current-buffer buffer
-    (unless (and (boundp 'imenu-generic-expression)
-                 (or imenu-generic-expression
-                     (bound-and-true-p imenu--index-alist)))
-      (error "Imenu is not available in %s" (buffer-name)))
-    (require 'imenu)
-    (let ((index (imenu--make-index-alist t))
-          groups)
-      (dolist (entry index)
-        (when (and (consp (cdr entry))
-                   (not (markerp (cdr entry))))
-          (let ((items
-                 (cl-loop for item in (cdr entry)
-                          when (markerp (cdr item))
-                          collect (cons (line-number-at-pos (cdr item))
-                                        (car item)))))
-            (when items
-              (push (cons (car entry) items) groups)))))
-      (unless groups
-        (error "Imenu has no valid entries in %s" (buffer-name)))
-      (mapconcat
-       (lambda (group)
-         (concat (upcase (car group)) "\n"
-                 (mapconcat
-                  (lambda (item)
-                    (format "%4d  %s" (car item) (cdr item)))
-                  (nreverse (cdr group)) "\n")))
-       (nreverse groups) "\n\n"))))
+    (save-excursion
+      (save-restriction
+        (widen)
+        ;; Ask the mode's provider, including tree-sitter or Eglot, to refresh.
+        (let ((index (imenu--make-index-alist t))
+              lines)
+          (cl-labels
+              ((walk (entries depth)
+                 (let (result)
+                   (dolist (entry entries)
+                     (unless (equal (car entry) "*Rescan*")
+                       (cond
+                        ((imenu--subalist-p entry)
+                         (let ((children (walk (cdr entry) (1+ depth))))
+                           (when children
+                             (setq result
+                                   (append result
+                                           (list (let* ((name (car entry))
+                                                        (region (get-text-property 0 'imenu-region name))
+                                                        (kind (get-text-property 0 'imenu-kind name)))
+                                                   (format "%s  %s%s%s:"
+                                                           (if (and (consp region) (integer-or-marker-p (car region)))
+                                                               (format "%4d" (line-number-at-pos (car region)))
+                                                             "    ")
+                                                           (make-string (* 2 depth) ?\s)
+                                                           (substring-no-properties name)
+                                                           (if kind (format " [%s]" kind) ""))))
+                                           children)))))
+                        ((or (integerp (cdr entry))
+                             (and (markerp (cdr entry))
+                                  (eq (marker-buffer (cdr entry)) buffer)))
+                         (let ((kind (or (get-text-property 0 'imenu-kind (car entry))
+                                         (gptel-ops-imenu--kind (cdr entry)))))
+                           (setq result
+                                 (append result
+                                         (list (format "%4d  %s%s%s"
+                                                       (line-number-at-pos (cdr entry))
+                                                       (make-string (* 2 depth) ?\s)
+                                                       (substring-no-properties (car entry))
+                                                       (if kind (format " [%s]" kind) ""))))))))))
+                   result)))
+            (setq lines (walk index 0)))
+          (unless lines
+            (error "Imenu has no valid entries in %s" (buffer-name)))
+          (format "%s\nImenu index (%s; may be incomplete)\n\n%s"
+                  (or buffer-file-name (buffer-name)) major-mode
+                  (mapconcat #'identity lines "\n")))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bash process operations

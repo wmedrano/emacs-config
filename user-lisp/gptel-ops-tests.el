@@ -73,5 +73,44 @@
        (lambda (result) (push result results)) "true"))
     (should (equal results '("bash tool call failure: Cannot launch bash")))))
 
+(ert-deftest gptel-ops-imenu-custom-provider ()
+  (with-temp-buffer
+    (insert "one\ntwo\nthree\n")
+    (setq-local imenu-generic-expression nil)
+    (setq-local imenu-create-index-function
+                (lambda ()
+                  (list (cons "top" 1)
+                        (list "Group"
+                              (cons "second" (copy-marker 5))
+                              (list "Nested" (cons "third" 9))))))
+    (goto-char 5)
+    (narrow-to-region 5 9)
+    (should (equal (gptel-ops-imenu (current-buffer))
+                   (concat (buffer-name)
+                           "\nImenu index (fundamental-mode; may be incomplete)\n\n"
+                           "   1  top\n      Group:\n   2    second\n        Nested:\n   3      third")))
+    (should (= (point) 5))
+    (should (= (point-min) 5))
+    (should (= (point-max) 9))))
+
+(ert-deftest gptel-ops-imenu-empty-provider ()
+  (with-temp-buffer
+    (setq-local imenu-create-index-function (lambda () nil))
+    (should-error (gptel-ops-imenu (current-buffer)))))
+
+(ert-deftest gptel-ops-imenu-elisp-kinds ()
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (insert "(defvar sample-variable nil)\n"
+            "(defconst sample-constant t)\n"
+            "(defun sample-function () nil)\n"
+            "(defmacro sample-macro () nil)\n")
+    (let ((output (gptel-ops-imenu (current-buffer))))
+      (should (string-match-p "Variables:" output))
+      (should (string-match-p "sample-variable \\[variable\\]" output))
+      (should (string-match-p "sample-constant \\[constant\\]" output))
+      (should (string-match-p "sample-function \\[function\\]" output))
+      (should (string-match-p "sample-macro \\[macro\\]" output)))))
+
 (provide 'gptel-ops-tests)
 ;;; gptel-ops-tests.el ends here

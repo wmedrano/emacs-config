@@ -106,7 +106,17 @@ Prefer this over sed and cat for simple use cases"
 (defconst gptel-agent-tools-symbols
   (gptel-make-tool
    :name "list_symbols"
-   :description "List a file's indexed functions, variables, and other symbols with line numbers. Uses Emacs imenu."
+   :description "List a file's indexed symbols with line numbers. Use to discover definitions and locate code before reading specific lines.
+
+Example output for a Rust file:
+/path/to/example.rs
+Imenu index (rust-ts-mode; may be incomplete)
+
+  10  CallFrame [Struct]:
+  12    module [Field]
+  20  impl CallFrame [Object]:
+  22    make_closure [Method]
+"
    :confirm nil
    :function #'gptel-agent-tools-symbols--impl
    :args (list
@@ -173,7 +183,7 @@ process and can have arbitrary side effects."
 (defconst gptel-agent-tools-elisp
   (gptel-make-tool
    :name "eval_elisp"
-   :description "Evaluate one Emacs Lisp form in the current Emacs process. Use this only when the task specifically requires live Emacs state or an Emacs API. Keep forms narrow and non-destructive."
+   :description "Evaluate one Emacs Lisp form in the running Emacs process and return its printed result. Use for live Emacs state or Emacs APIs, not for reading source files. Keep forms narrow and non-destructive."
    :confirm t
    :function #'gptel-agent-tools-elisp--impl
    :args (list
