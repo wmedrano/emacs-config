@@ -156,6 +156,16 @@
   :ensure nil ;; Defined under user-lisp/
   :commands (edocs))
 
+(use-package lan
+  :ensure nil ;; Defined under user-lisp/
+  :defer t
+  :commands (lan-list lan-ssh-tunnel))
+
+(defun halogen-connect ()
+  "Open the Halogen SSH tunnel on local port 8731."
+  (interactive)
+  (lan-ssh-tunnel "bill" "192.168.0.69" 8731))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Window management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
