@@ -644,6 +644,7 @@ Uses buffer name if not in a project."
               ("C-c RET" . gptel-submit)
               ("C-c i" . project-insert-file-path)
               ("C-c m" . gptel-model)
+              ("C-c o" . gptel-agent-tools-artifact)
               ("C-c c" . gptel-menu)
               ("C-c e" . gptel-shell-insert)))
 

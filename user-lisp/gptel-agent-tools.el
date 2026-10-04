@@ -4,6 +4,7 @@
 
 ;;; Code:
 
+(require 'browse-url)
 (require 'gptel)
 (require 'gptel-request)
 (require 'gptel-ops)
@@ -24,6 +25,11 @@
 
 working directory: %s
 scratch directory: %s
+
+Common Workflows:
+
+- plan - Create a plan through research and respond with the sections: Goal, Steps, Verification
+- report - Output reports to scratch directory using html format in bahaus style
 "
                   default-directory
                   gptel-agent-tools--scratch-dir)))
@@ -174,6 +180,39 @@ process and can have arbitrary side effects."
           '(:name "code"
                   :description "Emacs Lisp form to evaluate"
                   :type string))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Artifacts
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun gptel-agent-tools-artifacts ()
+  "Return a list of the files in `gptel-agent-tools--scratch-dir'.
+
+Paths are absolute.  Subdirectories are not included; returns nil when
+the scratch directory does not exist."
+  (when (and gptel-agent-tools--scratch-dir
+             (file-directory-p gptel-agent-tools--scratch-dir))
+    (seq-filter #'file-regular-p
+                (directory-files gptel-agent-tools--scratch-dir t
+                                 directory-files-no-dot-files-regexp))))
+
+(defun gptel-agent-tools-artifact (file)
+  "Open artifact FILE from `gptel-agent-tools--scratch-dir'.
+
+FILE may be a bare name or a path inside the scratch directory.  HTML
+files are visited in the browser with `browse-url-of-file', anything
+else is opened with `find-file'."
+  (interactive
+   (list (completing-read "Artifact: " (gptel-agent-tools-artifacts) nil t)))
+  (unless (and gptel-agent-tools--scratch-dir
+               (file-directory-p gptel-agent-tools--scratch-dir))
+    (user-error "Scratch directory does not exist"))
+  (let ((path (expand-file-name file gptel-agent-tools--scratch-dir)))
+    (unless (file-readable-p path)
+      (user-error "Cannot read artifact %s" path))
+    (if (member (downcase (file-name-extension path)) '("html" "htm"))
+        (browse-url-of-file path)
+      (find-file path))))
 
 (provide 'gptel-agent-tools)
 ;;; gptel-agent-tools.el ends here
