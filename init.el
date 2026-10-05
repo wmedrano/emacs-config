@@ -330,7 +330,7 @@
 
 (defun set-fill-column-100 ()
   "Set `fill-column' to 100."
-  (setq fill-column 100))
+  (setq-local fill-column 100))
 
 (use-package rust-mode
   :ensure t
@@ -349,6 +349,18 @@
   (add-hook 'rust-ts-mode-hook #'eglot-format-on-save-mode)
   (add-hook 'rust-ts-mode-hook #'set-fill-column-100)
   (add-hook 'rust-ts-mode-hook #'cargo-minor-mode-maybe-enable))
+
+(defun set-tab-width-2 ()
+  "Set `tab-width' to 2."
+  (setq-local tab-width 2))
+
+(use-package typescript-mode
+  :ensure t
+  :defer t
+  :config
+  (add-hook 'typescript-mode-hook #'eglot-ensure)
+  (add-hook 'typescript-mode-hook #'eglot-format-on-save-mode)
+  (add-hook 'typescript-mode-hook #'set-tab-width-2))
 
 (use-package cargo-extra
   :ensure nil ;; Defined in user-lisp/
