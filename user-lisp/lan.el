@@ -50,7 +50,7 @@
 
 (defun lan--read-neighbors (devices)
   "Add neighbor-table entries to DEVICES."
-  (when-let ((output (lan--run "ip" "neigh" "show")))
+  (when-let* ((output (lan--run "ip" "neigh" "show")))
     (dolist (line (split-string output "\n" t))
       (when (string-match
              "\\`\\([0-9.]+\\) +dev +\\([^ ]+\\)\\(?: +lladdr +\\([^ ]+\\)\\)?\\(?: +\\(.*\\)\\)?"
@@ -60,7 +60,7 @@
 
 (defun lan--read-avahi (devices)
   "Add IPv4 Avahi service announcements to DEVICES."
-  (when-let ((output (lan--run "avahi-browse" "--resolve" "--all" "--terminate")))
+  (when-let* ((output (lan--run "avahi-browse" "--resolve" "--all" "--terminate")))
     (let (record)
       (cl-labels ((finish-record ()
                     (when record
