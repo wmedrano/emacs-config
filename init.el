@@ -38,9 +38,7 @@
  '(tab-width 4)
  '(use-short-answers t)
  '(warning-suppress-log-types
-   '((files missing-lexbind-cookie
-            "~/.emacs.d/elpa/typescript-mode-0.4/typescript-mode.el")
-     (treesit))))
+   '((treesit))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -353,23 +351,23 @@
   (add-hook 'rust-ts-mode-hook #'set-fill-column-100)
   (add-hook 'rust-ts-mode-hook #'cargo-minor-mode-maybe-enable))
 
-;; Emacs 31 ships tree-sitter based TypeScript modes (see `typescript-ts-mode'),
-;; but the MELPA `typescript-mode' used here indents via
-;; `typescript-indent-level' (not `tab-width'), so set it to 2 explicitly.
-;; `tab-width' is also set to 2 so any literal tabs display consistently.
 (defun set-tab-width-2 ()
   "Set `tab-width' to 2."
   (setq-local tab-width 2))
 
-(use-package typescript-mode
-  :ensure t
+(use-package typescript-ts-mode
+  :ensure nil ;; builtin
   :defer t
+  :mode (("\\.ts\\'"  . typescript-ts-mode)
+         ("\\.mts\\'" . typescript-ts-mode)
+         ("\\.cts\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode))
   :custom
-  (typescript-indent-level 2)
+  (typescript-ts-indent-offset 2)
   :config
-  (add-hook 'typescript-mode-hook #'eglot-ensure)
-  (add-hook 'typescript-mode-hook #'eglot-format-on-save-mode)
-  (add-hook 'typescript-mode-hook #'set-tab-width-2))
+  (add-hook 'typescript-ts-base-mode-hook #'eglot-ensure)
+  (add-hook 'typescript-ts-base-mode-hook #'eglot-format-on-save-mode)
+  (add-hook 'typescript-ts-base-mode-hook #'set-tab-width-2))
 
 (use-package cargo-extra
   :ensure nil ;; Defined in user-lisp/
